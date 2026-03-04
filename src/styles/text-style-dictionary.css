@@ -1,0 +1,76 @@
+/* ############################### **
+   Text Styles               
+** ############################### */
+
+:root {
+  --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ------------------------------- **
+   Labels                
+** ------------------------------- */
+
+@utility font-label-3xl {
+  font-family: var(--font-sans);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@utility font-label-2xl {
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@utility font-label-xl {
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@utility font-label-l {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@utility font-label-m {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@utility font-label-s {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@utility font-label-xs {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* ------------------------------- **
+   Body Text                
+** ------------------------------- */
+
+@utility font-body-m {
+  font-family: var(--font-sans);
+  /* font-family: 'Open Sans', sans-serif; */
+  font-size: 1rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}

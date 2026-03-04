@@ -1,0 +1,482 @@
+/* ############################### **
+   Light + Dark Mode Colors               
+** ############################### */
+
+
+/* ------------------------------- **
+   Semantic Color               
+** ------------------------------- */
+
+@theme {
+
+  /* WIPE THE DEFAULT TAILWIND COLORS */
+  --color-*: initial;
+
+  /* 2. (Optional but recommended) Add back transparent and current */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* ink / text */
+  --color-ink-90: var(--setup-color-neutral-900);
+  --color-ink-80: var(--setup-color-neutral-800);
+  --color-ink-70: var(--setup-color-neutral-700);
+  --color-ink-60: var(--setup-color-neutral-600);
+  --color-ink-50: var(--setup-color-neutral-500);
+  --color-ink-40: var(--setup-color-neutral-400);
+  --color-ink-30: var(--setup-color-neutral-300);
+  --color-ink-20: var(--setup-color-neutral-200);
+  --color-ink-10: var(--setup-color-neutral-100);
+
+  /* publics */
+  --color-border: var(--setup-color-neutral-300);
+
+  /* buttons */
+  --color-button: var(--setup-color-neutral-900);
+  --color-button-hover-high: var(--setup-color-neutral-750);
+  --color-button-hover-low: var(--setup-color-neutral-250);
+  --color-button-active: var(--setup-color-neutral-300);
+
+  /* surfaces */
+  --color-level-1: var(--setup-color-level-1);
+  --color-level-1-hover: var(--setup-color-level-1-hover);
+  --color-level-1-active: var(--setup-color-level-1-active);
+
+  --color-level-2: var(--setup-color-level-2);
+  --color-level-2-hover: var(--setup-color-level-2-hover);
+  --color-level-2-active: var(--setup-color-level-2-active);
+}
+
+/* ------------------------------- **
+   Colored Semantics                
+** ------------------------------- */
+
+:root,
+.theme-neutral {
+
+  /* level-1 = layout */
+  --setup-color-level-1: var(--setup-color-neutral-200);
+  --setup-color-level-1-hover: var(--setup-color-neutral-250);
+  --setup-color-level-1-active: var(--setup-color-accent-300);
+
+  /* level-2 = content */
+  --setup-color-level-2: var(--setup-color-neutral-100);
+  --setup-color-level-2-hover: var(--setup-color-neutral-150);
+  --setup-color-level-2-active: var(--setup-color-accent-200);
+}
+
+/* ------------------------------- **
+   Primitive Colors                
+** ------------------------------- */
+
+@theme {
+
+  /* Colors (Generates bg-*, text-*, border-*, etc.) */
+
+  /* neutral */
+  --color-neutral-50: var(--setup-color-neutral-50);
+  --color-neutral-100: var(--setup-color-neutral-100);
+  --color-neutral-150: var(--setup-color-neutral-150);
+  --color-neutral-200: var(--setup-color-neutral-200);
+  --color-neutral-250: var(--setup-color-neutral-250);
+  --color-neutral-300: var(--setup-color-neutral-300);
+  --color-neutral-350: var(--setup-color-neutral-350);
+  --color-neutral-400: var(--setup-color-neutral-400);
+  --color-neutral-450: var(--setup-color-neutral-450);
+  --color-neutral-500: var(--setup-color-neutral-500);
+  --color-neutral-550: var(--setup-color-neutral-550);
+  --color-neutral-600: var(--setup-color-neutral-600);
+  --color-neutral-650: var(--setup-color-neutral-650);
+  --color-neutral-700: var(--setup-color-neutral-700);
+  --color-neutral-750: var(--setup-color-neutral-750);
+  --color-neutral-800: var(--setup-color-neutral-800);
+  --color-neutral-850: var(--setup-color-neutral-850);
+  --color-neutral-900: var(--setup-color-neutral-900);
+  --color-neutral-950: var(--setup-color-neutral-950);
+
+  /* accent */
+  --color-accent-100: var(--setup-color-accent-100);
+  --color-accent-200: var(--setup-color-accent-200);
+  --color-accent-300: var(--setup-color-accent-300);
+  --color-accent-400: var(--setup-color-accent-400);
+  --color-accent-500: var(--setup-color-accent-500);
+  --color-accent-600: var(--setup-color-accent-600);
+  --color-accent-700: var(--setup-color-accent-700);
+  --color-accent-800: var(--setup-color-accent-800);
+  --color-accent-900: var(--setup-color-accent-900);
+
+  /* purpur */
+  --color-purpur-100: var(--setup-color-purpur-100);
+  --color-purpur-200: var(--setup-color-purpur-200);
+  --color-purpur-300: var(--setup-color-purpur-300);
+  --color-purpur-400: var(--setup-color-purpur-400);
+  --color-purpur-500: var(--setup-color-purpur-500);
+  --color-purpur-600: var(--setup-color-purpur-600);
+  --color-purpur-700: var(--setup-color-purpur-700);
+  --color-purpur-800: var(--setup-color-purpur-800);
+  --color-purpur-900: var(--setup-color-purpur-900);
+
+  /* purple */
+  --color-purple-100: var(--setup-color-purple-100);
+  --color-purple-200: var(--setup-color-purple-200);
+  --color-purple-300: var(--setup-color-purple-300);
+  --color-purple-400: var(--setup-color-purple-400);
+  --color-purple-500: var(--setup-color-purple-500);
+  --color-purple-600: var(--setup-color-purple-600);
+  --color-purple-700: var(--setup-color-purple-700);
+  --color-purple-800: var(--setup-color-purple-800);
+  --color-purple-900: var(--setup-color-purple-900);
+
+  /* blue */
+  --color-blue-100: var(--setup-color-blue-100);
+  --color-blue-200: var(--setup-color-blue-200);
+  --color-blue-300: var(--setup-color-blue-300);
+  --color-blue-400: var(--setup-color-blue-400);
+  --color-blue-500: var(--setup-color-blue-500);
+  --color-blue-600: var(--setup-color-blue-600);
+  --color-blue-700: var(--setup-color-blue-700);
+  --color-blue-800: var(--setup-color-blue-800);
+  --color-blue-900: var(--setup-color-blue-900);
+
+  /* cyan */
+  --color-cyan-100: var(--setup-color-cyan-100);
+  --color-cyan-200: var(--setup-color-cyan-200);
+  --color-cyan-300: var(--setup-color-cyan-300);
+  --color-cyan-400: var(--setup-color-cyan-400);
+  --color-cyan-500: var(--setup-color-cyan-500);
+  --color-cyan-600: var(--setup-color-cyan-600);
+  --color-cyan-700: var(--setup-color-cyan-700);
+  --color-cyan-800: var(--setup-color-cyan-800);
+  --color-cyan-900: var(--setup-color-cyan-900);
+
+  /* green */
+  --color-green-100: var(--setup-color-green-100);
+  --color-green-200: var(--setup-color-green-200);
+  --color-green-300: var(--setup-color-green-300);
+  --color-green-400: var(--setup-color-green-400);
+  --color-green-500: var(--setup-color-green-500);
+  --color-green-600: var(--setup-color-green-600);
+  --color-green-700: var(--setup-color-green-700);
+  --color-green-800: var(--setup-color-green-800);
+  --color-green-900: var(--setup-color-green-900);
+
+  /* yellow */
+  --color-yellow-100: var(--setup-color-yellow-100);
+  --color-yellow-200: var(--setup-color-yellow-200);
+  --color-yellow-300: var(--setup-color-yellow-300);
+  --color-yellow-400: var(--setup-color-yellow-400);
+  --color-yellow-500: var(--setup-color-yellow-500);
+  --color-yellow-600: var(--setup-color-yellow-600);
+  --color-yellow-700: var(--setup-color-yellow-700);
+  --color-yellow-800: var(--setup-color-yellow-800);
+  --color-yellow-900: var(--setup-color-yellow-900);
+
+  /* orange */
+  --color-orange-100: var(--setup-color-orange-100);
+  --color-orange-200: var(--setup-color-orange-200);
+  --color-orange-300: var(--setup-color-orange-300);
+  --color-orange-400: var(--setup-color-orange-400);
+  --color-orange-500: var(--setup-color-orange-500);
+  --color-orange-600: var(--setup-color-orange-600);
+  --color-orange-700: var(--setup-color-orange-700);
+  --color-orange-800: var(--setup-color-orange-800);
+  --color-orange-900: var(--setup-color-orange-900);
+
+  /* red */
+  --color-red-100: var(--setup-color-red-100);
+  --color-red-200: var(--setup-color-red-200);
+  --color-red-300: var(--setup-color-red-300);
+  --color-red-400: var(--setup-color-red-400);
+  --color-red-500: var(--setup-color-red-500);
+  --color-red-600: var(--setup-color-red-600);
+  --color-red-700: var(--setup-color-red-700);
+  --color-red-800: var(--setup-color-red-800);
+  --color-red-900: var(--setup-color-red-900);
+
+  /* magenta */
+  --color-magenta-100: var(--setup-color-magenta-100);
+  --color-magenta-200: var(--setup-color-magenta-200);
+  --color-magenta-300: var(--setup-color-magenta-300);
+  --color-magenta-400: var(--setup-color-magenta-400);
+  --color-magenta-500: var(--setup-color-magenta-500);
+  --color-magenta-600: var(--setup-color-magenta-600);
+  --color-magenta-700: var(--setup-color-magenta-700);
+  --color-magenta-800: var(--setup-color-magenta-800);
+  --color-magenta-900: var(--setup-color-magenta-900);
+}
+
+
+/* ------------------------------- **
+   Tokens                
+** ------------------------------- */
+
+/* 2. LIGHT MODE RAW VALUES (Default) */
+.mode-light {
+
+  /* neutral */
+  --setup-color-neutral-50: #FFFFFF;
+  --setup-color-neutral-100: #FFFFFF;
+  --setup-color-neutral-150: #FBFBFB;
+  --setup-color-neutral-200: #F6F6F7;
+  --setup-color-neutral-250: #DDDDE1;
+  --setup-color-neutral-300: #C4C5CA;
+  --setup-color-neutral-350: #B5B6BD;
+  --setup-color-neutral-400: #A6A8B0;
+  --setup-color-neutral-450: #9496A0;
+  --setup-color-neutral-500: #828590;
+  --setup-color-neutral-550: #70747F;
+  --setup-color-neutral-600: #60636D;
+  --setup-color-neutral-650: #50535A;
+  --setup-color-neutral-700: #404248;
+  --setup-color-neutral-750: #303236;
+  --setup-color-neutral-800: #202124;
+  --setup-color-neutral-850: #101112;
+  --setup-color-neutral-900: #000000;
+  --setup-color-neutral-950: #000000;
+
+  /* accent */
+  --setup-color-accent-100: #F1EDFE;
+  --setup-color-accent-200: #E2DBFD;
+  --setup-color-accent-300: #C6B7FB;
+  --setup-color-accent-400: #AA93F8;
+  --setup-color-accent-500: #7042F5;
+  --setup-color-accent-600: #5A35C4;
+  --setup-color-accent-700: #432893;
+  --setup-color-accent-800: #2D1A62;
+  --setup-color-accent-900: #160D31;
+
+  /* purpur */
+  --setup-color-purpur-100: #E7D6F8;
+  --setup-color-purpur-200: #E2C8FE;
+  --setup-color-purpur-300: #B685EA;
+  --setup-color-purpur-400: #9D5CE3;
+  --setup-color-purpur-500: #8533DC;
+  --setup-color-purpur-600: #6A20B9;
+  --setup-color-purpur-700: #50188B;
+  --setup-color-purpur-800: #35105D;
+  --setup-color-purpur-900: #1B082E;
+
+  /* purple */
+  --setup-color-purple-100: #CBCAEE;
+  --setup-color-purple-200: #9894DD;
+  --setup-color-purple-300: #645FCC;
+  --setup-color-purple-400: #3D37AD;
+  --setup-color-purple-500: #2A2678;
+  --setup-color-purple-600: #221E60;
+  --setup-color-purple-700: #191748;
+  --setup-color-purple-800: #110F30;
+  --setup-color-purple-900: #080818;
+
+  /* blue */
+  --setup-color-blue-100: #D9DBF8;
+  --setup-color-blue-200: #B3B7F1;
+  --setup-color-blue-300: #8C92E9;
+  --setup-color-blue-400: #666EE2;
+  --setup-color-blue-500: #404ADB;
+  --setup-color-blue-600: #242EBE;
+  --setup-color-blue-700: #1B228F;
+  --setup-color-blue-800: #12175F;
+  --setup-color-blue-900: #090B30;
+
+  /* cyan */
+  --setup-color-cyan-100: #DAFAF4;
+  --setup-color-cyan-200: #B4F5E9;
+  --setup-color-cyan-300: #8FF0DE;
+  --setup-color-cyan-400: #69EBD3;
+  --setup-color-cyan-500: #44E6C8;
+  --setup-color-cyan-600: #1CD2B1;
+  --setup-color-cyan-700: #159E84;
+  --setup-color-cyan-800: #0E6958;
+  --setup-color-cyan-900: #07352C;
+
+  /* green */
+  --setup-color-green-100: #D5FAE1;
+  --setup-color-green-200: #D7FEE4;
+  --setup-color-green-300: #82EFA6;
+  --setup-color-green-400: #58EA89;
+  --setup-color-green-500: #2EE56B;
+  --setup-color-green-600: #18C451;
+  --setup-color-green-700: #12933D;
+  --setup-color-green-800: #0C6229;
+  --setup-color-green-900: #063114;
+
+  /* yellow */
+  --setup-color-yellow-100: #F9FADB;
+  --setup-color-yellow-200: #F3F5B7;
+  --setup-color-yellow-300: #ECEF92;
+  --setup-color-yellow-400: #E6EA6E;
+  --setup-color-yellow-500: #E0E54A;
+  --setup-color-yellow-600: #D4CC1F;
+  --setup-color-yellow-700: #9F8F17;
+  --setup-color-yellow-800: #6A5810;
+  --setup-color-yellow-900: #352908;
+
+  /* orange */
+  --setup-color-orange-100: #F9EDD7;
+  --setup-color-orange-200: #F3DAB1;
+  --setup-color-orange-300: #EEC58B;
+  --setup-color-orange-400: #E8AF66;
+  --setup-color-orange-500: #E29640;
+  --setup-color-orange-600: #C86F1F;
+  --setup-color-orange-700: #954C18;
+  --setup-color-orange-800: #622E10;
+  --setup-color-orange-900: #301408;
+
+  /* red */
+  --setup-color-red-100: #F8D9D9;
+  --setup-color-red-200: #F1B3B3;
+  --setup-color-red-300: #E98C8C;
+  --setup-color-red-400: #E26666;
+  --setup-color-red-500: #DB4040;
+  --setup-color-red-600: #BE2424;
+  --setup-color-red-700: #8F1B1B;
+  --setup-color-red-800: #5F1212;
+  --setup-color-red-900: #300909;
+
+  /* magenta */
+  --setup-color-magenta-100: #F8D9F5;
+  --setup-color-magenta-200: #F1B3EB;
+  --setup-color-magenta-300: #E98CE2;
+  --setup-color-magenta-400: #E266D8;
+  --setup-color-magenta-500: #DB40CE;
+  --setup-color-magenta-600: #BE24B2;
+  --setup-color-magenta-700: #8F1B85;
+  --setup-color-magenta-800: #5F1259;
+  --setup-color-magenta-900: #30092C;
+
+
+}
+
+/* 3. DARK MODE RAW VALUES */
+.mode-dark {
+
+  /* neutral */
+  --setup-color-neutral-50: #020203;
+  --setup-color-neutral-100: #070708;
+  --setup-color-neutral-150: #0B0C0E;
+  --setup-color-neutral-200: #101114;
+  --setup-color-neutral-250: #1C1F24;
+  --setup-color-neutral-300: #24282F;
+  --setup-color-neutral-350: #2E3139;
+  --setup-color-neutral-400: #373A43;
+  --setup-color-neutral-450: #484C57;
+  --setup-color-neutral-500: #595D6B;
+  --setup-color-neutral-550: #6A6F7F;
+  --setup-color-neutral-600: #7D8191;
+  --setup-color-neutral-650: #9294A1;
+  --setup-color-neutral-700: #A6A7B2;
+  --setup-color-neutral-750: #BABBC3;
+  --setup-color-neutral-800: #CECFD4;
+  --setup-color-neutral-850: #E2E2E5;
+  --setup-color-neutral-900: #F6F6F7;
+  --setup-color-neutral-950: #FBFBFB;
+
+  /* accent */
+  --setup-color-accent-100: #140E24;
+  --setup-color-accent-200: #281C48;
+  --setup-color-accent-300: #3D2A6C;
+  --setup-color-accent-400: #6546B4;
+  --setup-color-accent-500: #9D7BFF;
+  --setup-color-accent-600: #B196FF;
+  --setup-color-accent-700: #C5B0FF;
+  --setup-color-accent-800: #D9CBFF;
+  --setup-color-accent-900: #EDE6FF;
+
+  /* purpur */
+  --setup-color-purpur-100: #1B082E;
+  --setup-color-purpur-200: #1B1026;
+  --setup-color-purpur-300: #50188B;
+  --setup-color-purpur-400: #6A20B9;
+  --setup-color-purpur-500: #8533DC;
+  --setup-color-purpur-600: #9D5CE3;
+  --setup-color-purpur-700: #B685EA;
+  --setup-color-purpur-800: #CEADF1;
+  --setup-color-purpur-900: #E7D6F8;
+
+  /* purple */
+  --setup-color-purple-100: #080818;
+  --setup-color-purple-200: #110F30;
+  --setup-color-purple-300: #191748;
+  --setup-color-purple-400: #221E60;
+  --setup-color-purple-500: #2A2678;
+  --setup-color-purple-600: #3D37AD;
+  --setup-color-purple-700: #645FCC;
+  --setup-color-purple-800: #9894DD;
+  --setup-color-purple-900: #CBCAEE;
+
+  /* blue */
+  --setup-color-blue-100: #D9DBF8;
+  --setup-color-blue-200: #B3B7F1;
+  --setup-color-blue-300: #8C92E9;
+  --setup-color-blue-400: #666EE2;
+  --setup-color-blue-500: #404ADB;
+  --setup-color-blue-600: #242EBE;
+  --setup-color-blue-700: #1B228F;
+  --setup-color-blue-800: #12175F;
+  --setup-color-blue-900: #090B30;
+
+  /* cyan */
+  --setup-color-cyan-100: #DAFAF4;
+  --setup-color-cyan-200: #B4F5E9;
+  --setup-color-cyan-300: #8FF0DE;
+  --setup-color-cyan-400: #69EBD3;
+  --setup-color-cyan-500: #44E6C8;
+  --setup-color-cyan-600: #1CD2B1;
+  --setup-color-cyan-700: #159E84;
+  --setup-color-cyan-800: #0E6958;
+  --setup-color-cyan-900: #07352C;
+
+  /* green */
+  --setup-color-green-100: #D5FAE1;
+  --setup-color-green-200: #D7FEE4;
+  --setup-color-green-300: #82EFA6;
+  --setup-color-green-400: #58EA89;
+  --setup-color-green-500: #2EE56B;
+  --setup-color-green-600: #18C451;
+  --setup-color-green-700: #12933D;
+  --setup-color-green-800: #0C6229;
+  --setup-color-green-900: #063114;
+
+  /* yellow */
+  --setup-color-yellow-100: #F9FADB;
+  --setup-color-yellow-200: #F3F5B7;
+  --setup-color-yellow-300: #ECEF92;
+  --setup-color-yellow-400: #E6EA6E;
+  --setup-color-yellow-500: #E0E54A;
+  --setup-color-yellow-600: #D4CC1F;
+  --setup-color-yellow-700: #9F8F17;
+  --setup-color-yellow-800: #6A5810;
+  --setup-color-yellow-900: #352908;
+
+  /* orange */
+  --setup-color-orange-100: #F9EDD7;
+  --setup-color-orange-200: #F3DAB1;
+  --setup-color-orange-300: #EEC58B;
+  --setup-color-orange-400: #E8AF66;
+  --setup-color-orange-500: #E29640;
+  --setup-color-orange-600: #C86F1F;
+  --setup-color-orange-700: #954C18;
+  --setup-color-orange-800: #622E10;
+  --setup-color-orange-900: #301408;
+
+  /* red */
+  --setup-color-red-100: #F8D9D9;
+  --setup-color-red-200: #F1B3B3;
+  --setup-color-red-300: #E98C8C;
+  --setup-color-red-400: #E26666;
+  --setup-color-red-500: #DB4040;
+  --setup-color-red-600: #BE2424;
+  --setup-color-red-700: #8F1B1B;
+  --setup-color-red-800: #5F1212;
+  --setup-color-red-900: #300909;
+
+  /* magenta */
+  --setup-color-magenta-100: #F8D9F5;
+  --setup-color-magenta-200: #F1B3EB;
+  --setup-color-magenta-300: #E98CE2;
+  --setup-color-magenta-400: #E266D8;
+  --setup-color-magenta-500: #DB40CE;
+  --setup-color-magenta-600: #BE24B2;
+  --setup-color-magenta-700: #8F1B85;
+  --setup-color-magenta-800: #5F1259;
+  --setup-color-magenta-900: #30092C;
+}
