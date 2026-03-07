@@ -13,21 +13,24 @@
   --spacing-xl: var(--setup-spacing-xl);
   --spacing-2xl: var(--setup-spacing-2xl);
   --spacing-3xl: var(--setup-spacing-3xl);
+  --spacing-4xl: var(--setup-spacing-4xl);
 
   --spacing-sidebar-files: var(--setup-spacing-sidebar-files);
 
   /* Standard Heights */
   /* main icon size */
-  --height-main-2xs: 1.1875rem;
+  --spacing-main-2xs: 1.1875rem;
   /* tag size */
-  --height-main-xs: 1.375rem;
+  --spacing-main-xs: 1.375rem;
   /* small button and file size */
-  --height-main-s: 2rem;
+  --spacing-main-s: 2rem;
   /* regular button size */
-  --height-main-m: 2.8125rem;
+  --spacing-main-m: 2.8125rem;
   /* content header and file preview size */
-  --height-main-l: var(--setup-spacing-3xl);
-  /* not in use at the moment: --height-main-xl: 4.375rem; */
+  --spacing-main-l: var(--setup-spacing-3xl);
+  /* not in use at the moment: --height-main-xl: var(--setup-spacing-4xl); */
+
+  --spacing-main-5xl: 43.75rem;
 
   /* Border Radius (Generates rounded-*) */
   --radius-m: var(--setup-radius-m);
@@ -51,6 +54,7 @@
   --setup-spacing-xl: 1.25rem;
   --setup-spacing-2xl: 2.1875rem;
   --setup-spacing-3xl: 3.4375rem;
+  --setup-spacing-4xl: 4.375rem;
 
   --setup-spacing-sidebar-files: var(--setup-spacing-3xs);
 

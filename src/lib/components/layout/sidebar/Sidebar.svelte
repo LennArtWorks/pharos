@@ -1,29 +1,15 @@
 <script lang="ts">
 	/**
-
-* import Sidebar from '$lib/components/layout/Sidebar.svelte';
-
-*/
+	 * import Sidebar from '$lib/components/layout/Sidebar.svelte';
+	 */
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Divider from '$lib/components/ui/Divider.svelte';
 	import File from '$lib/components/blocks/File.svelte';
-	import Folder from '$lib/components/blocks/Folder.svelte';
 
-	/* *** Language Management *** */
-
-	import { t, locale } from '$lib/language/i18n.svelte';
 	import SidebarSection from './SidebarSection.svelte';
 	import FileTree from './FileTree.svelte';
-	import SyncButton from './SyncButton.svelte';
-
-	// We can get the available languages directly from our data
-
-	const languages: { val: typeof locale.current; label: string }[] = [
-		{ val: 'en', label: 'English' },
-
-		{ val: 'de', label: 'Deutsch' }
-	];
+	import Icon from '$lib/components/ui/Icon.svelte';
 
 	/* *** Sidebar Resizing *** */
 
@@ -79,8 +65,9 @@
 	<Button variant="primary" size="l" href="../"><Icon name="arrow-left" />{t('back')}</Button>
 	<Button variant="template" size="s"><Icon name="arrow-left" />Template</Button> -->
 
-	<section data-uiname="top-part" class="h-main-l flex items-center">
+	<section data-uiname="top-part" class="h-main-l flex items-center justify-between">
 		<p class="font-label-m">Organisation</p>
+		<Button variant="tertiary" size="s" href="?overlay=settings-org"><Icon name="dots" /></Button>
 	</section>
 
 	<section
@@ -107,16 +94,6 @@
 	</section>
 
 	<section data-uiname="bottom-part" class=" border-border gap-xs py-l mt-auto flex flex-col justify-center border-t">
-		<label for="lang-select" class="text-ink-50 px-2xs font-label-s font-semibold"> Language </label>
-		<select
-			id="lang-select"
-			bind:value={locale.current}
-			class="bg-button-hover-low text-ink-90 font-label-s rounded-m px-s h-button-s focus:ring-purpur-500 cursor-pointer border-none outline-none focus:ring-2">
-			{#each languages as lang}
-				<option value={lang.val}>{lang.label}</option>
-			{/each}
-		</select>
-
-		<SyncButton />
+		<Button>Settings</Button>
 	</section>
 </aside>

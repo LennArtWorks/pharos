@@ -37,10 +37,12 @@
   --color-button-active: var(--setup-color-neutral-300);
 
   /* surfaces */
+  /* level-1 = layout */
   --color-level-1: var(--setup-color-level-1);
   --color-level-1-hover: var(--setup-color-level-1-hover);
   --color-level-1-active: var(--setup-color-level-1-active);
 
+  /* level-2 = content */
   --color-level-2: var(--setup-color-level-2);
   --color-level-2-hover: var(--setup-color-level-2-hover);
   --color-level-2-active: var(--setup-color-level-2-active);

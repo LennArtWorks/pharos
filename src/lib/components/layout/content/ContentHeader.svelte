@@ -18,16 +18,16 @@
 		<!-- <Divider v /> -->
 		<div data-uiname="opened-tabs" class="gap-m flex items-center">
 			<div class="border-border h-5 w-1 border-l"></div>
-			<File filetype="document" active></File>
-			<File filetype="tasks" active></File>
+			<File filetype="document" active minimized>document</File>
+			<File filetype="tasks" active minimized>tasks</File>
 		</div>
 	</div>
 	<div data-uiname="directory-navigation" class="gap-3xs mr-auto flex items-center">
-		<File filetype="folder" class="text-ink-50 px-s" iconHidden>Workspace 1</File>
+		<File filetype="folder" class="text-ink-50" iconHidden>Workspace 1</File>
 		<span class="font-label-s text-ink-50 font-semibold">/</span>
-		<File filetype="folder" class="text-ink-50 px-s" iconHidden>Folder</File>
+		<File filetype="folder" class="text-ink-50" iconHidden>Folder</File>
 		<span class="font-label-s text-ink-50 font-semibold">/</span>
-		<File filetype="document" class=" pr-s">Document</File>
+		<File filetype="document">Document</File>
 	</div>
 	<Button variant="tertiary" size="s"><Icon name="dots" /></Button>
 </header>

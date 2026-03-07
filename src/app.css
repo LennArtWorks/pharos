@@ -12,6 +12,7 @@
   transition-duration: 150ms;
   /* Adjust to your preferred speed */
   transition-timing-function: ease;
+  transition-behavior:  allow-discrete;
 }
 
 a,

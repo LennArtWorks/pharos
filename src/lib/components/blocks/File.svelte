@@ -15,6 +15,10 @@
 		iconHidden?: boolean;
 		disabled?: boolean;
 		class?: string;
+		// --- New Display Modifiers ---
+		hideLabel?: boolean;
+		minimized?: boolean;
+		// --- Edit Props ---
 		isEditing?: boolean;
 		editValue?: string;
 		onsave?: (newName: string) => void;
@@ -32,6 +36,8 @@
 		iconHidden = false,
 		disabled = false,
 		class: className = '',
+		hideLabel = false,
+		minimized = false,
 		isEditing = false,
 		editValue = '',
 		onsave,
@@ -53,6 +59,11 @@
 	);
 
 	let iconClass = $derived(loading ? 'animate-pulse opacity-50' : '');
+
+	// Derive whether we should pass the label snippet at all
+	let shouldShowLabel = $derived((!!children || isEditing) && !hideLabel);
+
+	// ####### Edit Label Logic #######
 
 	let inputValue = $state('');
 
@@ -83,34 +94,42 @@
 	}
 </script>
 
+{#snippet leadingSnippet()}
+	{#if !iconHidden}
+		<Icon name={iconName} class={cn(iconClass, 'shrink-0')} />
+	{/if}
+{/snippet}
+
+{#snippet labelSnippet()}
+	{#if isEditing}
+		<input
+			type="text"
+			bind:value={inputValue}
+			use:focusInput
+			onkeydown={handleKeydown}
+			onblur={() => onsave?.(inputValue)}
+			onclick={(e) => e.stopPropagation()}
+			ondblclick={(e) => e.stopPropagation()}
+			class="text-text-primary font-inherit font-label-s m-0 w-full border-none bg-transparent p-0 leading-none outline-transparent" />
+	{:else if children}
+		<span class={cn('gap-xs min-w-0 flex-1 truncate text-left', loading ? 'opacity-50' : '')}>
+			{@render children()}
+		</span>
+	{/if}
+{/snippet}
+
 <Button
 	variant={template ? 'template' : 'tertiary'}
 	{size}
 	active={active || isEditing}
 	disabled={disabled || loading}
-	class={cn(className, isEditing ? 'bg-surface-2 ring-border ring-1' : '')}
-	{...rest}>
-	{#snippet leading()}
-		{#if !iconHidden}
-			<Icon name={iconName} class={cn(iconClass, 'shrink-0')} />
-		{/if}
-	{/snippet}
-
-	{#snippet label()}
-		{#if isEditing}
-			<input
-				type="text"
-				bind:value={inputValue}
-				use:focusInput
-				onkeydown={handleKeydown}
-				onblur={() => onsave?.(inputValue)}
-				onclick={(e) => e.stopPropagation()}
-				ondblclick={(e) => e.stopPropagation()}
-				class="text-text-primary font-inherit font-label-s m-0 w-full border-none bg-transparent p-0 leading-none outline-transparent" />
-		{:else if children}
-			<span class={cn('gap-xs min-w-0 flex-1 truncate text-left', loading ? 'opacity-50' : '')}>
-				{@render children()}
-			</span>
-		{/if}
-	{/snippet}
-</Button>
+	leading={leadingSnippet}
+	label={shouldShowLabel ? labelSnippet : undefined}
+	class={cn(
+		className,
+		isEditing ? 'bg-level-1-hover ring-border ring-1' : '',
+		// 1. Use transition-all to override Button's default transition-colors
+		// 2. Animate exact 'w' (width) instead of 'max-w' for a smooth curve
+		minimized && !isEditing ? 'w-main-s overflow-hidden whitespace-nowrap transition-all duration-300 ease-out hover:w-[10rem]' : ''
+	)}
+	{...rest} />

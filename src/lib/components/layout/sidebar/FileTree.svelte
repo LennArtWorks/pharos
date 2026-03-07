@@ -76,6 +76,7 @@
 		{:else}
 			{@const internal = isInternalExtension(node.extension)}
 			<File
+				href={`/files/${node.id}`}
 				filetype={node.uiFileType}
 				template={node.isTemplate}
 				isEditing={editingId === node.id}

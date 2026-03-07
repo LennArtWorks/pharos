@@ -1,4 +1,5 @@
-import { getScieboClient } from './sciebo';
+import { getCloudClient } from './origin/client';
+import { setMetaCache } from '../cache';
 import { SYSTEM_CONFIG, getUIFileType, type FSRMeta } from '$lib/config/filesystem';
 import { createHash } from 'crypto';
 import { DEFAULT_ROLES } from '$lib/config/permissions';
@@ -16,21 +17,20 @@ function getParentPath(path: string): string {
   return '/' + parts.slice(0, -1).join('/');
 }
 
-export async function syncCloudIndex(org: any) {
-  const client = getScieboClient({
-    url: org.cloud_url,
-    user: org.cloud_username,
-    pass: org.decrypted_password
-  });
+export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
+  if (!orgConfig) throw new Error("No organization config provided to syncCloudIndex");
 
-  let rootPath = org.cloud_directory.startsWith('/') ? org.cloud_directory : `/${org.cloud_directory}`;
+  // 1. Use the modular client!
+  const client = getCloudClient(orgConfig);
+
+  let rootPath = orgConfig.cloud_directory.startsWith('/') ? orgConfig.cloud_directory : `/${orgConfig.cloud_directory}`;
   if (rootPath.endsWith('/')) rootPath = rootPath.slice(0, -1);
 
   const configPath = `${rootPath}/${SYSTEM_CONFIG.CONFIG_FOLDER}`;
   try { await client.createDirectory(configPath); } catch (e) { }
 
   /* ---------------------------------------------------------------- *
-   *  Create Default Roles if no roles.fsrsys is found
+   * Create Default Roles if no roles.fsrsys is found
    * ---------------------------------------------------------------- */
 
   const rolesPath = `${configPath}/roles${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
@@ -49,13 +49,13 @@ export async function syncCloudIndex(org: any) {
   // Save the cached roles to SQLite so hooks.server.ts can read them instantly
   try {
     db.prepare(`UPDATE organisations SET roles_json = ? WHERE organisation_id = ?`)
-      .run(JSON.stringify(activeRoles), org.organisation_id);
+      .run(JSON.stringify(activeRoles), orgConfig.organisation_id);
   } catch (err) {
     console.error("Failed to update roles in local database", err);
   }
 
   /* ---------------------------------------------------------------- *
-   *  update/build meta.fsrsys and setup filetree
+   * update/build meta.fsrsys and setup filetree
    * ---------------------------------------------------------------- */
 
   const metaPath = `${configPath}/${SYSTEM_CONFIG.META_FILENAME}${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
@@ -180,6 +180,11 @@ export async function syncCloudIndex(org: any) {
   existingMeta.nodes = newNodes;
   existingMeta._meta.lastUpdated = Date.now();
 
+  // Save to Cloud
   await client.putFileContents(metaPath, JSON.stringify(existingMeta, null, 2));
+
+  // Instant Cache Update!
+  setMetaCache(orgConfig.organisation_id, existingMeta);
+
   return existingMeta;
 }

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+	import Icon from '$lib/components/ui/Icon.svelte';
+
 	let loading = $state(false);
 	let lastSync = $state('Never');
 
@@ -25,6 +28,7 @@
 		<span class="text-2xs font-bold tracking-wider text-neutral-400 uppercase">Cloud Status</span>
 		<span class="text-2xs text-neutral-500">{lastSync}</span>
 	</div>
+	<Button><Icon name="settings" />Settings</Button>
 	<button
 		onclick={triggerSync}
 		disabled={loading}

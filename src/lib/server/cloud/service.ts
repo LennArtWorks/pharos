@@ -1,28 +1,41 @@
-import { getScieboClient } from './sciebo';
+import { getCloudClient } from './origin/client';
+import { getMetaCache, setMetaCache } from '../cache';
 import { SYSTEM_CONFIG, getUIFileType, type FSRNode } from '$lib/config/filesystem';
 
-export async function getFileSystemMeta(org: any) {
-  const client = getScieboClient({
-    url: org.cloud_url,
-    user: org.cloud_username,
-    pass: org.decrypted_password
-  });
+export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
+  if (!orgConfig) throw new Error("No organization config provided to getFileSystemMeta");
 
-  // FIXED: Construction now matches sync.ts using .config and the .fsrsys extension
-  const metaPath = `/${org.cloud_directory}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILENAME}${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
+  // 1. Check the fast RAM cache first
+  const cachedMeta = getMetaCache(orgConfig.organisation_id);
+  if (cachedMeta) {
+    console.log(`[CACHE HIT] Returning meta for ${orgConfig.subdomain}`);
+    return cachedMeta;
+  }
+
+  // Updated log message to reflect modularity!
+  console.log(`[CACHE MISS] Fetching meta from Cloud for ${orgConfig.subdomain}...`);
+
+  // 2. Fallback to Cloud Storage (WebDAV via client.ts)
+  const client = getCloudClient(orgConfig);
+  const metaPath = `/${orgConfig.cloud_directory}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILENAME}${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
 
   try {
     const content = await client.getFileContents(metaPath, { format: "text" });
-    return JSON.parse(content as string);
+    const parsedData = JSON.parse(content as string);
+
+    // 3. Save the fresh data to RAM for the next 15 minutes
+    setMetaCache(orgConfig.organisation_id, parsedData);
+
+    return parsedData;
   } catch (e) {
-    console.warn(`meta file not found at ${metaPath}, returning empty state`);
+    console.warn(`Meta file not found at ${metaPath}, returning empty state`);
     return { nodes: {} };
   }
 }
 
 export function transformNodesToTree(nodes: Record<string, any>): FSRNode[] {
   const nodeArray: FSRNode[] = Object.entries(nodes).map(([id, node]) => {
-    // FIXED: Detect workspace using SYSTEM_CONFIG.EXTENSIONS.WORKSPACE
+    // Detect workspace using SYSTEM_CONFIG.EXTENSIONS.WORKSPACE
     const isWorkspace = node.type === 'workspace' ||
       (node.type === 'folder' && node.physicalName?.endsWith(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE));
 

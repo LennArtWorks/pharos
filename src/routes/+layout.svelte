@@ -8,6 +8,7 @@
 
 	import { onMount } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
+	import OverlayRoot from '$lib/components/overlays/OverlayRoot.svelte';
 
 	let { children } = $props();
 
@@ -49,3 +50,5 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 {@render children()}
+
+<OverlayRoot />
