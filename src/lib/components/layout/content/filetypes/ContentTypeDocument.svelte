@@ -5,6 +5,7 @@
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
+	import { page } from '$app/stores';
 
 	import * as Y from 'yjs';
 	import { HocuspocusProvider } from '@hocuspocus/provider';
@@ -50,6 +51,8 @@
 	});
 
 	onMount(() => {
+		const currentUser = $page.data.user;
+
 		console.log('[DEBUG 1] Component Mounted. Starting setup...');
 		console.log('[DEBUG 2] Editor Element exists?', !!editorElement);
 		console.log('[DEBUG 3] Bubble Menu Element exists?', !!bubbleMenuElement);
@@ -72,9 +75,6 @@
 		provider.on('synced', () => {
 			console.log(`[WS SYNCED] Document is fully synced with server!`);
 		});
-
-		const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-		const currentUser = { name: 'FSR Member', color: randomColor };
 
 		console.log('[DEBUG 5] Booting Tiptap Editor...');
 

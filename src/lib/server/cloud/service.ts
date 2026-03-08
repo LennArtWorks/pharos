@@ -1,6 +1,6 @@
 import { getCloudClient, type CloudConfig } from './origin/client';
 import { getMetaCache, setMetaCache } from '../cache';
-import { SYSTEM_CONFIG, getUIFileType, getFileConfig, type FSRNode } from '$lib/config/filesystem';
+import { SYSTEM_CONFIG, getUIFileType, getFileConfig, type FSRNode, FILE_TYPE_CONFIG } from '$lib/config/filesystem';
 
 export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
   if (!orgConfig) throw new Error("No organization config provided to getFileSystemMeta");
@@ -13,7 +13,7 @@ export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
 
   // 2. Fetch raw "Lean" JSON from Sciebo
   const client = getCloudClient(orgConfig as CloudConfig);
-  const metaPath = `/${orgConfig.cloud_directory}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILENAME}${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
+  const metaPath = `/${orgConfig.cloud_directory}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
 
   try {
     const content = await client.getFileContents(metaPath, { format: "text" });

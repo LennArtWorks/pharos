@@ -39,3 +39,26 @@ export function decrypt(text: string) {
     throw new Error('Could not decrypt cloud credentials');
   }
 }
+
+export function encrypt(text: string): string {
+  try {
+    // Generate a new random Initialization Vector for every encryption
+    const iv = crypto.randomBytes(16);
+
+    const cipher = crypto.createCipheriv(ALGORITHM, SECRET_KEY, iv);
+
+    const encryptedBuffer = Buffer.concat([
+      cipher.update(text, 'utf8'),
+      cipher.final()
+    ]);
+
+    // The Auth Tag ensures the encrypted data hasn't been tampered with
+    const authTag = cipher.getAuthTag();
+
+    // Return in the exact same format your decrypt function expects
+    return `${iv.toString('hex')}:${authTag.toString('hex')}:${encryptedBuffer.toString('hex')}`;
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    throw new Error('Could not encrypt secure payload');
+  }
+}

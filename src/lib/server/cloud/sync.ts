@@ -1,6 +1,6 @@
 import { getCloudClient, type CloudConfig } from './origin/client';
 import { setMetaCache } from '../cache';
-import { SYSTEM_CONFIG, type FSRMeta } from '$lib/config/filesystem';
+import { FILE_TYPE_CONFIG, SYSTEM_CONFIG, type FSRMeta } from '$lib/config/filesystem';
 import { createHash } from 'crypto';
 import { DEFAULT_ROLES } from '$lib/config/permissions';
 import db from '$lib/server/db';
@@ -33,7 +33,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
    * Create Default Roles if no roles.fsrsys is found
    * ---------------------------------------------------------------- */
 
-  const rolesPath = `${configPath}/roles${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
+  const rolesPath = `${configPath}/roles${FILE_TYPE_CONFIG.internal.sysfile.ext[0]}`;
 
   let activeRoles: Record<string, string[]> = {};
 
@@ -58,7 +58,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
    * update/build meta.fsrsys and setup filetree
    * ---------------------------------------------------------------- */
 
-  const metaPath = `${configPath}/${SYSTEM_CONFIG.META_FILENAME}${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
+  const metaPath = `${rootPath}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
 
   // 1. Load Existing Meta
   let existingMeta: FSRMeta = {
@@ -73,10 +73,10 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
 
   // 2. Initial Setup: Create Default Workspace if none in root (RESTORED!)
   const rootItems = await client.getDirectoryContents(rootPath);
-  const hasWorkspace = rootItems.some(f => f.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE));
+  const hasWorkspace = rootItems.some(f => f.basename.endsWith(FILE_TYPE_CONFIG.internal.workspace.ext[0]));
 
   if (!hasWorkspace) {
-    const defaultWSName = `${SYSTEM_CONFIG.DEFAULT_WORKSPACE}${SYSTEM_CONFIG.EXTENSIONS.WORKSPACE}`;
+    const defaultWSName = `${SYSTEM_CONFIG.DEFAULT_WORKSPACE}${FILE_TYPE_CONFIG.internal.workspace.ext[0]}`;
     const defaultWSPath = `${rootPath}/${defaultWSName}`;
     await client.createDirectory(defaultWSPath);
 
@@ -104,8 +104,8 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
       // Logic for new files: Clean basename
       temporaryNameMap[id] = file.basename
         .split('.')[0]
-        .replace(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE, '')
-        .replace(SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER, '');
+        .replace(FILE_TYPE_CONFIG.internal.workspace.ext[0], '')
+        .replace(FILE_TYPE_CONFIG.internal.sysfolder.ext[0], '');
     }
   });
 
@@ -122,8 +122,8 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
 
     let suffix = '';
     if (isDir) {
-      if (file.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE)) suffix = SYSTEM_CONFIG.EXTENSIONS.WORKSPACE;
-      else if (file.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER)) suffix = SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER;
+      if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.workspace.ext[0])) suffix = FILE_TYPE_CONFIG.internal.workspace.ext[0];
+      else if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.sysfolder.ext[0])) suffix = FILE_TYPE_CONFIG.internal.sysfolder.ext[0];
     }
 
     const expectedBasename = `${id}${suffix}${ext}`;
@@ -148,23 +148,23 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
 
     // Extract ID safely
     const id = file.basename.split('.')[0]
-      .replace(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE, '')
-      .replace(SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER, '');
+      .replace(FILE_TYPE_CONFIG.internal.workspace.ext[0], '')
+      .replace(FILE_TYPE_CONFIG.internal.sysfolder.ext[0], '');
 
     const parentPath = getParentPath(file.filename);
     let parentId = null;
     if (parentPath !== rootPath) {
       const parentBasename = parentPath.split('/').pop() || '';
       parentId = parentBasename.split('.')[0]
-        .replace(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE, '')
-        .replace(SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER, '');
+        .replace(FILE_TYPE_CONFIG.internal.workspace.ext[0], '')
+        .replace(FILE_TYPE_CONFIG.internal.sysfolder.ext[0], '');
     }
 
     // Determine the exact physical extension (Crucial for the new server.js path builder)
     let extension = isDir ? '' : `.${file.basename.split('.').pop()}`;
     if (isDir) {
-      if (file.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE)) extension = SYSTEM_CONFIG.EXTENSIONS.WORKSPACE;
-      else if (file.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER)) extension = SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER;
+      if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.workspace.ext[0])) extension = FILE_TYPE_CONFIG.internal.workspace.ext[0];
+      else if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.sysfolder.ext[0])) extension = FILE_TYPE_CONFIG.internal.sysfolder.ext[0];
     }
 
     const existingNode = existingMeta.nodes[id] as any;

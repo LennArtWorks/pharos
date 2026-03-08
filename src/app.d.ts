@@ -18,6 +18,8 @@ declare global {
 			user: {
 				id: string;
 				role: string;
+				name?: string;
+				color?: string;
 			};
 		}
 	}

@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
-import { SYSTEM_CONFIG, getFileConfig } from '$lib/config/filesystem';
+import { FILE_TYPE_CONFIG, SYSTEM_CONFIG, getFileConfig } from '$lib/config/filesystem';
 import { PERMISSIONS, hasPermission } from '$lib/config/permissions';
 import { getFileSystemMeta } from '$lib/server/cloud/service';
 import { setMetaCache } from '$lib/server/cache';
@@ -38,7 +38,7 @@ export async function POST({ request, locals }) {
     // 5. Save back to Cloud
     const client = getCloudClient(locals.orgConfig as CloudConfig);
     const rootPath = locals.orgConfig.cloud_directory.startsWith('/') ? locals.orgConfig.cloud_directory : `/${locals.orgConfig.cloud_directory}`;
-    const metaPath = `${rootPath}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILENAME}${SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FILE}`;
+    const metaPath = `${rootPath}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
 
     await client.putFileContents(metaPath, JSON.stringify(existingMeta, null, 2));
 

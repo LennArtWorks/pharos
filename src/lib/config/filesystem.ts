@@ -1,20 +1,5 @@
 import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
-export const SYSTEM_CONFIG = {
-  // The OS-internal folder for meta.fsrsys
-  ID_PREFIX: 'fsr',
-  CONFIG_FOLDER: '.config',
-  META_FILENAME: 'meta',
-  DEFAULT_WORKSPACE: 'Workspace',
-  HIDDEN_PREFIXES: ['.', '_'],
-  EXTENSIONS: {
-    SYSTEM_FOLDER: '.sysfolder',
-    WORKSPACE: '.workspace',
-    SYSTEM_FILE: '.fsrsys',
-    SECURE_FILE: '.fsrsecure'
-  }
-} as const;
-
 // Navigation views mapped to their icons and route paths
 export const VIEW_CONFIG = {
   recentTopics: { active: true, icon: 'home', label: "Recent Topics", path: '/dashboard/recent' },
@@ -26,8 +11,20 @@ export const VIEW_CONFIG = {
 export const FILE_TYPE_CONFIG = {
   // Internal OS files mapped to their icons and extensions
   internal: {
+    secure: {
+      active: true, type: "file", icon: 'lock', ext: ['.fsrsecure'],
+      component: "ContentTypeNotSupported", websocket: false, defaultContent: {}
+    },
+    sysfile: {
+      active: true, type: "file", icon: 'settings', ext: ['.fsrsys'],
+      component: "ContentTypeNotSupported", websocket: false, defaultContent: {}
+    },
+    sysfolder: {
+      active: true, type: "folder", icon: 'folder', ext: ['.sysfolder'],
+      component: "ContentTypeFolder", websocket: false, defaultContent: {}
+    },
     folder: {
-      active: true, type: "folder", icon: 'folder', ext: ['', '.sysfolder'],
+      active: true, type: "folder", icon: 'folder', ext: [''],
       component: "ContentTypeFolder", websocket: false, defaultContent: {}
     },
     workspace: {
@@ -59,12 +56,27 @@ export const FILE_TYPE_CONFIG = {
   }
 } as const;
 
+export const SYSTEM_CONFIG = {
+  // The OS-internal folder for meta.fsrsys
+  ID_PREFIX: 'fsr',
+  CONFIG_FOLDER: '.config', // stores the special system files (like meta, roles, accounts)
+  META_FILE: ['meta', FILE_TYPE_CONFIG.internal.sysfile.ext[0]],
+  ROLES_FILE: ['roles', FILE_TYPE_CONFIG.internal.sysfile.ext[0]],
+  ACCOUNTS_FILE: ['accounts', FILE_TYPE_CONFIG.internal.secure.ext[0]],
+  DEFAULT_WORKSPACE: 'Workspace',
+  HIDDEN_PREFIXES: ['.', '_'],
+
+  // Maps UIFileIconType keys that require the "system.files.*" permission scope
+  SYSTEM_FILE_TYPES: ['sysfolder', 'sysfile', 'secure'] as const
+} as const;
+
 // Types
 export type UIFileIconType =
   | keyof typeof VIEW_CONFIG
   | keyof typeof FILE_TYPE_CONFIG.internal
   | keyof typeof FILE_TYPE_CONFIG.external;
 
+// structure of a node/file listed in meta.fsrsys
 export interface FSRNode {
   id: string;
   parentId: string | null;
@@ -81,7 +93,7 @@ export interface FSRNode {
   children?: FSRNode[];
 }
 
-// The physical representation saved in meta.fsrsys (stripped of UI/dynamic fields)
+// header of the meta.fsrsys
 export interface FSRMeta {
   _meta: { schemaVersion: string; lastUpdated: number; description: string };
   nodes: Record<string, Omit<FSRNode, 'id' | 'children' | 'uiFileType' | 'physicalName' | 'type'>>;

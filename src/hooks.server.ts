@@ -26,10 +26,15 @@ export async function handle({ event, resolve }) {
   if (org) {
     let parsedRoles = DEFAULT_ROLES;
     try {
-      if (org.roles_json) parsedRoles = JSON.parse(org.roles_json);
+      if (org.roles_json) {
+        const parsed = JSON.parse(org.roles_json);
+        // CRITICAL FIX: Only use the DB roles if it actually contains data
+        if (Object.keys(parsed).length > 0) {
+          parsedRoles = parsed;
+        }
+      }
     } catch (e) { /* fallback to default */ }
 
-    // DYNAMIC SPREAD: All DB columns (cloud_name, cloud_url, etc.) are passed through
     event.locals.orgConfig = {
       ...org,
       decrypted_password: decrypt(org.cloud_password_encrypted),
@@ -40,7 +45,8 @@ export async function handle({ event, resolve }) {
   // 3. INJECT MOCK USER (So our rename/edit APIs have a role to check)
   event.locals.user = {
     id: 'mock_admin_1',
-    role: 'Admin'
+    role: 'Admin',
+    name: 'Lennart'
   };
 
   return await resolve(event);
