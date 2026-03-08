@@ -7,6 +7,7 @@ declare global {
 				organisation_id: string;
 				subdomain: string;
 				organization_name: string;
+				cloud_name: string;
 				cloud_url: string;
 				cloud_username: string;
 				cloud_directory: string;

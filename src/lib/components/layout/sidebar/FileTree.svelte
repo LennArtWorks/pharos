@@ -3,7 +3,7 @@
 	import SidebarSection from './SidebarSection.svelte';
 	import Folder from '$lib/components/blocks/Folder.svelte';
 	import File from '$lib/components/blocks/File.svelte';
-	import { type FSRNode, isInternalExtension } from '$lib/config/filesystem';
+	import { FILE_TYPE_CONFIG, type FSRNode, getFileConfig } from '$lib/config/filesystem';
 	import { PERMISSIONS } from '$lib/config/permissions';
 	import { can } from '$lib/utils/permissions';
 
@@ -61,6 +61,17 @@
 			editingId = null;
 		}
 	}
+
+	// Helper to decide if we show the extension in the UI
+	function getDisplayName(node: FSRNode) {
+		const config = getFileConfig(node.extension);
+		// If it's an internal OS file (doc, task, etc.), we usually hide the extension
+		if (config.type !== 'file') return node.name; // Workspaces/Folders
+
+		// Check if it's an internal type defined in our config
+		const isInternal = node.uiFileType in FILE_TYPE_CONFIG.internal;
+		return isInternal ? node.name : node.name + node.extension;
+	}
 </script>
 
 {#snippet renderNodes(nodes: FSRNode[])}
@@ -74,23 +85,21 @@
 				{@render renderNodes(node.children || [])}
 			</Folder>
 		{:else}
-			{@const internal = isInternalExtension(node.extension)}
 			<File
 				href={`/files/${node.id}`}
 				filetype={node.uiFileType}
-				template={node.isTemplate}
+				template={node.customFields?.isTemplate}
 				isEditing={editingId === node.id}
 				editValue={node.name}
 				onsave={(newName) => handleRenameSubmit(node, newName)}
 				oncancel={() => (editingId = null)}
 				ondblclick={(e: MouseEvent) => {
 					e.stopPropagation();
-					// Verify they have permission before opening the input
 					if ($can(PERMISSIONS.FILES.EDIT)) {
 						editingId = node.id;
 					}
 				}}>
-				{internal ? node.name : node.name + node.extension}
+				{getDisplayName(node)}
 			</File>
 		{/if}
 	{/each}

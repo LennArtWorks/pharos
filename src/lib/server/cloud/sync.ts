@@ -1,6 +1,6 @@
-import { getCloudClient } from './origin/client';
+import { getCloudClient, type CloudConfig } from './origin/client';
 import { setMetaCache } from '../cache';
-import { SYSTEM_CONFIG, getUIFileType, type FSRMeta } from '$lib/config/filesystem';
+import { SYSTEM_CONFIG, type FSRMeta } from '$lib/config/filesystem';
 import { createHash } from 'crypto';
 import { DEFAULT_ROLES } from '$lib/config/permissions';
 import db from '$lib/server/db';
@@ -21,7 +21,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
   if (!orgConfig) throw new Error("No organization config provided to syncCloudIndex");
 
   // 1. Use the modular client!
-  const client = getCloudClient(orgConfig);
+  const client = getCloudClient(orgConfig as CloudConfig);
 
   let rootPath = orgConfig.cloud_directory.startsWith('/') ? orgConfig.cloud_directory : `/${orgConfig.cloud_directory}`;
   if (rootPath.endsWith('/')) rootPath = rootPath.slice(0, -1);
@@ -62,7 +62,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
 
   // 1. Load Existing Meta
   let existingMeta: FSRMeta = {
-    _meta: { schemaVersion: "1.3", lastUpdated: Date.now(), description: "Global index" },
+    _meta: { schemaVersion: "1.4", lastUpdated: Date.now(), description: "Global index" },
     nodes: {}
   };
 
@@ -71,7 +71,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
     existingMeta = JSON.parse(raw as string);
   } catch (e) { console.log("Fresh setup."); }
 
-  // 2. Initial Setup: Create Default Workspace if none in root
+  // 2. Initial Setup: Create Default Workspace if none in root (RESTORED!)
   const rootItems = await client.getDirectoryContents(rootPath);
   const hasWorkspace = rootItems.some(f => f.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE));
 
@@ -96,7 +96,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
 
   initialScan.forEach(file => {
     const id = generateNodeId(file.filename);
-    const existingNode = existingMeta.nodes[id];
+    const existingNode = existingMeta.nodes[id] as any;
 
     if (existingNode) {
       temporaryNameMap[id] = existingNode.name;
@@ -136,7 +136,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
     }
   }
 
-  // 5. Build Final Node Map
+  // 5. Build Final Node Map (UPDATED FOR LEAN JSON STANDARD)
   const finalizedFiles = await client.getDirectoryContents(rootPath, { deep: true });
   const newNodes: Record<string, any> = {};
 
@@ -145,6 +145,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
     if (file.filename === rootPath) return;
 
     const isDir = file.type === 'directory';
+
     // Extract ID safely
     const id = file.basename.split('.')[0]
       .replace(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE, '')
@@ -159,21 +160,27 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
         .replace(SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER, '');
     }
 
-    const extension = isDir ? '' : `.${file.basename.split('.').pop()}`;
-    const existingNode = existingMeta.nodes[id];
+    // Determine the exact physical extension (Crucial for the new server.js path builder)
+    let extension = isDir ? '' : `.${file.basename.split('.').pop()}`;
+    if (isDir) {
+      if (file.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE)) extension = SYSTEM_CONFIG.EXTENSIONS.WORKSPACE;
+      else if (file.basename.endsWith(SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER)) extension = SYSTEM_CONFIG.EXTENSIONS.SYSTEM_FOLDER;
+    }
 
+    const existingNode = existingMeta.nodes[id] as any;
+
+    // LEAN JSON: We strip type, physicalName, and uiFileType.
     newNodes[id] = {
-      type: isDir && file.basename.includes(SYSTEM_CONFIG.EXTENSIONS.WORKSPACE) ? 'workspace' : (isDir ? 'folder' : 'file'),
       name: temporaryNameMap[id] || (isDir ? 'New Folder' : 'New File'),
-      physicalName: file.basename,
       parentId: parentId,
       extension: extension,
       updatedAt: new Date(file.lastmod).getTime(),
       createdAt: existingNode?.createdAt || Date.now(),
-      uiFileType: isDir ? 'folder' : getUIFileType(extension),
       tags: existingNode?.tags || [],
-      isTemplate: existingNode?.isTemplate || false,
-      customFields: existingNode?.customFields || {}
+      customFields: {
+        ...(existingNode?.customFields || {}),
+        isTemplate: existingNode?.isTemplate || existingNode?.customFields?.isTemplate || false
+      }
     };
   });
 

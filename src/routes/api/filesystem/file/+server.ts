@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { getCloudClient } from '$lib/server/cloud/origin/client';
+import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
 import { getFileSystemMeta } from '$lib/server/cloud/service';
 import { readJsonDocument, writeJsonDocument } from '$lib/server/cloud/filetypes/json';
 import type { RequestHandler } from './$types';
@@ -19,19 +19,18 @@ async function resolvePhysicalPath(orgConfig: App.Locals['orgConfig'], nodeId: s
 
   while (currentId && meta.nodes[currentId]) {
     const currentNode: any = meta.nodes[currentId];
-    // Add the physical name to the front of our path array
-    pathParts.unshift(currentNode.physicalName);
-    // Move up to the parent for the next loop
+    // DYNAMIC PATH: Construct physical name using ID + Extension
+    pathParts.unshift(`${currentId}${currentNode.extension}`);
     currentId = currentNode.parentId;
   }
 
   const fullPath = pathParts.join('/');
-  return `/${orgConfig.cloud_directory}/${fullPath}`;
+  return `/${orgConfig.cloud_directory}/${fullPath}`.replace(/\/+/g, '/');
 }
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const id = url.searchParams.get('id');
-  if (!id) return json({ error: 'Missing document ID' }, { status: 400 });
+  if (!id) return json({ error: 'Missing file ID' }, { status: 400 });
 
   const orgConfig = locals.orgConfig;
   if (!orgConfig) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -42,10 +41,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       return json({ error: 'Node not found in filesystem meta' }, { status: 404 });
     }
 
-    const client = getCloudClient(orgConfig);
+    const client = getCloudClient(orgConfig as CloudConfig);
     const documentData = await readJsonDocument(client, physicalPath);
 
-    // Return it nested under 'data' so we don't conflict with Tiptap's 'content' keyword
     return json({ data: documentData });
   } catch (error: any) {
     return json({ error: error.message }, { status: 500 });
@@ -69,7 +67,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'Node not found in filesystem meta' }, { status: 404 });
     }
 
-    const client = getCloudClient(orgConfig);
+    const client = getCloudClient(orgConfig as CloudConfig);
     await writeJsonDocument(client, physicalPath, content);
 
     return json({ success: true, id });

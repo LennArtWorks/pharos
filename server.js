@@ -6,7 +6,7 @@ import { Hocuspocus } from '@hocuspocus/server';
 import { TiptapTransformer } from '@hocuspocus/transformer';
 import { handler } from './build/handler.js';
 
-// Headless Tiptap Extensions for Server-side Schema
+// Headless Tiptap Extensions
 import { Document } from '@tiptap/extension-document';
 import { Paragraph } from '@tiptap/extension-paragraph';
 import { Text } from '@tiptap/extension-text';
@@ -33,32 +33,46 @@ import db from './src/lib/server/db.ts';
 import { readJsonDocument, writeJsonDocument } from './src/lib/server/cloud/filetypes/json.ts';
 import { getCloudClient } from './src/lib/server/cloud/origin/client.ts';
 import { getMetaCache } from './src/lib/server/cache.ts';
-
-// ADDED: We need decrypt so getCloudClient can actually log into Sciebo
 import { decrypt } from './src/lib/server/auth/crypto.ts';
+import { getFileConfig } from './src/lib/config/filesystem.ts';
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 const httpServer = createServer(app);
 
-// ADDED: Helper to turn parentId relationships into a real WebDAV folder path
+// FIXED: Bulletproof path builder that handles legacy and new formats
 function buildCloudPath(cloudDirectory, nodes, targetId) {
   let current = nodes[targetId];
   if (!current) return null;
 
-  let pathSegments = [current.physicalName];
+  // Helper to safely get the physical name
+  const getPhysicalName = (node, id) => {
+    // 1. If physicalName is still in the cache, use it (Backward compatibility)
+    if (node.physicalName) return node.physicalName;
+
+    // 2. If it's a workspace but the extension is empty (Old sync format)
+    if (node.type === 'workspace' && node.extension !== '.workspace') {
+      return `${id}.workspace`;
+    }
+
+    // 3. New standard format
+    return `${id}${node.extension || ''}`;
+  };
+
+  let pathSegments = [getPhysicalName(current, targetId)];
 
   while (current.parentId) {
-    current = nodes[current.parentId];
-    if (current && current.physicalName) {
-      pathSegments.unshift(current.physicalName);
+    const parentId = current.parentId;
+    current = nodes[parentId];
+    if (current) {
+      pathSegments.unshift(getPhysicalName(current, parentId));
     } else {
       break;
     }
   }
 
   const basePath = cloudDirectory ? `/${cloudDirectory}` : '';
-  return `${basePath}/${pathSegments.join('/')}`.replace(/\/+/g, '/'); // ensure no double slashes
+  return `${basePath}/${pathSegments.join('/')}`.replace(/\/+/g, '/');
 }
 
 const hocuspocusServer = new Hocuspocus({
@@ -72,14 +86,9 @@ const hocuspocusServer = new Hocuspocus({
     const { subdomain } = data.context;
     const fileId = data.documentName;
 
-    console.log(`[Persistence] Loading: ${fileId} for ${subdomain}`);
-
     try {
       const org = db.prepare('SELECT * FROM organisations WHERE subdomain = ?').get(subdomain);
       if (!org) throw new Error("Organisation not found");
-
-      // ADDED: Decrypt the password for the cloud client
-      org.decrypted_password = decrypt(org.cloud_password_encrypted);
 
       const meta = getMetaCache(org.organisation_id) || getMetaCache(subdomain);
       const node = meta?.nodes?.[fileId];
@@ -88,7 +97,13 @@ const hocuspocusServer = new Hocuspocus({
         throw new Error("File not found in RAM cache index");
       }
 
-      // ADDED: Calculate the true Sciebo path
+      const config = getFileConfig(node.extension);
+      if (!config.websocket) {
+        return data.document;
+      }
+
+      org.decrypted_password = decrypt(org.cloud_password_encrypted);
+
       const fullPath = buildCloudPath(org.cloud_directory, meta.nodes, fileId);
       console.log(`[Persistence] Mapped ID to Sciebo Path: ${fullPath}`);
 
@@ -100,7 +115,7 @@ const hocuspocusServer = new Hocuspocus({
       return TiptapTransformer.toYdoc(remoteJson, 'default', serverExtensions);
     } catch (error) {
       console.error(`[Persistence Load Error] ${fileId}:`, error.message);
-      return data.document; // return empty doc on fail
+      return data.document;
     }
   },
 
@@ -110,16 +125,16 @@ const hocuspocusServer = new Hocuspocus({
 
     try {
       const org = db.prepare('SELECT * FROM organisations WHERE subdomain = ?').get(subdomain);
-
-      // ADDED: Decrypt the password for the cloud client
-      org.decrypted_password = decrypt(org.cloud_password_encrypted);
-
-      const meta = getMetaCache(org.organisation_id) || getMetaCache(subdomain);
+      const meta = getMetaCache(org?.organisation_id) || getMetaCache(subdomain);
       const node = meta?.nodes?.[fileId];
 
       if (!org || !node) return;
 
-      // ADDED: Calculate the true Sciebo path
+      const config = getFileConfig(node.extension);
+      if (!config.websocket) return;
+
+      org.decrypted_password = decrypt(org.cloud_password_encrypted);
+
       const fullPath = buildCloudPath(org.cloud_directory, meta.nodes, fileId);
 
       const json = TiptapTransformer.fromYdoc(data.document, 'default', serverExtensions);

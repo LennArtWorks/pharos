@@ -3,44 +3,65 @@ import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 export const SYSTEM_CONFIG = {
   // The OS-internal folder for meta.fsrsys
   ID_PREFIX: 'fsr',
-  CONFIG_FOLDER: '.config', // ends with .{SYSTEM_FOLDER}
-  META_FILENAME: 'meta', // ends with .{SYSTEM_FILE}
-  DEFAULT_WORKSPACE: 'Workspace', // this one will be created if there is no workspace in root
-  HIDDEN_PREFIXES: ['.', '_'], // hidden for everyone accept the os itself
+  CONFIG_FOLDER: '.config',
+  META_FILENAME: 'meta',
+  DEFAULT_WORKSPACE: 'Workspace',
+  HIDDEN_PREFIXES: ['.', '_'],
   EXTENSIONS: {
-    SYSTEM_FOLDER: '.sysfolder',      // Folders for privileged users
-    WORKSPACE: '.workspace',    // Root-level organizational folders
-    SYSTEM_FILE: '.fsrsys',           // Meta file extension
-    SECURE_FILE: '.fsrsecure'         // Encrypted/Privileged file extension
+    SYSTEM_FOLDER: '.sysfolder',
+    WORKSPACE: '.workspace',
+    SYSTEM_FILE: '.fsrsys',
+    SECURE_FILE: '.fsrsecure'
   }
+} as const;
+
+// Navigation views mapped to their icons and route paths
+export const VIEW_CONFIG = {
+  recentTopics: { active: true, icon: 'home', label: "Recent Topics", path: '/dashboard/recent' },
+  myTasks: { active: true, icon: 'person', label: "My Tasks", path: '/dashboard/tasks' },
+  calendar: { active: true, icon: 'calendar', label: "Calendar", path: '/dashboard/calendar' },
+  eMails: { active: true, icon: 'mail', label: "Mails", path: '/dashboard/mail' }
 } as const;
 
 export const FILE_TYPE_CONFIG = {
-  // Navigation views mapped to their icons and route paths
-  views: {
-    recentTopics: { icon: 'home', label: "Recent Topics", path: '/dashboard/recent' },
-    myTasks: { icon: 'person', label: "My Tasks", path: '/dashboard/tasks' },
-    calendar: { icon: 'calendar', label: "Calendar", path: '/dashboard/calendar' },
-    eMails: { icon: 'mail', label: "Mails", path: '/dashboard/mail' }
-  },
   // Internal OS files mapped to their icons and extensions
   internal: {
-    document: { icon: 'file', ext: '.fsrdoc', component: "FileContentDocument", websocket: true, newFile: { filename: "New Document", content: "This File is Empty" } },
-    tasks: { icon: 'checkbox', ext: '.fsrtask', component: "FileContentTask", websocket: true },
-    event: { icon: 'calendar', ext: '.fsrevt', component: "FileContentNotSupported", websocket: false }
+    folder: {
+      active: true, type: "folder", icon: 'folder', ext: ['', '.sysfolder'],
+      component: "ContentTypeFolder", websocket: false, defaultContent: {}
+    },
+    workspace: {
+      active: true, type: "workspace", icon: '', ext: ['.workspace'],
+      component: "ContentTypeWorkspace", websocket: false, defaultContent: {}
+    },
+    document: {
+      active: true, type: "file", icon: 'file', ext: ['.fsrdoc'],
+      component: "ContentTypeDocument", websocket: true,
+      defaultContent: { type: "doc", name: "New Document", content: [{ type: "paragraph", content: [] }] }
+    },
+    tasks: {
+      active: false, type: "file", icon: 'checkbox', ext: ['.fsrtasks'],
+      component: "ContentTypeTasks", websocket: true,
+      defaultContent: { name: "New Tasksboard", columns: [{ id: "todo", title: "To Do", tasks: [] }] }
+    },
+    event: {
+      active: false, type: "file", icon: 'calendar', ext: ['.fsrevt'],
+      component: "ContentTypeNotSupported", websocket: true,
+      defaultContent: { name: "New Event", date: null, attendees: [] }
+    },
   },
   // Standard external files
   external: {
-    pdf: { icon: 'file', ext: '.pdf', component: "FileContentPreview", websocket: false },
-    spreadsheet: { icon: 'file-table', ext: '.xlsx', component: "FileContentNotSupported", websocket: false },
-    image: { icon: 'castle', ext: '.jpg', component: "FileContentPreview", websocket: false },
-    folder: { icon: 'folder', ext: '', component: null, websocket: false },
-    unknown: { icon: 'circled-question-small', ext: '', component: "FileContentNotSupported", websocket: false }
+    pdf: { active: true, type: "file", icon: 'file', ext: ['.pdf'], component: "ContentTypePreview", websocket: false },
+    spreadsheet: { active: true, type: "file", icon: 'file-table', ext: ['.xlsx', '.csv'], component: "ContentTypeNotSupported", websocket: false },
+    image: { active: true, type: "file", icon: 'castle', ext: ['.jpg', '.jpeg', '.png', '.gif', '.webp'], component: "ContentTypePreview", websocket: false },
+    unknown: { active: true, type: "file", icon: 'circled-question-small', ext: [''], component: "ContentTypeNotSupported", websocket: false }
   }
 } as const;
 
+// Types
 export type UIFileIconType =
-  | keyof typeof FILE_TYPE_CONFIG.views
+  | keyof typeof VIEW_CONFIG
   | keyof typeof FILE_TYPE_CONFIG.internal
   | keyof typeof FILE_TYPE_CONFIG.external;
 
@@ -49,9 +70,9 @@ export interface FSRNode {
   parentId: string | null;
   type: 'workspace' | 'folder' | 'file';
   name: string;
-  physicalName: string;
+  physicalName: string; // Dynamically generated in SvelteKit: id + extension
   extension: string;
-  uiFileType: UIFileIconType;
+  uiFileType: UIFileIconType; // Dynamically generated in SvelteKit via getUIFileType
   updatedAt: number;
   createdAt: number;
   isTemplate?: boolean;
@@ -60,24 +81,47 @@ export interface FSRNode {
   children?: FSRNode[];
 }
 
+// The physical representation saved in meta.fsrsys (stripped of UI/dynamic fields)
 export interface FSRMeta {
   _meta: { schemaVersion: string; lastUpdated: number; description: string };
-  nodes: Record<string, Omit<FSRNode, 'id' | 'children' | 'uiFileType'>>;
+  nodes: Record<string, Omit<FSRNode, 'id' | 'children' | 'uiFileType' | 'physicalName' | 'type'>>;
 }
 
-export function isInternalExtension(ext: string): boolean {
-  return Object.values(FILE_TYPE_CONFIG.internal).some(config => config.ext === ext);
+// --- Helper Functions ---
+
+export function getFileConfig(extension: string) {
+  const ext = (extension || '').toLowerCase();
+
+  // Cast cfg.ext to readonly string[] to prevent the 'never' TS error
+  for (const cfg of Object.values(FILE_TYPE_CONFIG.internal)) {
+    if ((cfg.ext as readonly string[]).includes(ext)) return cfg;
+  }
+  for (const cfg of Object.values(FILE_TYPE_CONFIG.external)) {
+    if ((cfg.ext as readonly string[]).includes(ext)) return cfg;
+  }
+
+  return FILE_TYPE_CONFIG.external.unknown;
+}
+
+export function isInternalExtension(extension: string): boolean {
+  const ext = (extension || '').toLowerCase();
+  return Object.values(FILE_TYPE_CONFIG.internal).some(cfg =>
+    (cfg.ext as readonly string[]).includes(ext)
+  );
 }
 
 export function getUIFileType(extension: string | undefined): UIFileIconType {
-  if (!extension) return 'unknown';
-  const ext = extension.toLowerCase();
+  const ext = (extension || '').toLowerCase();
 
   for (const [key, cfg] of Object.entries(FILE_TYPE_CONFIG.internal)) {
-    if (cfg.ext === ext) return key as UIFileIconType;
+    if ((cfg.ext as readonly string[]).includes(ext)) return key as UIFileIconType;
   }
   for (const [key, cfg] of Object.entries(FILE_TYPE_CONFIG.external)) {
-    if ((cfg as any).ext === ext) return key as UIFileIconType;
+    if ((cfg.ext as readonly string[]).includes(ext)) return key as UIFileIconType;
   }
   return 'unknown';
+}
+
+export function isWebsocketEnabled(extension: string): boolean {
+  return getFileConfig(extension).websocket;
 }

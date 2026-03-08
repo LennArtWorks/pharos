@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 	import { cn } from '$lib/utils';
-	import { FILE_TYPE_CONFIG, type UIFileIconType } from '$lib/config/filesystem';
+	import { FILE_TYPE_CONFIG, VIEW_CONFIG, type UIFileIconType } from '$lib/config/filesystem';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
@@ -50,10 +50,12 @@
 	let iconName = $derived(
 		(() => {
 			if (loading) return 'clock';
+
 			const config =
-				FILE_TYPE_CONFIG.views[filetype as keyof typeof FILE_TYPE_CONFIG.views] ||
+				VIEW_CONFIG[filetype as keyof typeof VIEW_CONFIG] ||
 				FILE_TYPE_CONFIG.internal[filetype as keyof typeof FILE_TYPE_CONFIG.internal] ||
 				FILE_TYPE_CONFIG.external[filetype as keyof typeof FILE_TYPE_CONFIG.external];
+
 			return (config?.icon || 'circled-alert') as FigmaIconName;
 		})()
 	);

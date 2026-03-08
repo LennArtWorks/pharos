@@ -24,17 +24,16 @@ export async function handle({ event, resolve }) {
   const org = db.prepare('SELECT * FROM organisations WHERE subdomain = ?').get(subdomain) as OrganisationRow | undefined;
 
   if (org) {
-    let parsedRoles = {};
+    let parsedRoles = DEFAULT_ROLES;
     try {
-      parsedRoles = org.roles_json ? JSON.parse(org.roles_json) : DEFAULT_ROLES;
-    } catch (e) {
-      parsedRoles = DEFAULT_ROLES;
-    }
+      if (org.roles_json) parsedRoles = JSON.parse(org.roles_json);
+    } catch (e) { /* fallback to default */ }
 
+    // DYNAMIC SPREAD: All DB columns (cloud_name, cloud_url, etc.) are passed through
     event.locals.orgConfig = {
       ...org,
       decrypted_password: decrypt(org.cloud_password_encrypted),
-      roles: parsedRoles // <--- Attached securely and instantly
+      roles: parsedRoles
     };
   }
 

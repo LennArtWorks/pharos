@@ -30,6 +30,11 @@ export function getMetaCache(orgId: string): any | null {
   return entry.data;
 }
 
+export function hasMetaCache(orgId: string): boolean {
+  const entry = metaCache.get(orgId);
+  return !!entry && Date.now() <= entry.expiresAt;
+}
+
 export function setMetaCache(orgId: string, data: any, ttlMs: number = DEFAULT_TTL) {
   metaCache.set(orgId, { data, expiresAt: Date.now() + ttlMs });
 }

@@ -1,28 +1,42 @@
 <script lang="ts">
-	import type { FSRNode } from '$lib/config/filesystem';
-	import FileContentDocument from './filetypes/FileContentDocument.svelte';
-	import FileContentFolder from './filetypes/FileContentFolder.svelte';
+	import { getFileConfig, type FSRNode } from '$lib/config/filesystem';
+	import type { Component } from 'svelte';
+
+	// Import the actual Svelte components
+	import ContentTypeFolder from './filetypes/ContentTypeFolder.svelte';
+	import ContentTypeWorkspace from './filetypes/ContentTypeWorkspace.svelte';
+	import ContentTypeDocument from './filetypes/ContentTypeDocument.svelte';
+	import ContentTypePreview from './filetypes/ContentTypePreview.svelte';
+	import ContentTypeTasks from './filetypes/ContentTypeTasks.svelte';
+	import ContentTypeNotSupported from './filetypes/ContentTypeNotSupported.svelte';
 
 	let { node }: { node: FSRNode | null } = $props();
+	type FSRComponent = Component<{ node: FSRNode }>;
+
+	// This is the "Bridge" between your config strings and the actual code
+	const componentRegistry = {
+		ContentTypeFolder,
+		ContentTypeWorkspace,
+		ContentTypeDocument,
+		ContentTypePreview,
+		ContentTypeTasks,
+		ContentTypeNotSupported
+	};
+
+	let ActiveComponent = $derived(() => {
+		if (!node) return null;
+		const config = getFileConfig(node.extension);
+
+		// Look up the component, fallback to NotSupported if the string doesn't match
+		return (componentRegistry[config.component] || ContentTypeNotSupported) as FSRComponent;
+	});
 </script>
 
 <div class="flex-1 overflow-y-auto">
-	{#if !node}
-		<div class="text-ink-40 flex h-full items-center justify-center">
-			<p>File not found or loading...</p>
-		</div>
-	{:else}
+	{#if !node}{:else}
 		{#key node.id}
-			{#if node.type === 'workspace' || node.type === 'folder' || node.uiFileType === 'folder'}
-				<FileContentFolder {node} />
-			{:else if node.uiFileType === 'document'}
-				<FileContentDocument {node} />
-			{:else}
-				<div class="p-8">
-					<h1 class="mb-4 text-3xl font-bold">{node.name}</h1>
-					<p class="text-ink-50">Preview not available for this file type {node.extension} ({node.uiFileType}).</p>
-				</div>
-			{/if}
+			{@const Component = ActiveComponent()}
+			<Component {node} />
 		{/key}
 	{/if}
 </div>

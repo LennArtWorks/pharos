@@ -1,9 +1,14 @@
 import { getScieboClient } from './sciebo';
-// import { getNextcloudClient } from './nextcloud';
-// import { getAWSClient } from './aws';
 
-export function getCloudClient(orgConfig: any) {
-  // Read the cloud_name from the database to determine which adapter to use
+// Explicit interface to ensure we always have the decrypted credentials
+export interface CloudConfig {
+  cloud_name: string;
+  cloud_url: string;
+  cloud_username: string;
+  decrypted_password?: string; // The OS must provide this
+}
+
+export function getCloudClient(orgConfig: CloudConfig) {
   switch (orgConfig.cloud_name) {
     case 'sciebo':
     default:
