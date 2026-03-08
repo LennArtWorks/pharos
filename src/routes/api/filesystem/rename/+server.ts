@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { getCloudClient } from '$lib/server/cloud/client';
+import { getCloudClient } from '$lib/server/cloud/origin/client';
 import { SYSTEM_CONFIG, type FSRMeta } from '$lib/config/filesystem';
 import { PERMISSIONS, hasPermission } from '$lib/config/permissions';
 

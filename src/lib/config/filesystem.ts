@@ -18,24 +18,24 @@ export const SYSTEM_CONFIG = {
 export const FILE_TYPE_CONFIG = {
   // Navigation views mapped to their icons and route paths
   views: {
-    recentTopics: { icon: 'home', path: '/dashboard/recent' },
-    myTasks: { icon: 'person', path: '/dashboard/tasks' },
-    calendar: { icon: 'calendar', path: '/dashboard/calendar' },
-    eMails: { icon: 'mail', path: '/dashboard/mail' }
+    recentTopics: { icon: 'home', label: "Recent Topics", path: '/dashboard/recent' },
+    myTasks: { icon: 'person', label: "My Tasks", path: '/dashboard/tasks' },
+    calendar: { icon: 'calendar', label: "Calendar", path: '/dashboard/calendar' },
+    eMails: { icon: 'mail', label: "Mails", path: '/dashboard/mail' }
   },
   // Internal OS files mapped to their icons and extensions
   internal: {
-    document: { icon: 'file', ext: '.fsrdoc' },
-    tasks: { icon: 'checkbox', ext: '.fsrtask' },
-    event: { icon: 'calendar', ext: '.fsrevt' }
+    document: { icon: 'file', ext: '.fsrdoc', component: "FileContentDocument", websocket: true, newFile: { filename: "New Document", content: "This File is Empty" } },
+    tasks: { icon: 'checkbox', ext: '.fsrtask', component: "FileContentTask", websocket: true },
+    event: { icon: 'calendar', ext: '.fsrevt', component: "FileContentNotSupported", websocket: false }
   },
   // Standard external files
   external: {
-    pdf: { icon: 'file', ext: '.pdf' },
-    spreadsheet: { icon: 'file-table', ext: '.xlsx' },
-    image: { icon: 'castle', ext: '.jpg' },
-    folder: { icon: 'folder', ext: '' },
-    unknown: { icon: 'circled-question-small', ext: '' }
+    pdf: { icon: 'file', ext: '.pdf', component: "FileContentPreview", websocket: false },
+    spreadsheet: { icon: 'file-table', ext: '.xlsx', component: "FileContentNotSupported", websocket: false },
+    image: { icon: 'castle', ext: '.jpg', component: "FileContentPreview", websocket: false },
+    folder: { icon: 'folder', ext: '', component: null, websocket: false },
+    unknown: { icon: 'circled-question-small', ext: '', component: "FileContentNotSupported", websocket: false }
   }
 } as const;
 

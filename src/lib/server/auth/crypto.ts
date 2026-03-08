@@ -1,11 +1,19 @@
 import crypto from 'crypto';
-import { env } from '$env/dynamic/private';
+
+// FIXED: Use standard Node process.env instead of SvelteKit's virtual $env.
+// This allows both SvelteKit and server.js to use this file.
+const rawKey = process.env.DATABASE_ENCRYPTION_KEY;
+
+if (!rawKey) {
+  console.warn("WARNING: DATABASE_ENCRYPTION_KEY is not set in environment!");
+}
 
 const ALGORITHM = 'aes-256-gcm';
+
 // This ensures your key is the correct length for AES-256
 const SECRET_KEY = crypto
   .createHash('sha256')
-  .update(String(env.DATABASE_ENCRYPTION_KEY))
+  .update(String(rawKey))
   .digest('base64')
   .substring(0, 32);
 

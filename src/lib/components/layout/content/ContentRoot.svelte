@@ -20,7 +20,7 @@
 			{:else}
 				<div class="p-8">
 					<h1 class="mb-4 text-3xl font-bold">{node.name}</h1>
-					<p class="text-ink-50">Preview not available for this file type ({node.uiFileType}).</p>
+					<p class="text-ink-50">Preview not available for this file type {node.extension} ({node.uiFileType}).</p>
 				</div>
 			{/if}
 		{/key}

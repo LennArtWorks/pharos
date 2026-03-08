@@ -18,7 +18,7 @@ async function resolvePhysicalPath(orgConfig: App.Locals['orgConfig'], nodeId: s
   const pathParts: string[] = [];
 
   while (currentId && meta.nodes[currentId]) {
-    const currentNode = meta.nodes[currentId];
+    const currentNode: any = meta.nodes[currentId];
     // Add the physical name to the front of our path array
     pathParts.unshift(currentNode.physicalName);
     // Move up to the parent for the next loop

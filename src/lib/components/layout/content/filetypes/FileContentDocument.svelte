@@ -5,13 +5,16 @@
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
-	import type { FSRNode } from '$lib/config/filesystem';
-	import { GLOBAL_SETTINGS } from '$lib/config/globalSetting';
 
+	import * as Y from 'yjs';
+	import { HocuspocusProvider } from '@hocuspocus/provider';
+	import Collaboration from '@tiptap/extension-collaboration';
+	import CollaborationCaret from '@tiptap/extension-collaboration-caret';
+
+	import type { FSRNode } from '$lib/config/filesystem';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 
-	// Real permissions!
 	import { can } from '$lib/utils/permissions';
 	import { PERMISSIONS } from '$lib/config/permissions';
 
@@ -19,14 +22,13 @@
 
 	let editorElement: HTMLElement;
 	let bubbleMenuElement: HTMLElement;
-	let editor: Editor | null = $state(null);
 
-	// Derive edit permission reactively
+	// Clean variables
+	let ydoc: Y.Doc | null = null;
+	let editor: Editor | null = null;
+	let provider: HocuspocusProvider | null = null;
+
 	let canEdit = $derived($can(PERMISSIONS.FILES.EDIT));
-
-	let saveTimeout: ReturnType<typeof setTimeout>;
-	let isDirty = $state(false);
-	let isSaving = $state(false); // Useful if you want to show a spinner somewhere
 
 	let isTextDropdownOpen = $state(false);
 	let isListDropdownOpen = $state(false);
@@ -47,68 +49,54 @@
 		codeBlock: false
 	});
 
-	// --- 1. PRODUCTION LOAD ---
-	async function loadDocumentContent() {
-		try {
-			const res = await fetch(`/api/filesystem/documents?id=${node.id}`);
-			if (res.ok) {
-				const payload = await res.json();
+	onMount(() => {
+		console.log('[DEBUG 1] Component Mounted. Starting setup...');
+		console.log('[DEBUG 2] Editor Element exists?', !!editorElement);
+		console.log('[DEBUG 3] Bubble Menu Element exists?', !!bubbleMenuElement);
 
-				// If we have data and it looks like a Tiptap doc, return it!
-				if (payload.data && payload.data.type === 'doc') {
-					return payload.data;
-				}
-			}
-		} catch (e) {
-			console.error('Failed to load document content:', e);
-		}
+		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+		const wsUrl = `${protocol}//${window.location.host}/ws`;
+		console.log('[DEBUG 4] Connecting to WS URL:', wsUrl);
 
-		// Fallback/Template for empty or brand new files
-		return `
-      <h2>${node.name}</h2>
-      <p>Start writing here...</p>
-    `;
-	}
+		ydoc = new Y.Doc();
 
-	// --- 2. PRODUCTION SAVE ---
-	async function saveContent() {
-		if (!isDirty || !editor || !canEdit) return;
+		provider = new HocuspocusProvider({
+			url: wsUrl,
+			name: node.id,
+			document: ydoc
+		});
 
-		isSaving = true;
-		isDirty = false; // Optimistically clear the dirty flag
-		const jsonContent = editor.getJSON();
+		provider.on('status', ({ status }: { status: string }) => {
+			console.log(`[WS STATUS] ${status}`);
+		});
+		provider.on('synced', () => {
+			console.log(`[WS SYNCED] Document is fully synced with server!`);
+		});
 
-		try {
-			// Send the JSON to your backend
-			await fetch('/api/filesystem/documents', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					id: node.id,
-					content: jsonContent
-				})
-			});
-			console.log(`[SAVED] ${node.id} successfully synced to backend.`);
-		} catch (e) {
-			console.error('Failed to save document:', e);
-			isDirty = true; // Revert dirty flag so it tries again
-		} finally {
-			isSaving = false;
-		}
-	}
+		const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+		const currentUser = { name: 'FSR Member', color: randomColor };
 
-	onMount(async () => {
-		// Wait for the content to fetch before booting the editor
-		const initialContent = await loadDocumentContent();
+		console.log('[DEBUG 5] Booting Tiptap Editor...');
 
 		editor = new Editor({
 			element: editorElement,
-			editable: canEdit, // Locks the editor if they don't have permission
+			editable: canEdit,
 			extensions: [
-				StarterKit,
+				StarterKit.configure({ history: false } as any),
 				Underline,
 				Link.configure({ openOnClick: false }),
-				...(canEdit
+
+				Collaboration.configure({
+					document: ydoc
+				}),
+
+				CollaborationCaret.configure({
+					provider: provider,
+					user: currentUser
+				}),
+
+				// Always load it; Tiptap hides it automatically when read-only
+				...(bubbleMenuElement
 					? [
 							BubbleMenu.configure({
 								element: bubbleMenuElement,
@@ -117,17 +105,9 @@
 						]
 					: [])
 			],
-			content: initialContent,
 			editorProps: {
 				attributes: { class: 'focus:outline-none min-h-full pb-32' }
 			},
-			onUpdate: () => {
-				if (!canEdit) return;
-				isDirty = true;
-				clearTimeout(saveTimeout);
-				saveTimeout = setTimeout(saveContent, GLOBAL_SETTINGS.FILES.AUTOSAVE_DELAY_MS);
-			},
-			// FIX: onTransaction fires on EVERY state change (typing, clicking buttons, selecting)
 			onTransaction: ({ editor }) => {
 				activeStates = {
 					bold: editor.isActive('bold'),
@@ -146,9 +126,10 @@
 				};
 			}
 		});
+
+		console.log('[DEBUG 6] Editor Mount Complete! Crash avoided.');
 	});
 
-	// Watch for permission changes and lock/unlock editor instantly
 	$effect(() => {
 		if (editor && editor.isEditable !== canEdit) {
 			editor.setEditable(canEdit);
@@ -156,15 +137,14 @@
 	});
 
 	onDestroy(() => {
-		clearTimeout(saveTimeout);
-		if (isDirty) saveContent();
 		if (editor) editor.destroy();
+		if (provider) provider.destroy();
+		if (ydoc) ydoc.destroy();
 	});
 
 	function toggle(action: () => void) {
 		if (!editor || !canEdit) return;
 		action();
-		// Force UI state update immediately after clicking, just in case
 		editor.chain().focus().run();
 		isTextDropdownOpen = false;
 		isListDropdownOpen = false;
@@ -296,7 +276,6 @@
 </div>
 
 <style>
-	/* Base Editor Styling remains the same */
 	:global(.editor-content .ProseMirror > * + *) {
 		margin-top: 1em;
 	}
@@ -339,10 +318,36 @@
 		font-style: italic;
 		color: var(--ink-50, #6b7280);
 	}
-
 	:global(.tippy-box) {
 		background-color: transparent !important;
 		border: none !important;
 		z-index: 50 !important;
+	}
+
+	/* The blinking vertical line */
+	:global(.collaboration-carets__caret) {
+		border-left: 1px solid #0d0d0d;
+		border-right: 1px solid #0d0d0d;
+		margin-left: -1px;
+		margin-right: -1px;
+		pointer-events: none;
+		position: relative;
+		word-break: normal;
+	}
+
+	/* The floating name tag */
+	:global(.collaboration-carets__label) {
+		border-radius: 3px 3px 3px 0;
+		color: #ffffff;
+		font-size: 12px;
+		font-weight: 600;
+		font-style: normal;
+		left: -1px;
+		line-height: normal;
+		padding: 2px 6px;
+		position: absolute;
+		top: -1.4em;
+		user-select: none;
+		white-space: nowrap;
 	}
 </style>

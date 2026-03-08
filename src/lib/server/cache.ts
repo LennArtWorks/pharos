@@ -4,36 +4,34 @@
  * Wipes completely if the Node.js server restarts.
  */
 
+// src/lib/server/cache.ts
 interface CacheEntry {
   data: any;
   expiresAt: number;
 }
 
-// The actual RAM storage
-const metaCache = new Map<string, CacheEntry>();
+// Create a true Singleton using globalThis to bridge SvelteKit and server.js
+const _global = globalThis as any;
+if (!_global.__fsrMetaCache) {
+  _global.__fsrMetaCache = new Map<string, CacheEntry>();
+}
 
-// Default TTL: 15 minutes in milliseconds
+const metaCache: Map<string, CacheEntry> = _global.__fsrMetaCache;
 const DEFAULT_TTL = 15 * 60 * 1000;
 
 export function getMetaCache(orgId: string): any | null {
   const entry = metaCache.get(orgId);
-
   if (!entry) return null;
 
-  // Check if the cache has expired
   if (Date.now() > entry.expiresAt) {
-    metaCache.delete(orgId); // Clean up old data
+    metaCache.delete(orgId);
     return null;
   }
-
   return entry.data;
 }
 
 export function setMetaCache(orgId: string, data: any, ttlMs: number = DEFAULT_TTL) {
-  metaCache.set(orgId, {
-    data,
-    expiresAt: Date.now() + ttlMs
-  });
+  metaCache.set(orgId, { data, expiresAt: Date.now() + ttlMs });
 }
 
 export function clearMetaCache(orgId: string) {
