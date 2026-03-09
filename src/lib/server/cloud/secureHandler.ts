@@ -1,57 +1,52 @@
 import { encrypt, decrypt } from '$lib/server/auth/crypto';
 import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
+import { SYSTEM_CONFIG } from '$lib/config/filesystem';
 
-const BACKUP_DIR = '.config/backups';
-
-export async function readSecureFile(orgConfig: CloudConfig, filePath: string) {
+export async function readSecureFile(orgConfig: CloudConfig, relativePath: string) {
   const client = getCloudClient(orgConfig);
+  const fullPath = `/${relativePath}`.replace(/\/+/g, '/');
 
   try {
-    if (await client.exists(filePath) === false) {
-      return null;
-    }
+    if (await client.exists(fullPath) === false) return null;
 
-    // Assuming your client returns a string for text formats
-    const encryptedContent = (await client.getFileContents(filePath, { format: 'text' })) as string;
+    const encryptedContent = (await client.getFileContents(fullPath, { format: 'text' })) as string;
     const decryptedText = decrypt(encryptedContent);
 
     return JSON.parse(decryptedText);
   } catch (err) {
-    console.error(`Failed to read or decrypt secure file: ${filePath}`, err);
+    console.error(`Failed to read secure file: ${fullPath}`, err);
     throw err;
   }
 }
 
-export async function writeSecureFileWithBackup(orgConfig: CloudConfig, filePath: string, data: any) {
+export async function writeSecureFileWithBackup(orgConfig: CloudConfig, relativePath: string, data: any) {
   const client = getCloudClient(orgConfig);
 
+  const fullPath = `/${relativePath}`.replace(/\/+/g, '/');
+  const configDir = `/${SYSTEM_CONFIG.CONFIG_FOLDER}`;
+  const backupDir = `${configDir}/backups`;
+
   try {
-    // 1. Ensure the backup directory exists
-    if (await client.exists(BACKUP_DIR) === false) {
-      await client.createDirectory(BACKUP_DIR);
-    }
+    if (await client.exists(configDir) === false) await client.createDirectory(configDir);
+    if (await client.exists(backupDir) === false) await client.createDirectory(backupDir);
 
-    // 2. Create a permanent, timestamped backup of the current state
-    if (await client.exists(filePath)) {
+    if (await client.exists(fullPath)) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = filePath.split('/').pop();
-      const backupPath = `${BACKUP_DIR}/${filename}.${timestamp}.bak`;
+      const filename = fullPath.split('/').pop();
+      const backupPath = `${backupDir}/${filename}.${timestamp}.bak`;
 
-      // Copy the existing file to the backup directory
-      await client.copyFile(filePath, backupPath);
+      await client.copyFile(fullPath, backupPath);
       console.log(`Created permanent secure backup at ${backupPath}`);
     }
 
-    // 3. Encrypt the new payload
-    const rawJson = JSON.stringify(data, null, 2); // Indented just in case someone looks at the raw encrypted string
+    const rawJson = JSON.stringify(data, null, 2);
     const encryptedContent = encrypt(rawJson);
 
-    // 4. Write the encrypted string to the cloud
-    await client.putFileContents(filePath, encryptedContent);
-    console.log(`Successfully wrote encrypted file to ${filePath}`);
+    await client.putFileContents(fullPath, encryptedContent);
+    console.log(`Successfully wrote encrypted file to ${fullPath}`);
 
   } catch (err) {
-    console.error(`Failed to write secure file: ${filePath}`, err);
-    throw new Error('Secure file write failed. Check server logs.');
+    console.error(`Failed to write secure file: ${fullPath}`, err);
+    throw new Error('Secure file write failed.');
   }
 }

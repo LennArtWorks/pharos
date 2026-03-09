@@ -5,6 +5,7 @@ import { WebSocketServer } from 'ws';
 import { Hocuspocus } from '@hocuspocus/server';
 import { TiptapTransformer } from '@hocuspocus/transformer';
 import { handler } from './build/handler.js';
+import * as Y from 'yjs';
 
 // Headless Tiptap Extensions
 import { Document } from '@tiptap/extension-document';
@@ -40,22 +41,16 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 const httpServer = createServer(app);
 
-// FIXED: Bulletproof path builder that handles legacy and new formats
-function buildCloudPath(cloudDirectory, nodes, targetId) {
+// FIXED: Removed the cloudDirectory argument, the WebDAV client handles the root path now.
+function buildCloudPath(nodes, targetId) {
   let current = nodes[targetId];
   if (!current) return null;
 
-  // Helper to safely get the physical name
   const getPhysicalName = (node, id) => {
-    // 1. If physicalName is still in the cache, use it (Backward compatibility)
     if (node.physicalName) return node.physicalName;
-
-    // 2. If it's a workspace but the extension is empty (Old sync format)
     if (node.type === 'workspace' && node.extension !== '.workspace') {
       return `${id}.workspace`;
     }
-
-    // 3. New standard format
     return `${id}${node.extension || ''}`;
   };
 
@@ -71,11 +66,13 @@ function buildCloudPath(cloudDirectory, nodes, targetId) {
     }
   }
 
-  const basePath = cloudDirectory ? `/${cloudDirectory}` : '';
-  return `${basePath}/${pathSegments.join('/')}`.replace(/\/+/g, '/');
+  return `/${pathSegments.join('/')}`.replace(/\/+/g, '/');
 }
 
 const hocuspocusServer = new Hocuspocus({
+  name: 'FSR-OS-Server',
+  debounce: 2000, // Re-added the debounce for efficient saving
+
   async onConnect(data) {
     const host = data.request.headers.host || '';
     const subdomain = host.split('.')[0];
@@ -104,15 +101,23 @@ const hocuspocusServer = new Hocuspocus({
 
       org.decrypted_password = decrypt(org.cloud_password_encrypted);
 
-      const fullPath = buildCloudPath(org.cloud_directory, meta.nodes, fileId);
-      console.log(`[Persistence] Mapped ID to Sciebo Path: ${fullPath}`);
+      // Updated call signature
+      const fullPath = buildCloudPath(meta.nodes, fileId);
+      console.log(`[Persistence] Loading Sciebo Path: ${fullPath}`);
 
       const client = await getCloudClient(org);
       const remoteJson = await readJsonDocument(client, fullPath);
 
       if (!remoteJson) return data.document;
 
-      return TiptapTransformer.toYdoc(remoteJson, 'default', serverExtensions);
+      const isEmpty = data.document.getXmlFragment('default').firstChild === null;
+
+      if (isEmpty) {
+        const tempDoc = TiptapTransformer.toYdoc(remoteJson, 'default', serverExtensions);
+        Y.applyUpdate(data.document, Y.encodeStateAsUpdate(tempDoc));
+      }
+
+      return data.document;
     } catch (error) {
       console.error(`[Persistence Load Error] ${fileId}:`, error.message);
       return data.document;
@@ -135,7 +140,8 @@ const hocuspocusServer = new Hocuspocus({
 
       org.decrypted_password = decrypt(org.cloud_password_encrypted);
 
-      const fullPath = buildCloudPath(org.cloud_directory, meta.nodes, fileId);
+      // Updated call signature
+      const fullPath = buildCloudPath(meta.nodes, fileId);
 
       const json = TiptapTransformer.fromYdoc(data.document, 'default', serverExtensions);
       const client = await getCloudClient(org);

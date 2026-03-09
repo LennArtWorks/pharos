@@ -37,8 +37,7 @@ export async function POST({ request, locals }) {
 
     // 5. Save back to Cloud
     const client = getCloudClient(locals.orgConfig as CloudConfig);
-    const rootPath = locals.orgConfig.cloud_directory.startsWith('/') ? locals.orgConfig.cloud_directory : `/${locals.orgConfig.cloud_directory}`;
-    const metaPath = `${rootPath}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
+    const metaPath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
 
     await client.putFileContents(metaPath, JSON.stringify(existingMeta, null, 2));
 

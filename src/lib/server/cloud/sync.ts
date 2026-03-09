@@ -23,17 +23,20 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
   // 1. Use the modular client!
   const client = getCloudClient(orgConfig as CloudConfig);
 
-  let rootPath = orgConfig.cloud_directory.startsWith('/') ? orgConfig.cloud_directory : `/${orgConfig.cloud_directory}`;
-  if (rootPath.endsWith('/')) rootPath = rootPath.slice(0, -1);
+  const rootPath = '/';
+  const configPath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}`;
 
-  const configPath = `${rootPath}/${SYSTEM_CONFIG.CONFIG_FOLDER}`;
-  try { await client.createDirectory(configPath); } catch (e) { }
+  try {
+    await client.createDirectory(configPath);
+  } catch (e: any) {
+    console.log("Config dir creation skipped or failed:", e.message);
+  }
 
   /* ---------------------------------------------------------------- *
    * Create Default Roles if no roles.fsrsys is found
    * ---------------------------------------------------------------- */
 
-  const rolesPath = `${configPath}/roles${FILE_TYPE_CONFIG.internal.sysfile.ext[0]}`;
+  const rolesPath = `${configPath}/${SYSTEM_CONFIG.ROLES_FILE.join('')}`;
 
   let activeRoles: Record<string, string[]> = {};
 
@@ -58,7 +61,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
    * update/build meta.fsrsys and setup filetree
    * ---------------------------------------------------------------- */
 
-  const metaPath = `${rootPath}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
+  const metaPath = `${configPath}/${SYSTEM_CONFIG.META_FILE.join('')}`;
 
   // 1. Load Existing Meta
   let existingMeta: FSRMeta = {

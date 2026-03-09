@@ -22,7 +22,10 @@ export async function readJsonDocument(client: any, physicalPath: string) {
 
 export async function writeJsonDocument(client: any, physicalPath: string, data: any) {
   try {
-    const stringifiedContent = JSON.stringify(data, null, 2);
+    // Guard against undefined data by providing an empty valid Tiptap document
+    const safeData = data || { type: 'doc', content: [] };
+    const stringifiedContent = JSON.stringify(safeData, null, 2);
+
     await client.putFileContents(physicalPath, stringifiedContent, { format: 'text' });
     return true;
   } catch (e) {

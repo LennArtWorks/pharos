@@ -25,7 +25,7 @@ async function resolvePhysicalPath(orgConfig: App.Locals['orgConfig'], nodeId: s
   }
 
   const fullPath = pathParts.join('/');
-  return `/${orgConfig.cloud_directory}/${fullPath}`.replace(/\/+/g, '/');
+  return `/${fullPath}`.replace(/\/+/g, '/');
 }
 
 export const GET: RequestHandler = async ({ url, locals }) => {

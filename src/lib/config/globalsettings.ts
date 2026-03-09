@@ -1,4 +1,8 @@
 export const GLOBAL_SETTINGS = {
+  ACCOUNT: {
+    LOGIN_SESSION_DURATION: 30 * 24 * 60 * 60
+  },
+
   APP_INFO: {
     // Used in titles, emails, and UI
     NAME: 'FSR-OS',

@@ -15,13 +15,37 @@
 	let rootNodes = $derived(tree.filter((node) => node.parentId === null));
 
 	onMount(async () => {
-		const res = await fetch('/api/filesystem');
-		const data: FSRNode[] = await res.json();
+		try {
+			// Force the browser to send the fsr_session cookie!
+			const res = await fetch('/api/filesystem', {
+				credentials: 'include'
+			});
 
-		tree = data.sort((a: FSRNode, b: FSRNode) => {
-			const typeOrder = { workspace: 0, folder: 1, file: 2 };
-			return typeOrder[a.type] - typeOrder[b.type];
-		});
+			if (!res.ok) {
+				const errData = await res.json();
+				console.error('[FileTree Error]:', res.status, errData);
+				tree = []; // Fallback gracefully
+				return;
+			}
+
+			const data = await res.json();
+
+			if (!Array.isArray(data)) {
+				console.error('[FileTree Error]: Expected array, got:', data);
+				tree = [];
+				return;
+			}
+
+			tree = data.sort((a: FSRNode, b: FSRNode) => {
+				const typeOrder = { workspace: 0, folder: 1, file: 2 };
+				const orderA = typeOrder[a.type] ?? 2;
+				const orderB = typeOrder[b.type] ?? 2;
+				return orderA - orderB;
+			});
+		} catch (err) {
+			console.error('[FileTree Network Error]:', err);
+			tree = [];
+		}
 	});
 
 	/* ---------------------------------------------------------------- *

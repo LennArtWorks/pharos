@@ -13,7 +13,7 @@ export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
 
   // 2. Fetch raw "Lean" JSON from Sciebo
   const client = getCloudClient(orgConfig as CloudConfig);
-  const metaPath = `/${orgConfig.cloud_directory}/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
+  const metaPath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
 
   try {
     const content = await client.getFileContents(metaPath, { format: "text" });

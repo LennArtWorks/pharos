@@ -17,8 +17,8 @@ interface OrganisationRow {
 }
 
 export async function handle({ event, resolve }) {
-  const url = new URL(event.request.url);
-  const subdomain = url.hostname.split('.')[0];
+  const subdomain = event.url.hostname.split('.')[0];
+  console.log(`[HOOK] Request: ${event.url.pathname} | Subdomain parsed: ${subdomain}`);
 
   // 2. Cast the result to your interface
   const org = db.prepare('SELECT * FROM organisations WHERE subdomain = ?').get(subdomain) as OrganisationRow | undefined;
@@ -28,26 +28,52 @@ export async function handle({ event, resolve }) {
     try {
       if (org.roles_json) {
         const parsed = JSON.parse(org.roles_json);
-        // CRITICAL FIX: Only use the DB roles if it actually contains data
         if (Object.keys(parsed).length > 0) {
           parsedRoles = parsed;
         }
       }
     } catch (e) { /* fallback to default */ }
 
+    // We must attach it to locals so the API and layout can see it
     event.locals.orgConfig = {
       ...org,
       decrypted_password: decrypt(org.cloud_password_encrypted),
       roles: parsedRoles
     };
-  }
 
-  // 3. INJECT MOCK USER (So our rename/edit APIs have a role to check)
-  event.locals.user = {
-    id: 'mock_admin_1',
-    role: 'Admin',
-    name: 'Lennart'
-  };
+    const sessionId = event.cookies.get('fsr_session');
+    let currentUser = null;
+
+    if (sessionId) {
+      // 1. Check if the session exists and is valid for THIS organisation
+      const session = db.prepare(`
+        SELECT account_id, expires_at 
+        FROM sessions 
+        WHERE id = ? AND organisation_id = ?
+      `).get(sessionId, org.organisation_id) as { account_id: string, expires_at: number } | undefined;
+
+      if (session) {
+        if (session.expires_at > Date.now()) {
+          // 2. Valid Session! 
+          // (For right now, we grant 'Admin' so you can test. 
+          // Next step is fetching their real role from RAM Cache)
+          currentUser = {
+            id: session.account_id,
+            role: 'Admin',
+            name: 'Real User'
+          };
+        } else {
+          // 3. Expired Session - Clean it up
+          db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+          event.cookies.delete('fsr_session', { path: '/' });
+        }
+      }
+    }
+
+    // Assign the real user (or null if they aren't logged in, triggering the Anonymous animal!)
+    event.locals.user = currentUser;
+
+  }
 
   return await resolve(event);
 }

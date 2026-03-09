@@ -20,7 +20,7 @@ declare global {
 				role: string;
 				name?: string;
 				color?: string;
-			};
+			} | null;
 		}
 	}
 }
