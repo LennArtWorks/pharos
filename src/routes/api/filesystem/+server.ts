@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { getFileSystemMeta, transformNodesToTree } from '$lib/server/cloud/service';
-import { PERMISSIONS, hasPermission, NOTLOGGEDIN_ROLE } from '$lib/config/permissions';
+import { PERMISSIONS, hasPermission, SETUP_ROLES } from '$lib/config/permissions';
 
 export async function GET({ locals, url }) {
   // 1. Check Tenant Config
@@ -11,7 +11,7 @@ export async function GET({ locals, url }) {
 
   // 2. SECURITY CHECK: Does this user have permission to view files?
   // If locals.user is null (no session cookie), they get the Anonymous role
-  const userRole = locals.user?.role || NOTLOGGEDIN_ROLE;
+  const userRole = locals.user?.role || SETUP_ROLES.GUEST;
   const activeRoles = locals.orgConfig.roles || {};
 
   if (!hasPermission(userRole, PERMISSIONS.FILES.READ, activeRoles)) {

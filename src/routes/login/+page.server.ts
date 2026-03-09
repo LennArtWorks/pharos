@@ -2,9 +2,11 @@ import { fail, redirect } from '@sveltejs/kit';
 import crypto from 'crypto';
 import db from '$lib/server/db';
 import { checkRateLimit } from '$lib/server/auth/rateLimit';
-import { readSecureFile, writeSecureFileWithBackup } from '$lib/server/cloud/secureHandler';
-import { SYSTEM_CONFIG } from '$lib/config/filesystem';
-import { GLOBAL_SETTINGS } from '$lib/config/globalsettings.js';
+import { readSecureFile, writeSecureFile } from '$lib/server/cloud/secureHandler';
+import { FILE_MODIFIERS, FILE_TYPE_CONFIG, SYSTEM_CONFIG } from '$lib/config/filesystem';
+import { GLOBAL_SETTINGS } from '$lib/config/globalsettings';
+import { USER_CONFIG } from '$lib/config/user';
+import { getDefaultProfile } from '$lib/utils/user';
 
 // Helper to generate a 6-digit OTP
 function generateOTP() {
@@ -128,19 +130,22 @@ export const actions = {
       accountId = accountsDb.identities[email].accountId;
       if (!accountsDb.identities[email].isActive) return fail(403, { error: 'Account is deactivated.' });
     } else {
-      // Create new account
-      accountId = `usr_${Date.now()}`;
+      accountId = `${USER_CONFIG.ID_PREFIX}_${Date.now()}`;
+
       accountsDb.identities[email] = {
         accountId,
-        authType: "magic_link", // Or 'otp'
+        authType: "otp",
         isActive: true,
-        securityFlags: {}
       };
-      // Save updated registry back to WebDAV
-      await writeSecureFileWithBackup(orgConfig, accountsPath, accountsDb);
 
-      // TODO: In the future, we should also create their empty profile file here:
-      // `.config/accounts.sysfolder/${accountId}.fsrsys`
+      await writeSecureFile(orgConfig, accountsPath, accountsDb);
+
+      // Dynamischer Pfad aus filesystem.ts
+      const profilePath = `${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.ACCOUNTS_FOLDER.join('')}/${accountId}${FILE_TYPE_CONFIG.internal.sysfile.ext[0]}${FILE_MODIFIERS.SECURE}`;
+      const newProfile = getDefaultProfile(accountId, email);
+
+      await writeSecureFile(orgConfig, profilePath, newProfile);
+      console.log(`[AUTH] Scaffolded new encrypted profile for ${email} at ${profilePath}`);
     }
 
     // 7. Create the Session in SQLite

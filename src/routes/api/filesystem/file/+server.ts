@@ -1,32 +1,9 @@
 import { json } from '@sveltejs/kit';
 import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
-import { getFileSystemMeta } from '$lib/server/cloud/service';
+import { getFileSystemMeta, resolvePhysicalPath } from '$lib/server/cloud/service';
 import { readJsonDocument, writeJsonDocument } from '$lib/server/cloud/filetypes/json';
+import { readSecureFile, writeSecureFile } from '$lib/server/cloud/secureHandler'; // NEW IMPORTS
 import type { RequestHandler } from './$types';
-
-async function resolvePhysicalPath(orgConfig: App.Locals['orgConfig'], nodeId: string): Promise<string | null> {
-  if (!orgConfig) return null;
-
-  const meta = await getFileSystemMeta(orgConfig);
-
-  if (!meta.nodes || !meta.nodes[nodeId]) {
-    return null;
-  }
-
-  // Build the path recursively by climbing up the parent IDs
-  let currentId: string | null = nodeId;
-  const pathParts: string[] = [];
-
-  while (currentId && meta.nodes[currentId]) {
-    const currentNode: any = meta.nodes[currentId];
-    // DYNAMIC PATH: Construct physical name using ID + Extension
-    pathParts.unshift(`${currentId}${currentNode.extension}`);
-    currentId = currentNode.parentId;
-  }
-
-  const fullPath = pathParts.join('/');
-  return `/${fullPath}`.replace(/\/+/g, '/');
-}
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const id = url.searchParams.get('id');
@@ -36,13 +13,22 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   if (!orgConfig) return json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const physicalPath = await resolvePhysicalPath(orgConfig, id);
-    if (!physicalPath) {
-      return json({ error: 'Node not found in filesystem meta' }, { status: 404 });
-    }
+    const meta = await getFileSystemMeta(orgConfig);
+    const node = meta.nodes[id];
+    if (!node) return json({ error: 'Node not found in index' }, { status: 404 });
 
-    const client = getCloudClient(orgConfig as CloudConfig);
-    const documentData = await readJsonDocument(client, physicalPath);
+    const physicalPath = await resolvePhysicalPath(orgConfig, id);
+    if (!physicalPath) return json({ error: 'Could not resolve physical path' }, { status: 404 });
+
+    let documentData;
+
+    // ROUTING LOGIC: If wrapped in .fsrsecure, decrypt it. Otherwise, read standard JSON.
+    if (node.isSecure) {
+      documentData = await readSecureFile(orgConfig, physicalPath);
+    } else {
+      const client = getCloudClient(orgConfig as CloudConfig);
+      documentData = await readJsonDocument(client, physicalPath);
+    }
 
     return json({ data: documentData });
   } catch (error: any) {
@@ -62,13 +48,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'Invalid payload' }, { status: 400 });
     }
 
-    const physicalPath = await resolvePhysicalPath(orgConfig, id);
-    if (!physicalPath) {
-      return json({ error: 'Node not found in filesystem meta' }, { status: 404 });
-    }
+    const meta = await getFileSystemMeta(orgConfig);
+    const node = meta.nodes[id];
+    if (!node) return json({ error: 'Node not found in index' }, { status: 404 });
 
-    const client = getCloudClient(orgConfig as CloudConfig);
-    await writeJsonDocument(client, physicalPath, content);
+    const physicalPath = await resolvePhysicalPath(orgConfig, id);
+    if (!physicalPath) return json({ error: 'Could not resolve physical path' }, { status: 404 });
+
+    // ROUTING LOGIC: Encrypt on the way out if wrapped
+    if (node.isSecure) {
+      // We use standard writeSecureFile here, not the backup version!
+      await writeSecureFile(orgConfig, physicalPath, content);
+    } else {
+      const client = getCloudClient(orgConfig as CloudConfig);
+      await writeJsonDocument(client, physicalPath, content);
+    }
 
     return json({ success: true, id });
   } catch (error: any) {

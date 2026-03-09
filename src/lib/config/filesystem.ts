@@ -1,5 +1,3 @@
-import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
-
 // Navigation views mapped to their icons and route paths
 export const VIEW_CONFIG = {
   recentTopics: { active: true, icon: 'home', label: "Recent Topics", path: '/dashboard/recent' },
@@ -11,10 +9,6 @@ export const VIEW_CONFIG = {
 export const FILE_TYPE_CONFIG = {
   // Internal OS files mapped to their icons and extensions
   internal: {
-    secure: {
-      active: true, type: "file", icon: 'lock', ext: ['.fsrsecure'],
-      component: "ContentTypeNotSupported", websocket: false, defaultContent: {}
-    },
     sysfile: {
       active: true, type: "file", icon: 'settings', ext: ['.fsrsys'],
       component: "ContentTypeNotSupported", websocket: false, defaultContent: {}
@@ -56,18 +50,25 @@ export const FILE_TYPE_CONFIG = {
   }
 } as const;
 
+export const FILE_MODIFIERS = {
+  // extension for ecrypted files (they will be encrypted when laying on the cloud)
+  SECURE: '.fsrsecure',
+};
+
 export const SYSTEM_CONFIG = {
   // The OS-internal folder for meta.fsrsys
   ID_PREFIX: 'fsr',
   CONFIG_FOLDER: '.config', // stores the special system files (like meta, roles, accounts)
   META_FILE: ['meta', FILE_TYPE_CONFIG.internal.sysfile.ext[0]],
   ROLES_FILE: ['roles', FILE_TYPE_CONFIG.internal.sysfile.ext[0]],
-  ACCOUNTS_FILE: ['accounts', FILE_TYPE_CONFIG.internal.secure.ext[0]],
+  ACCOUNTS_FILE: ['accounts', `${FILE_TYPE_CONFIG.internal.sysfile.ext[0]}${FILE_MODIFIERS.SECURE}`],
+  ACCOUNTS_FOLDER: ['accounts', `${FILE_TYPE_CONFIG.internal.sysfolder.ext[0]}`],
+  SECURE_BACKUP_FOLDER: ['backups-secure', `${FILE_TYPE_CONFIG.internal.sysfolder.ext[0]}`], // stores only backups for system relevant secure files
   DEFAULT_WORKSPACE: 'Workspace',
-  HIDDEN_PREFIXES: ['.', '_'],
+  HIDDEN_PREFIXES: ['.', '_'], // completely hidden from the os at any time
 
   // Maps UIFileIconType keys that require the "system.files.*" permission scope
-  SYSTEM_FILE_TYPES: ['sysfolder', 'sysfile', 'secure'] as const
+  SYSTEM_FILE_TYPES: ['sysfolder', 'sysfile'] as const
 } as const;
 
 // Types
@@ -88,6 +89,7 @@ export interface FSRNode {
   updatedAt: number;
   createdAt: number;
   isTemplate?: boolean;
+  isSecure?: boolean;
   tags?: string[];
   customFields?: Record<string, any>;
   children?: FSRNode[];
@@ -96,44 +98,5 @@ export interface FSRNode {
 // header of the meta.fsrsys
 export interface FSRMeta {
   _meta: { schemaVersion: string; lastUpdated: number; description: string };
-  nodes: Record<string, Omit<FSRNode, 'id' | 'children' | 'uiFileType' | 'physicalName' | 'type'>>;
-}
-
-// --- Helper Functions ---
-
-export function getFileConfig(extension: string) {
-  const ext = (extension || '').toLowerCase();
-
-  // Cast cfg.ext to readonly string[] to prevent the 'never' TS error
-  for (const cfg of Object.values(FILE_TYPE_CONFIG.internal)) {
-    if ((cfg.ext as readonly string[]).includes(ext)) return cfg;
-  }
-  for (const cfg of Object.values(FILE_TYPE_CONFIG.external)) {
-    if ((cfg.ext as readonly string[]).includes(ext)) return cfg;
-  }
-
-  return FILE_TYPE_CONFIG.external.unknown;
-}
-
-export function isInternalExtension(extension: string): boolean {
-  const ext = (extension || '').toLowerCase();
-  return Object.values(FILE_TYPE_CONFIG.internal).some(cfg =>
-    (cfg.ext as readonly string[]).includes(ext)
-  );
-}
-
-export function getUIFileType(extension: string | undefined): UIFileIconType {
-  const ext = (extension || '').toLowerCase();
-
-  for (const [key, cfg] of Object.entries(FILE_TYPE_CONFIG.internal)) {
-    if ((cfg.ext as readonly string[]).includes(ext)) return key as UIFileIconType;
-  }
-  for (const [key, cfg] of Object.entries(FILE_TYPE_CONFIG.external)) {
-    if ((cfg.ext as readonly string[]).includes(ext)) return key as UIFileIconType;
-  }
-  return 'unknown';
-}
-
-export function isWebsocketEnabled(extension: string): boolean {
-  return getFileConfig(extension).websocket;
+  nodes: Record<string, Omit<FSRNode, 'id' | 'children' | 'uiFileType' | 'physicalName' | 'type'> & { isSecure?: boolean }>;
 }

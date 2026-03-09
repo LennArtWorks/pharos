@@ -1,17 +1,13 @@
-import { derived } from 'svelte/store';
-import { page } from '$app/stores';
-import { hasPermission, NOTLOGGEDIN_ROLE } from '$lib/config/permissions';
+import { page } from '$app/state';
+import { hasPermission, SETUP_ROLES } from '$lib/config/permissions';
 
 /**
- * A reactive Svelte store that checks permissions against the current user's session.
- * Usage in components: $can('files.edit')
+ * A reactive permission checker.
+ * Usage in Svelte 5 components: can('files.edit')
  */
-export const can = derived(page, ($page) => {
-  return (requiredFlag: string) => {
-    const role = $page.data.user?.role || NOTLOGGEDIN_ROLE;
-    // Fallback just in case, though layout.server.ts guarantees it now
-    const activeRoles = $page.data.activeRoles || {};
+export function can(requiredFlag: string) {
+  const role = page.data?.user?.role || SETUP_ROLES.GUEST;
+  const activeRoles = page.data?.activeRoles || {};
 
-    return hasPermission(role, requiredFlag, activeRoles);
-  };
-});
+  return hasPermission(role, requiredFlag, activeRoles);
+}

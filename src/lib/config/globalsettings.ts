@@ -2,7 +2,13 @@ export const GLOBAL_SETTINGS = {
   ACCOUNT: {
     LOGIN_SESSION_DURATION: 30 * 24 * 60 * 60
   },
+  SECURITY: {
+    // TTL for the central identity registry (used only during login)
+    REGISTRY_CACHE_TTL_MS: 1 * 60 * 1000, // 1 minute
 
+    // TTL for active user profiles (checked on every navigation)
+    PROFILE_CACHE_TTL_MS: 5 * 60 * 1000, // 5 minute
+  },
   APP_INFO: {
     // Used in titles, emails, and UI
     NAME: 'FSR-OS',

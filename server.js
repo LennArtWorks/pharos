@@ -35,35 +35,28 @@ import { readJsonDocument, writeJsonDocument } from './src/lib/server/cloud/file
 import { getCloudClient } from './src/lib/server/cloud/origin/client.ts';
 import { getMetaCache } from './src/lib/server/cache.ts';
 import { decrypt } from './src/lib/server/auth/crypto.ts';
-import { getFileConfig } from './src/lib/config/filesystem.ts';
+import { getFileConfig, buildNodeFilename } from './src/lib/utils/filesystem.ts'; // NEW IMPORT
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 const httpServer = createServer(app);
 
-// FIXED: Removed the cloudDirectory argument, the WebDAV client handles the root path now.
+// UPDATED: Now uses the centralized buildNodeFilename utility
 function buildCloudPath(nodes, targetId) {
-  let current = nodes[targetId];
+  let currentId = targetId;
+  let current = nodes[currentId];
   if (!current) return null;
 
-  const getPhysicalName = (node, id) => {
-    if (node.physicalName) return node.physicalName;
-    if (node.type === 'workspace' && node.extension !== '.workspace') {
-      return `${id}.workspace`;
-    }
-    return `${id}${node.extension || ''}`;
-  };
+  let pathSegments = [];
 
-  let pathSegments = [getPhysicalName(current, targetId)];
-
-  while (current.parentId) {
-    const parentId = current.parentId;
-    current = nodes[parentId];
-    if (current) {
-      pathSegments.unshift(getPhysicalName(current, parentId));
-    } else {
-      break;
-    }
+  while (currentId && nodes[currentId]) {
+    const node = nodes[currentId];
+    const physicalName = buildNodeFilename(currentId, node.extension, {
+      isSecure: node.isSecure,
+      isTemplate: node.isTemplate
+    });
+    pathSegments.unshift(physicalName);
+    currentId = node.parentId;
   }
 
   return `/${pathSegments.join('/')}`.replace(/\/+/g, '/');
@@ -71,7 +64,7 @@ function buildCloudPath(nodes, targetId) {
 
 const hocuspocusServer = new Hocuspocus({
   name: 'FSR-OS-Server',
-  debounce: 2000, // Re-added the debounce for efficient saving
+  debounce: 2000,
 
   async onConnect(data) {
     const host = data.request.headers.host || '';
@@ -90,18 +83,13 @@ const hocuspocusServer = new Hocuspocus({
       const meta = getMetaCache(org.organisation_id) || getMetaCache(subdomain);
       const node = meta?.nodes?.[fileId];
 
-      if (!node) {
-        throw new Error("File not found in RAM cache index");
-      }
+      if (!node) throw new Error("File not found in RAM cache index");
 
       const config = getFileConfig(node.extension);
-      if (!config.websocket) {
-        return data.document;
-      }
+      if (!config.websocket) return data.document;
 
       org.decrypted_password = decrypt(org.cloud_password_encrypted);
 
-      // Updated call signature
       const fullPath = buildCloudPath(meta.nodes, fileId);
       console.log(`[Persistence] Loading Sciebo Path: ${fullPath}`);
 
@@ -113,8 +101,16 @@ const hocuspocusServer = new Hocuspocus({
       const isEmpty = data.document.getXmlFragment('default').firstChild === null;
 
       if (isEmpty) {
-        const tempDoc = TiptapTransformer.toYdoc(remoteJson, 'default', serverExtensions);
-        Y.applyUpdate(data.document, Y.encodeStateAsUpdate(tempDoc));
+        if (remoteJson.documentState) {
+          // NEW: Apply pure mathematical Yjs history from Base64
+          const update = Buffer.from(remoteJson.documentState, 'base64');
+          Y.applyUpdate(data.document, update);
+        } else {
+          // Fallback for older JSON-only files
+          const jsonPayload = remoteJson.content || remoteJson;
+          const tempDoc = TiptapTransformer.toYdoc(jsonPayload, 'default', serverExtensions);
+          Y.applyUpdate(data.document, Y.encodeStateAsUpdate(tempDoc));
+        }
       }
 
       return data.document;
@@ -139,13 +135,24 @@ const hocuspocusServer = new Hocuspocus({
       if (!config.websocket) return;
 
       org.decrypted_password = decrypt(org.cloud_password_encrypted);
-
-      // Updated call signature
       const fullPath = buildCloudPath(meta.nodes, fileId);
 
+      // Extract readable JSON
       const json = TiptapTransformer.fromYdoc(data.document, 'default', serverExtensions);
+
+      // Extract math history as Base64
+      const stateVector = Y.encodeStateAsUpdate(data.document);
+      const base64State = Buffer.from(stateVector).toString('base64');
+
+      // NEW: Wrap both into the save payload
+      const payload = {
+        _meta: { format: "fsrdoc", version: "1.1" },
+        documentState: base64State,
+        content: json
+      };
+
       const client = await getCloudClient(org);
-      await writeJsonDocument(client, fullPath, json);
+      await writeJsonDocument(client, fullPath, payload);
 
       console.log(`[Persistence] Saved ${node.name} to Sciebo at ${fullPath}`);
     } catch (error) {
@@ -166,7 +173,6 @@ httpServer.on('upgrade', (request, socket, head) => {
   }
 });
 
-// SvelteKit handler
 app.use(handler);
 
 httpServer.listen(PORT, () => {

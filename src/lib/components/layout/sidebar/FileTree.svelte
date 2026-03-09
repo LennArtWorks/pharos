@@ -3,9 +3,10 @@
 	import SidebarSection from './SidebarSection.svelte';
 	import Folder from '$lib/components/blocks/Folder.svelte';
 	import File from '$lib/components/blocks/File.svelte';
-	import { FILE_TYPE_CONFIG, type FSRNode, getFileConfig } from '$lib/config/filesystem';
+	import { FILE_TYPE_CONFIG, type FSRNode } from '$lib/config/filesystem';
 	import { PERMISSIONS } from '$lib/config/permissions';
 	import { can } from '$lib/utils/permissions';
+	import { getFileConfig } from '$lib/utils/filesystem';
 
 	/* ---------------------------------------------------------------- *
 	 *  setup file tree
@@ -119,7 +120,7 @@
 				oncancel={() => (editingId = null)}
 				ondblclick={(e: MouseEvent) => {
 					e.stopPropagation();
-					if ($can(PERMISSIONS.FILES.EDIT)) {
+					if (can(PERMISSIONS.FILES.EDIT)) {
 						editingId = node.id;
 					}
 				}}>

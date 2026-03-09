@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { getFileConfig, SYSTEM_CONFIG, type FSRNode } from '$lib/config/filesystem';
-	import { page } from '$app/stores';
+	import { SYSTEM_CONFIG, type FSRNode } from '$lib/config/filesystem';
+	import { page } from '$app/state';
 	import type { Component } from 'svelte';
 
 	// Import the actual Svelte components
@@ -12,6 +12,7 @@
 	import ContentTypeNotSupported from './filetypes/ContentTypeNotSupported.svelte';
 	import ContentTypeForbidden from './filetypes/ContentTypeForbidden.svelte';
 	import { hasPermission } from '$lib/config/permissions';
+	import { getFileConfig } from '$lib/utils/filesystem';
 
 	let { node }: { node: FSRNode | null } = $props();
 	type FSRComponent = Component<{ node: FSRNode }>;
@@ -36,8 +37,8 @@
 		if (!node) return false;
 
 		// Extract user and roles from the layout load function
-		let currentUser = $derived($page.data.user);
-		let activeRoles = $derived($page.data.activeRoles);
+		let currentUser = $derived(page.data.user);
+		let activeRoles = $derived(page.data.activeRoles);
 
 		if (!currentUser) return false;
 

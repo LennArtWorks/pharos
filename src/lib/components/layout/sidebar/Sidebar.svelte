@@ -10,6 +10,8 @@
 	import SidebarSection from './SidebarSection.svelte';
 	import FileTree from './FileTree.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import SidebarProfile from './SidebarProfile.svelte';
+	import { page } from '$app/state';
 
 	/* *** Sidebar Resizing *** */
 
@@ -94,6 +96,6 @@
 	</section>
 
 	<section data-uiname="bottom-part" class=" border-border gap-xs py-l mt-auto flex flex-col justify-center border-t">
-		<Button>Settings</Button>
+		<SidebarProfile user={page.data.user} />
 	</section>
 </aside>

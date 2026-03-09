@@ -62,8 +62,10 @@ export type PermissionFlag = string;
 
 // The Blueprint: Used when creating the roles file for the first time
 
-export const NOTLOGGEDIN_ROLE = "Guest";
-export const NEW_USER_ROLE = 'Admin';
+export const SETUP_ROLES = {
+  GUEST: 'Guest', // the role not logged in users get
+  NEW_USER: 'Member'
+} as const;
 
 export const DEFAULT_ROLES: Record<string, string[]> = {
   Admin: [PERMISSIONS.GLOBAL_ADMIN],
@@ -77,7 +79,7 @@ export const DEFAULT_ROLES: Record<string, string[]> = {
     PERMISSIONS.INTERACTION.BOOK_SHIFTS,
     PERMISSIONS.INTERACTION.SUBMIT_FORMS
   ],
-  [NOTLOGGEDIN_ROLE]: [
+  [SETUP_ROLES.GUEST]: [
     PERMISSIONS.FILES.READ,
     PERMISSIONS.INTERACTION.SUBMIT_FORMS
   ]

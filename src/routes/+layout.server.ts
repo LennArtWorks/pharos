@@ -4,32 +4,9 @@
  * ---------------------------------------------------------------- */
 
 import type { LayoutServerLoad } from './$types';
-import { DEFAULT_ROLES, NOTLOGGEDIN_ROLE } from '$lib/config/permissions';
+import { DEFAULT_ROLES } from '$lib/config/permissions';
+import { generateAnonymousUser, generateRandomColor, generateRandomName } from '$lib/utils/user';
 
-const ADJECTIVES = ['Anonymous', 'Mysterious', 'Clever', 'Sleepy', 'Brave', 'Curious', 'Swift'];
-const ANIMALS = ['Axolotl', 'Capybara', 'Pangolin', 'Quokka', 'Wombat', 'Lemur', 'Red Panda'];
-
-// Extracted color generator
-function generateRandomColor() {
-  return `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
-}
-
-function generateRandomName() {
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-
-  return `${adj} ${animal}`
-}
-
-
-function generateAnonymousUser() {
-  return {
-    id: crypto.randomUUID(),
-    name: generateRandomName(),
-    color: generateRandomColor(),
-    role: NOTLOGGEDIN_ROLE
-  };
-}
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   const user = locals.user ? {

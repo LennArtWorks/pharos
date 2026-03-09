@@ -5,7 +5,7 @@
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	import * as Y from 'yjs';
 	import { HocuspocusProvider } from '@hocuspocus/provider';
@@ -29,7 +29,7 @@
 	let editor: Editor | null = null;
 	let provider: HocuspocusProvider | null = null;
 
-	let canEdit = $derived($can(PERMISSIONS.FILES.EDIT));
+	let canEdit = $derived(can(PERMISSIONS.FILES.EDIT));
 
 	let isTextDropdownOpen = $state(false);
 	let isListDropdownOpen = $state(false);
@@ -51,7 +51,7 @@
 	});
 
 	onMount(() => {
-		const currentUser = $page.data.user;
+		const currentUser = page.data.user;
 
 		console.log('[DEBUG 1] Component Mounted. Starting setup...');
 		console.log('[DEBUG 2] Editor Element exists?', !!editorElement);

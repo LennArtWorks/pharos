@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import type { FSRNode } from '$lib/config/filesystem';
 	import ContentRoot from '$lib/components/layout/content/ContentRoot.svelte';
 
 	// Reactively track the ID from the URL
-	let nodeId = $derived($page.params.id);
+	let nodeId = $derived(page.params.id);
 
 	let node = $state<FSRNode | null>(null);
 	let isLoading = $state(true);

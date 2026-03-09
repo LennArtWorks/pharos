@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import OrgSettings from './settings/OrgSettings.svelte';
 	// import ProfileSettings from './settings/ProfileSettings.svelte';
 
 	// Read the URL parameter reactively
-	let activeOverlay = $derived($page.url.searchParams.get('overlay'));
+	let activeOverlay = $derived(page.url.searchParams.get('overlay'));
 
 	function closeOverlay() {
 		// SvelteKit's way to update the URL without reloading the page
-		const url = new URL($page.url);
+		const url = new URL(page.url);
 		url.searchParams.delete('overlay');
 		goto(url, { keepFocus: true, noScroll: true });
 	}

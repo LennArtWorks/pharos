@@ -1,6 +1,7 @@
 import { getCloudClient, type CloudConfig } from './origin/client';
 import { getMetaCache, setMetaCache } from '../cache';
-import { SYSTEM_CONFIG, getUIFileType, getFileConfig, type FSRNode, FILE_TYPE_CONFIG } from '$lib/config/filesystem';
+import { SYSTEM_CONFIG, type FSRNode, FILE_TYPE_CONFIG } from '$lib/config/filesystem';
+import { buildNodeFilename, getFileConfig, getUIFileType } from '$lib/utils/filesystem';
 
 export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
   if (!orgConfig) throw new Error("No organization config provided to getFileSystemMeta");
@@ -29,16 +30,17 @@ export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
 
 export function transformNodesToTree(nodes: Record<string, any>): FSRNode[] {
   const nodeArray: FSRNode[] = Object.entries(nodes).map(([id, node]) => {
-    // Get the behavioral definition from filesystem.ts
     const config = getFileConfig(node.extension);
 
     return {
       ...node,
       id,
-      // DYNAMIC HYDRATION: Map physical extension to UI behaviors
       type: config.type,
       uiFileType: getUIFileType(node.extension),
-      physicalName: `${id}${node.extension}`,
+      physicalName: buildNodeFilename(id, node.extension, {
+        isSecure: node.isSecure,
+        isTemplate: node.isTemplate
+      }),
       children: []
     } as FSRNode;
   });
@@ -60,4 +62,29 @@ export function transformNodesToTree(nodes: Record<string, any>): FSRNode[] {
   });
 
   return root;
+}
+
+export async function resolvePhysicalPath(orgConfig: App.Locals['orgConfig'], nodeId: string): Promise<string | null> {
+  if (!orgConfig) return null;
+
+  const meta = await getFileSystemMeta(orgConfig);
+  if (!meta.nodes || !meta.nodes[nodeId]) return null;
+
+  let currentId: string | null = nodeId;
+  const pathParts: string[] = [];
+
+  while (currentId && meta.nodes[currentId]) {
+    const currentNode: any = meta.nodes[currentId];
+
+    const physicalName = buildNodeFilename(currentId, currentNode.extension, {
+      isSecure: currentNode.isSecure,
+      isTemplate: currentNode.isTemplate
+    });
+
+    pathParts.unshift(physicalName);
+    currentId = currentNode.parentId;
+  }
+
+  const fullPath = pathParts.join('/');
+  return `/${fullPath}`.replace(/\/+/g, '/');
 }

@@ -1,28 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
-import { getFileSystemMeta } from '$lib/server/cloud/service';
+import { getFileSystemMeta, resolvePhysicalPath } from '$lib/server/cloud/service';
 import { Readable } from 'stream';
 import type { RequestHandler } from './$types';
-
-// Helper to climb the tree and build the Sciebo path (identical to the one in your file route)
-async function resolvePhysicalPath(orgConfig: App.Locals['orgConfig'], nodeId: string): Promise<string | null> {
-  if (!orgConfig) return null;
-
-  const meta = await getFileSystemMeta(orgConfig);
-  if (!meta.nodes || !meta.nodes[nodeId]) return null;
-
-  let currentId: string | null = nodeId;
-  const pathParts: string[] = [];
-
-  while (currentId && meta.nodes[currentId]) {
-    const currentNode: any = meta.nodes[currentId];
-    pathParts.unshift(`${currentId}${currentNode.extension}`);
-    currentId = currentNode.parentId;
-  }
-
-  const fullPath = pathParts.join('/');
-  return `/${fullPath}`.replace(/\/+/g, '/');
-}
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const id = url.searchParams.get('id');

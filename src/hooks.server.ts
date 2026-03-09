@@ -1,8 +1,10 @@
 import db from "$lib/server/db";
 import { decrypt } from '$lib/server/auth/crypto';
 import { DEFAULT_ROLES } from "$lib/config/permissions";
+import { getCachedUser, setCachedUser } from "$lib/server/auth/userCache";
+import { readSecureFile } from "$lib/server/cloud/secureHandler";
+import { SYSTEM_CONFIG } from "$lib/config/filesystem";
 
-// 1. Define the shape of your database row to satisfy TypeScript
 interface OrganisationRow {
   organisation_id: string;
   subdomain: string;
@@ -20,7 +22,6 @@ export async function handle({ event, resolve }) {
   const subdomain = event.url.hostname.split('.')[0];
   console.log(`[HOOK] Request: ${event.url.pathname} | Subdomain parsed: ${subdomain}`);
 
-  // 2. Cast the result to your interface
   const org = db.prepare('SELECT * FROM organisations WHERE subdomain = ?').get(subdomain) as OrganisationRow | undefined;
 
   if (org) {
@@ -34,45 +35,67 @@ export async function handle({ event, resolve }) {
       }
     } catch (e) { /* fallback to default */ }
 
-    // We must attach it to locals so the API and layout can see it
-    event.locals.orgConfig = {
+    // Reconstruct full config with decrypted password
+    const orgConfig = {
       ...org,
       decrypted_password: decrypt(org.cloud_password_encrypted),
       roles: parsedRoles
     };
 
+    event.locals.orgConfig = orgConfig;
+
     const sessionId = event.cookies.get('fsr_session');
     let currentUser = null;
 
     if (sessionId) {
-      // 1. Check if the session exists and is valid for THIS organisation
       const session = db.prepare(`
         SELECT account_id, expires_at 
         FROM sessions 
         WHERE id = ? AND organisation_id = ?
       `).get(sessionId, org.organisation_id) as { account_id: string, expires_at: number } | undefined;
 
-      if (session) {
-        if (session.expires_at > Date.now()) {
-          // 2. Valid Session! 
-          // (For right now, we grant 'Admin' so you can test. 
-          // Next step is fetching their real role from RAM Cache)
-          currentUser = {
-            id: session.account_id,
-            role: 'Admin',
-            name: 'Real User'
-          };
-        } else {
-          // 3. Expired Session - Clean it up
-          db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
-          event.cookies.delete('fsr_session', { path: '/' });
+      if (session && session.expires_at > Date.now()) {
+        const accountId = session.account_id;
+
+        // 1. Check RAM Cache
+        currentUser = getCachedUser(accountId);
+
+        // 2. Fetch from WebDAV if not in cache
+        if (!currentUser) {
+          try {
+            const profilePath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/accounts.sysfolder/${accountId}.fsrsys.fsrsecure`;
+            const profileData = await readSecureFile(orgConfig, profilePath);
+
+            if (profileData) {
+              currentUser = {
+                id: accountId,
+                name: profileData.name || 'Unknown User',
+                role: profileData.role || 'Member'
+              };
+            } else {
+              throw new Error("Profile file not found");
+            }
+          } catch (e) {
+            // Fallback for missing profiles during development
+            console.log(`[AUTH] Profile missing for ${accountId}, using fallback.`);
+            currentUser = {
+              id: accountId,
+              name: 'New User',
+              role: 'Admin'
+            };
+          }
+
+          // Cache the result
+          setCachedUser(accountId, currentUser);
         }
+      } else if (session) {
+        // Expired Session - Clean it up
+        db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+        event.cookies.delete('fsr_session', { path: '/' });
       }
     }
 
-    // Assign the real user (or null if they aren't logged in, triggering the Anonymous animal!)
     event.locals.user = currentUser;
-
   }
 
   return await resolve(event);
@@ -83,7 +106,6 @@ const FOUR_HOURS = 4 * 60 * 60 * 1000;
 
 setInterval(async () => {
   try {
-    // Cast the .all() result as well
     const activeOrgs = db.prepare('SELECT * FROM organisations WHERE is_active = 1').all() as OrganisationRow[];
 
     for (const org of activeOrgs) {
@@ -92,8 +114,6 @@ setInterval(async () => {
           ...org,
           decrypted_password: decrypt(org.cloud_password_encrypted)
         };
-
-        // Uncomment when ready to test auto-sync
         // await syncCloudIndex(orgWithDecryptedPass);
         console.log(`Auto-synced: ${org.subdomain}`);
       } catch (e) {

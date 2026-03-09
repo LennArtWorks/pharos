@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
 import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
-import { FILE_TYPE_CONFIG, SYSTEM_CONFIG, getFileConfig } from '$lib/config/filesystem';
+import { SYSTEM_CONFIG } from '$lib/config/filesystem';
 import { PERMISSIONS, hasPermission } from '$lib/config/permissions';
 import { getFileSystemMeta } from '$lib/server/cloud/service';
 import { setMetaCache } from '$lib/server/cache';
+import { getFileConfig } from '$lib/utils/filesystem';
 
 export async function POST({ request, locals }) {
   if (!locals.orgConfig) return json({ error: 'Organization not found' }, { status: 400 });

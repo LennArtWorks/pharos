@@ -13,7 +13,7 @@
 	];
 
 	// If they aren't an admin, show an error state instead of the settings
-	let isAdmin = $derived($can(PERMISSIONS.SYSTEM.SETTINGS_WRITE));
+	let isAdmin = $derived(can(PERMISSIONS.SYSTEM.SETTINGS_WRITE));
 </script>
 
 {#if isAdmin}

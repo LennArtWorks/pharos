@@ -3,6 +3,7 @@ import { setMetaCache } from '../cache';
 import { FILE_TYPE_CONFIG, SYSTEM_CONFIG, type FSRMeta } from '$lib/config/filesystem';
 import { createHash } from 'crypto';
 import { DEFAULT_ROLES } from '$lib/config/permissions';
+import { parseNodeFilename, buildNodeFilename } from '$lib/utils/filesystem';
 import db from '$lib/server/db';
 
 function generateNodeId(path: string): string {
@@ -119,17 +120,20 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
     if (file.filename.includes(`/${SYSTEM_CONFIG.CONFIG_FOLDER}`)) continue;
     if (file.filename === rootPath) continue;
 
+    const parsed = parseNodeFilename(file.basename);
     const id = generateNodeId(file.filename);
     const isDir = file.type === 'directory';
-    const ext = isDir ? '' : `.${file.basename.split('.').pop()}`;
 
-    let suffix = '';
+    let expectedBaseExt = isDir ? '' : parsed.baseExtension;
     if (isDir) {
-      if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.workspace.ext[0])) suffix = FILE_TYPE_CONFIG.internal.workspace.ext[0];
-      else if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.sysfolder.ext[0])) suffix = FILE_TYPE_CONFIG.internal.sysfolder.ext[0];
+      if (parsed.logicalName.endsWith(FILE_TYPE_CONFIG.internal.workspace.ext[0])) expectedBaseExt = FILE_TYPE_CONFIG.internal.workspace.ext[0];
+      else if (parsed.logicalName.endsWith(FILE_TYPE_CONFIG.internal.sysfolder.ext[0])) expectedBaseExt = FILE_TYPE_CONFIG.internal.sysfolder.ext[0];
     }
 
-    const expectedBasename = `${id}${suffix}${ext}`;
+    const expectedBasename = buildNodeFilename(id, expectedBaseExt, {
+      isSecure: parsed.isSecure,
+      isTemplate: parsed.isTemplate
+    });
 
     if (file.basename !== expectedBasename) {
       const newPath = `${getParentPath(file.filename)}/${expectedBasename}`;
@@ -150,24 +154,28 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
     const isDir = file.type === 'directory';
 
     // Extract ID safely
-    const id = file.basename.split('.')[0]
-      .replace(FILE_TYPE_CONFIG.internal.workspace.ext[0], '')
-      .replace(FILE_TYPE_CONFIG.internal.sysfolder.ext[0], '');
+    const parsed = parseNodeFilename(file.basename);
 
     const parentPath = getParentPath(file.filename);
     let parentId = null;
     if (parentPath !== rootPath) {
       const parentBasename = parentPath.split('/').pop() || '';
-      parentId = parentBasename.split('.')[0]
+      const parsedParent = parseNodeFilename(parentBasename);
+
+      parentId = parsedParent.logicalName.split('.')[0]
         .replace(FILE_TYPE_CONFIG.internal.workspace.ext[0], '')
         .replace(FILE_TYPE_CONFIG.internal.sysfolder.ext[0], '');
     }
 
     // Determine the exact physical extension (Crucial for the new server.js path builder)
-    let extension = isDir ? '' : `.${file.basename.split('.').pop()}`;
+    const id = parsed.logicalName.split('.')[0]
+      .replace(FILE_TYPE_CONFIG.internal.workspace.ext[0], '')
+      .replace(FILE_TYPE_CONFIG.internal.sysfolder.ext[0], '');
+
+    let extension = isDir ? '' : parsed.baseExtension;
     if (isDir) {
-      if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.workspace.ext[0])) extension = FILE_TYPE_CONFIG.internal.workspace.ext[0];
-      else if (file.basename.endsWith(FILE_TYPE_CONFIG.internal.sysfolder.ext[0])) extension = FILE_TYPE_CONFIG.internal.sysfolder.ext[0];
+      if (parsed.logicalName.endsWith(FILE_TYPE_CONFIG.internal.workspace.ext[0])) extension = FILE_TYPE_CONFIG.internal.workspace.ext[0];
+      else if (parsed.logicalName.endsWith(FILE_TYPE_CONFIG.internal.sysfolder.ext[0])) extension = FILE_TYPE_CONFIG.internal.sysfolder.ext[0];
     }
 
     const existingNode = existingMeta.nodes[id] as any;
@@ -177,13 +185,12 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
       name: temporaryNameMap[id] || (isDir ? 'New Folder' : 'New File'),
       parentId: parentId,
       extension: extension,
+      isSecure: parsed.isSecure,
+      isTemplate: parsed.isTemplate || existingNode?.isTemplate || existingNode?.customFields?.isTemplate || false,
       updatedAt: new Date(file.lastmod).getTime(),
       createdAt: existingNode?.createdAt || Date.now(),
       tags: existingNode?.tags || [],
-      customFields: {
-        ...(existingNode?.customFields || {}),
-        isTemplate: existingNode?.isTemplate || existingNode?.customFields?.isTemplate || false
-      }
+      customFields: existingNode?.customFields || {}
     };
   });
 
