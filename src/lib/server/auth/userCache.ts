@@ -27,3 +27,21 @@ export function setCachedUser(accountId: string, data: UserProfile) {
 export function clearCachedUser(accountId: string) {
   cache.delete(accountId);
 }
+
+export function getUserCacheStats() {
+  const stats = [];
+  for (const [accountId, entry] of cache.entries()) {
+    stats.push({
+      accountId,
+      name: entry.data.name,
+      role: entry.data.role,
+      expiresAt: entry.expires,
+      isExpired: Date.now() > entry.expires
+    });
+  }
+  return stats;
+}
+
+export function clearAllUserCache() {
+  cache.clear();
+}

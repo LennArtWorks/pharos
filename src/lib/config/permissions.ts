@@ -1,11 +1,11 @@
 /**
  * Check for permissions:
  * <script>
- *   import { can } from '$lib/utils/permissions';
+ *   import { has } from '$lib/utils/permissions';
  *  import { PERMISSIONS } from '$lib/config/permissions';
  * </script>
  *
- * {#if $can(PERMISSIONS.FILES.EDIT)}
+ * {#if $has(PERMISSIONS.FILES.EDIT)}
  *  <button>Edit</button>
  * {/if} 
  *  */
@@ -80,6 +80,7 @@ export const DEFAULT_ROLES: Record<string, string[]> = {
     PERMISSIONS.INTERACTION.SUBMIT_FORMS
   ],
   [SETUP_ROLES.GUEST]: [
+    PERMISSIONS.GLOBAL_ADMIN,
     PERMISSIONS.FILES.READ,
     PERMISSIONS.INTERACTION.SUBMIT_FORMS
   ]

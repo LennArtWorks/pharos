@@ -1,9 +1,10 @@
 // Navigation views mapped to their icons and route paths
 export const VIEW_CONFIG = {
-  recentTopics: { active: true, icon: 'home', label: "Recent Topics", path: '/dashboard/recent' },
-  myTasks: { active: true, icon: 'person', label: "My Tasks", path: '/dashboard/tasks' },
-  calendar: { active: true, icon: 'calendar', label: "Calendar", path: '/dashboard/calendar' },
-  eMails: { active: true, icon: 'mail', label: "Mails", path: '/dashboard/mail' }
+  recentTopics: { active: true, icon: 'home', label: "Recent Topics", path: '/files/recent' },
+  myTasks: { active: true, icon: 'person', label: "My Tasks", path: '/files/tasks' },
+  calendar: { active: true, icon: 'calendar', label: "Calendar", path: '/files/calendar' },
+  eMails: { active: false, icon: 'mail', label: "Mails", path: '/files/mail' },
+  devPortal: { active: true, icon: 'code-block', label: "Dev Portal", path: '/files/dev' }
 } as const;
 
 export const FILE_TYPE_CONFIG = {

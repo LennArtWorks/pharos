@@ -53,7 +53,7 @@
 	});
 </script>
 
-<div class="flex-1 overflow-y-auto">
+<div class="relative flex-1 overflow-y-auto">
 	{#if !node}{:else if !hasAccess}
 		<ContentTypeForbidden {node} />
 	{:else}

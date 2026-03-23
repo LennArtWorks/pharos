@@ -11,9 +11,9 @@
 
 <header class="bg-level-1 px-l gap-2xl h-main-l flex items-center">
 	<div data-uiname="between-file-naviagtion" class="gap-m flex items-center">
-		<div data-uiname="backforth-arrows" class="gap-m flex">
-			<Button variant="tertiary" size="s"><Icon name="arrow-left" /></Button>
-			<Button variant="tertiary" size="s"><Icon name="arrow-right" /></Button>
+		<div data-uiname="backforth-arrows" class="gap-2xs flex">
+			<Button variant="tertiary" size="s" icon><Icon name="arrow-left" /></Button>
+			<Button variant="tertiary" size="s" icon><Icon name="arrow-right" /></Button>
 		</div>
 		<!-- <Divider v /> -->
 		<div data-uiname="opened-tabs" class="gap-m flex items-center">
@@ -29,5 +29,5 @@
 		<span class="font-label-s text-ink-50 font-semibold">/</span>
 		<File filetype="document">Document</File>
 	</div>
-	<Button variant="tertiary" size="s"><Icon name="dots" /></Button>
+	<Button variant="tertiary" size="s" icon><Icon name="dots" /></Button>
 </header>

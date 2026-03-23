@@ -4,6 +4,22 @@ import 'dotenv/config'; // Loads variables from .env automatically
 
 const db = new Database('organisations.db');
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS organisations (
+    organisation_id TEXT PRIMARY KEY,
+    subdomain TEXT UNIQUE NOT NULL,
+    organization_name TEXT NOT NULL,
+    cloud_name TEXT NOT NULL,
+    cloud_url TEXT NOT NULL,
+    cloud_username TEXT NOT NULL,
+    cloud_password_encrypted TEXT NOT NULL,
+    cloud_directory TEXT NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    roles_json TEXT
+  );
+`);
+
 // --- Encryption Setup ---
 const ALGORITHM = 'aes-256-gcm';
 // Hashes your JWT_SECRET to ensure it is exactly 32 bytes long, which AES-256 requires
@@ -38,7 +54,7 @@ const update = db.prepare(`
 `);
 
 // 1. Add your first organisation
-update.run({
+insert.run({
   organisation_id: `orga_${Date.now()}`,
   subdomain: 'fsr07',
   organization_name: 'FSR-07',

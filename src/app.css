@@ -8,11 +8,12 @@
 *,
 *::before,
 *::after {
-  transition-property: background-color, background, border-color, color, fill, stroke, opacity, box-shadow, transform, rotate;
+  transition-property: all;
+  /* transition-property: background-color, background, border, outline, color, fill, stroke, opacity, box-shadow, transform, rotate; */
   transition-duration: 150ms;
   /* Adjust to your preferred speed */
   transition-timing-function: ease;
-  transition-behavior:  allow-discrete;
+  transition-behavior: allow-discrete;
 }
 
 a,
@@ -32,7 +33,7 @@ button {
   .app-grid * {
     /* Firefox */
     scrollbar-width: thin;
-    scrollbar-color: var(--setup-color-neutral-300) transparent;
+    scrollbar-color: var(--color-neutral-300) transparent;
     /* scrollbar-gutter: stable; */
   }
 
@@ -48,13 +49,13 @@ button {
   }
 
   .app-grid *::-webkit-scrollbar-thumb {
-    background-color: var(--setup-color-neutral-300);
+    background-color: var(--color-neutral-300);
     border-radius: 20px;
   }
 
   .app-grid *::-webkit-scrollbar-thumb:hover {
     /* Svelte 5 will reactively use this if you have it in your theme */
-    background-color: var(--setup-color-neutral-300);
+    background-color: var(--color-neutral-300);
   }
 
   /* Firefox fallback */
@@ -66,6 +67,18 @@ button {
 }
 
 
+
+/* ------------------------------- **
+   Login                
+** ------------------------------- */
+
+.mode-light .login-page {
+  background-image: url("./lib/assets/LoginBG-light.jpg");
+}
+
+.mode-dark .login-page {
+  background-image: url("./lib/assets/LoginBG-dark.jpg");
+}
 
 /* ------------------------------- **
    Main App Layout                

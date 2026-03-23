@@ -16,7 +16,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 
-	import { can } from '$lib/utils/permissions';
+	import { has } from '$lib/utils/permissions';
 	import { PERMISSIONS } from '$lib/config/permissions';
 
 	let { node }: { node: FSRNode } = $props();
@@ -29,7 +29,7 @@
 	let editor: Editor | null = null;
 	let provider: HocuspocusProvider | null = null;
 
-	let canEdit = $derived(can(PERMISSIONS.FILES.EDIT));
+	let canEdit = $derived(has(PERMISSIONS.FILES.EDIT));
 
 	let isTextDropdownOpen = $state(false);
 	let isListDropdownOpen = $state(false);

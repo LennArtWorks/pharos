@@ -74,7 +74,7 @@
 	</header>
 
 	{#if isExpanded}
-		<div transition:slide={{ duration: 150, easing: snappyBezier }} class={cn('gap-sidebar-files flex origin-top flex-col overflow-hidden', triggerSquish && 'animate-squish')}>
+		<div transition:slide={{ duration: 150, easing: snappyBezier }} class={cn('gap-sidebar-files flex origin-top flex-col', triggerSquish && 'animate-squish')}>
 			{@render children()}
 		</div>
 	{/if}
@@ -103,7 +103,7 @@
      The icons container will transition its width and opacity simultaneously.
   */
 	[data-uiname='icons'] > div {
-		overflow: hidden;
+		/* overflow: hidden; */
 		white-space: nowrap;
 	}
 </style>

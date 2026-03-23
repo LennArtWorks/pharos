@@ -1,38 +1,25 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import SidebarSection from './SidebarSection.svelte';
-	import Folder from '$lib/components/blocks/Folder.svelte';
+	import SidebarSection from '$lib/components/layout/sidebar/SidebarSection.svelte';
 	import File from '$lib/components/blocks/File.svelte';
 	import { FILE_TYPE_CONFIG, type FSRNode } from '$lib/config/filesystem';
 	import { PERMISSIONS } from '$lib/config/permissions';
-	import { can } from '$lib/utils/permissions';
+	import { has } from '$lib/utils/permissions';
 	import { getFileConfig } from '$lib/utils/filesystem';
 
-	/* ---------------------------------------------------------------- *
-	 *  setup file tree
-	 * ---------------------------------------------------------------- */
-
+	// --- File Tree Setup ---
 	let tree: FSRNode[] = $state([]);
 	let rootNodes = $derived(tree.filter((node) => node.parentId === null));
 
 	onMount(async () => {
 		try {
-			// Force the browser to send the fsr_session cookie!
-			const res = await fetch('/api/filesystem', {
-				credentials: 'include'
-			});
-
+			const res = await fetch('/api/filesystem', { credentials: 'include' });
 			if (!res.ok) {
-				const errData = await res.json();
-				console.error('[FileTree Error]:', res.status, errData);
-				tree = []; // Fallback gracefully
+				tree = [];
 				return;
 			}
-
 			const data = await res.json();
-
 			if (!Array.isArray(data)) {
-				console.error('[FileTree Error]: Expected array, got:', data);
 				tree = [];
 				return;
 			}
@@ -49,10 +36,7 @@
 		}
 	});
 
-	/* ---------------------------------------------------------------- *
-	 *  file name saved popup
-	 * ---------------------------------------------------------------- */
-
+	// --- Rename Logic ---
 	let editingId = $state<string | null>(null);
 	let toastMessage = $state('');
 
@@ -62,7 +46,6 @@
 	}
 
 	async function handleRenameSubmit(node: FSRNode, newName: string) {
-		// If they didn't change the name, just close the input silently
 		if (newName.trim() === '' || newName === node.name) {
 			editingId = null;
 			return;
@@ -87,13 +70,9 @@
 		}
 	}
 
-	// Helper to decide if we show the extension in the UI
 	function getDisplayName(node: FSRNode) {
 		const config = getFileConfig(node.extension);
-		// If it's an internal OS file (doc, task, etc.), we usually hide the extension
-		if (config.type !== 'file') return node.name; // Workspaces/Folders
-
-		// Check if it's an internal type defined in our config
+		if (config.type !== 'file') return node.name;
 		const isInternal = node.uiFileType in FILE_TYPE_CONFIG.internal;
 		return isInternal ? node.name : node.name + node.extension;
 	}
@@ -106,9 +85,25 @@
 				{@render renderNodes(node.children || [])}
 			</SidebarSection>
 		{:else if node.type === 'folder'}
-			<Folder title={node.name}>
-				{@render renderNodes(node.children || [])}
-			</Folder>
+			<File
+				href={`/files/${node.id}`}
+				filetype={node.uiFileType}
+				isEditing={editingId === node.id}
+				editValue={node.name}
+				onsave={(newName) => handleRenameSubmit(node, newName)}
+				oncancel={() => (editingId = null)}
+				ondblclick={(e: MouseEvent) => {
+					e.stopPropagation();
+					if (has(PERMISSIONS.FILES.EDIT)) editingId = node.id;
+				}}>
+				{getDisplayName(node)}
+
+				{#snippet nestedItems()}
+					{#if node.children && node.children.length > 0}
+						{@render renderNodes(node.children)}
+					{/if}
+				{/snippet}
+			</File>
 		{:else}
 			<File
 				href={`/files/${node.id}`}
@@ -120,9 +115,7 @@
 				oncancel={() => (editingId = null)}
 				ondblclick={(e: MouseEvent) => {
 					e.stopPropagation();
-					if (can(PERMISSIONS.FILES.EDIT)) {
-						editingId = node.id;
-					}
+					if (has(PERMISSIONS.FILES.EDIT)) editingId = node.id;
 				}}>
 				{getDisplayName(node)}
 			</File>

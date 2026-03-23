@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import 'dotenv/config';
 
 // FIXED: Use standard Node process.env instead of SvelteKit's virtual $env.
 // This allows both SvelteKit and server.js to use this file.

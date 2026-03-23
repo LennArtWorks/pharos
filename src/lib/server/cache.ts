@@ -42,3 +42,20 @@ export function setMetaCache(orgId: string, data: any, ttlMs: number = DEFAULT_T
 export function clearMetaCache(orgId: string) {
   metaCache.delete(orgId);
 }
+
+export function getMetaCacheStats() {
+  const stats = [];
+  for (const [orgId, entry] of metaCache.entries()) {
+    stats.push({
+      orgId,
+      expiresAt: entry.expiresAt,
+      isExpired: Date.now() > entry.expiresAt,
+      nodeCount: entry.data?.nodes ? Object.keys(entry.data.nodes).length : 0
+    });
+  }
+  return stats;
+}
+
+export function clearAllMetaCache() {
+  metaCache.clear();
+}

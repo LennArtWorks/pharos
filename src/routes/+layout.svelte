@@ -8,7 +8,8 @@
 
 	import { onMount } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
-	import OverlayRoot from '$lib/components/overlays/OverlayRoot.svelte';
+	import OverlayRoot from '$lib/components/layout/overlays/OverlayRoot.svelte';
+	import MouseTooltip from '$lib/components/ui/MouseTooltip.svelte';
 
 	let { children } = $props();
 
@@ -52,3 +53,4 @@
 {@render children()}
 
 <OverlayRoot />
+<MouseTooltip />
