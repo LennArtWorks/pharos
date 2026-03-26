@@ -88,7 +88,7 @@
 						<label class="relative inline-flex cursor-pointer items-center">
 							<input type="checkbox" name="is_active" value="true" checked={isActive} class="peer sr-only" />
 							<div
-								class="peer bg-level-2 border-border after:border-border after:bg-ink-50 peer-checked:bg-accent-500 h-6 w-11 rounded-full border after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:after:bg-white">
+								class="peer bg-level-2 border-border after:border-border after:bg-ink-50 peer-checked:bg-accent-500 h-6 w-11 rounded-full border after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:after:bg-white">
 							</div>
 						</label>
 					</div>

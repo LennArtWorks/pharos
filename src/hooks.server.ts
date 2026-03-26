@@ -69,8 +69,10 @@ export async function handle({ event, resolve }) {
             if (profileData) {
               currentUser = {
                 id: accountId,
-                name: profileData.name || 'Unknown User',
-                role: profileData.role || 'Member'
+                // Drill into .profile and .access correctly!
+                name: profileData.profile?.displayName || profileData.profile?.firstName || 'Unknown User',
+                role: profileData.access?.roles?.[0] || 'Member',
+                color: profileData.profile?.color || '#888888' // Fallback color just in case
               };
             } else {
               throw new Error("Profile file not found");

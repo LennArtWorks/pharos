@@ -70,7 +70,7 @@
 	<div
 		bind:clientWidth={width}
 		bind:clientHeight={height}
-		class="rounded-m border-border bg-level-2 px-s py-2xs text-label-xs text-ink-90 pointer-events-none fixed z-[9999] max-w-xs border shadow-sm"
+		class="rounded-m border-border bg-level-2 px-s py-2xs text-label-xs text-ink-90 pointer-events-none fixed z-9999 max-w-xs border shadow-sm"
 		style="left: {safeX}px; top: {safeY}px;">
 		{@html content}
 	</div>

@@ -45,7 +45,7 @@
 	// Horizontal Padding (Ignored if icon=true)
 	const paddingClasses = $derived({
 		xs: icon ? 'w-main-xs justify-center p-0' : 'px-s',
-		s: icon ? 'w-main-s justify-center p-0' : 'px-xs', // Working padding for small size
+		s: icon ? 'w-main-s justify-center p-0' : 'pl-2xs pr-xs', // Working padding for small size
 		sm: icon ? 'w-main-s justify-center p-0' : 'px-m',
 		m: icon ? 'w-main-m justify-center p-0' : 'px-xl',
 		l: icon ? 'w-main-l justify-center p-0' : 'px-l',

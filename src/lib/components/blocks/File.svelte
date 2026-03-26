@@ -63,7 +63,7 @@
 		tags = [],
 		assigned = false,
 		isEditing = false,
-		editValue = '',
+		editValue = $bindable(''),
 		onsave,
 		oncancel,
 		isOpen = false,
@@ -143,6 +143,7 @@
 
 <div class={cn('flex flex-col gap-1', !minimized || nestedItems ? 'w-full' : 'w-fit')}>
 	<div class="relative w-full">
+		<!-- drag and drop indicators -->
 		{#if dropState === 'before'}
 			<div class="bg-accent-500 pointer-events-none absolute -top-[3px] left-0 z-10 h-1 w-full rounded-full shadow-sm"></div>
 		{/if}
@@ -163,7 +164,7 @@
 				className,
 				isEditing ? 'bg-level-1-hover ring-border ring-1' : '',
 				!minimized || nestedItems ? 'w-full' : '',
-				minimized && !isEditing && !nestedItems ? 'w-main-s hover:pl-xs pl-s whitespace-nowrap transition-all duration-300 ease-out hover:w-40' : '',
+				minimized && !isEditing && !nestedItems ? 'w-main-s hover:pl-s pl-s whitespace-nowrap transition-all duration-300 ease-out hover:w-40' : '',
 				'group relative'
 			)}
 			{...rest}>

@@ -1,6 +1,15 @@
 import Database from 'better-sqlite3';
 import { json } from '@sveltejs/kit';
 
+// Helper to recursively update category_id for a topic's entire tree
+function updateCategoryRecursive(db: Database.Database, topicId: string, newCategoryId: string) {
+  db.prepare('UPDATE topics SET category_id = ? WHERE id = ?').run(newCategoryId, topicId);
+  const children = db.prepare('SELECT id FROM topics WHERE parent_id = ?').all(topicId) as { id: string }[];
+  for (const child of children) {
+    updateCategoryRecursive(db, child.id, newCategoryId);
+  }
+}
+
 export const POST = async ({ request }) => {
   const { draggedId, targetId, action, categoryId, parentId } = await request.json();
   const db = new Database('aidev.db');
@@ -57,7 +66,12 @@ export const POST = async ({ request }) => {
   }
 
   const updateStmt = db.prepare('UPDATE topics SET sort_order = ?, parent_id = ?, category_id = ? WHERE id = ?');
+
   const transaction = db.transaction((items) => {
+    // 1. Force the dragged item and ALL of its nested children to inherit the new category
+    updateCategoryRecursive(db, draggedId, categoryId);
+
+    // 2. Process the sorting and standard parent reassignment for the top-level items in this level
     items.forEach((item: { id: string }, index: number) => {
       updateStmt.run(index, newParentId, categoryId, item.id);
     });

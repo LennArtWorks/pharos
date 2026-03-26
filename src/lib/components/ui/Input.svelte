@@ -93,10 +93,10 @@
 		{onclick}
 		class={cn(
 			'h-main-m rounded-m ring-border relative flex min-w-0 items-center overflow-visible ring-1 transition-all ring-inset', // base styling
-			isEffectivelyDisabled ? 'bg-level-2 pointer-events-none cursor-not-allowed opacity-50' : '', // variant: no permission
+			isEffectivelyDisabled ? 'cursor-not-allowed bg-transparent opacity-50' : '', // variant: no permission / disabled
 			hasError && !isEffectivelyDisabled ? 'ring-error focus-within:ring-error focus-within:ring-2' : '', // variant: has error
 			!hasError && !isEffectivelyDisabled ? 'focus-within:ring-ink-90 focus-within:ring-2 hover:ring-2' : '',
-			readonly && !isEffectivelyDisabled ? 'bg-level-2 hover:bg-level-2 cursor-pointer' : '', // variant: no permission
+			readonly && !isEffectivelyDisabled ? 'cursor-pointer bg-transparent' : '', // variant: read only
 			!readonly && !isEffectivelyDisabled ? 'bg-level-2' : '' // variant: normal
 		)}>
 		{#if leading}
@@ -110,7 +110,11 @@
 			disabled={isEffectivelyDisabled}
 			{readonly}
 			bind:value
-			class={cn('text-ink-90 placeholder:text-ink-50 px-m h-full w-full min-w-0 flex-1 border-none bg-transparent font-semibold outline-none focus:ring-0', readonly ? 'pointer-events-none' : '')} />
+			class={cn(
+				'text-ink-90 placeholder:text-ink-50 px-m h-full w-full min-w-0 flex-1 border-none bg-transparent font-semibold outline-none focus:ring-0',
+				readonly ? 'pointer-events-none' : '',
+				isEffectivelyDisabled ? 'cursor-not-allowed' : ''
+			)} />
 
 		<div class="pr-m text-ink-50 flex shrink-0 items-center gap-1">
 			{#if type === 'password'}

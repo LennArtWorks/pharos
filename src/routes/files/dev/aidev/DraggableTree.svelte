@@ -19,10 +19,16 @@
 	}
 
 	function handleDragEnter(e: DragEvent) {
-		e.preventDefault();
+		// Only allow enter if it's a topic
+		if (e.dataTransfer?.types.includes('application/fsr-topic-id')) {
+			e.preventDefault();
+		}
 	}
 
 	function handleDragOver(e: DragEvent, topicId: string) {
+		// ABORT if the dragged item is not a topic (e.g., if it's a category)
+		if (!e.dataTransfer?.types.includes('application/fsr-topic-id')) return;
+
 		e.preventDefault();
 		e.stopPropagation();
 
@@ -62,6 +68,9 @@
 
 	// --- Handlers for Empty Categories / Folders ---
 	function handleEmptyDragOver(e: DragEvent) {
+		// ABORT if the dragged item is not a topic
+		if (!e.dataTransfer?.types.includes('application/fsr-topic-id')) return;
+
 		e.preventDefault();
 		e.stopPropagation();
 		if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';

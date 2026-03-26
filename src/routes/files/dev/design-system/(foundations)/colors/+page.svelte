@@ -8,7 +8,7 @@
 	const aiContext = colorData?.context || '';
 
 	let copiedItem = $state<string | null>(null);
-	let copiedAI = $state(false); // NEW
+	let copiedAI = $state(false);
 
 	async function copyToClipboard(text: string, isAI = false) {
 		try {

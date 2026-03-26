@@ -112,7 +112,7 @@
 							{/if}
 						</div>
 					</Popover.Trigger>
-					<Popover.Content class="z-50 w-[450px] p-2">
+					<Popover.Content class="z-50 w-112.5 p-2">
 						<div class="text-label-s text-ink-90 border-border mb-2 border-b px-2 pb-2 font-bold">Session Activity</div>
 						{#if stats.sessions.list.length === 0}
 							<div class="text-body-s text-ink-50 p-2">No active database sessions. Guests are not tracked via SQLite to ensure DSGVO compliance.</div>
@@ -149,7 +149,7 @@
 							<span class="text-ink-90 text-4xl font-bold">{stats.rateLimits.length}</span>
 						</div>
 					</Popover.Trigger>
-					<Popover.Content class="z-50 w-[400px] p-2">
+					<Popover.Content class="z-50 w-100 p-2">
 						<div class="text-label-s text-ink-90 border-border mb-2 border-b px-2 pb-2 font-bold">Tracked Rate Limits</div>
 						{#if stats.rateLimits.length === 0}
 							<div class="text-body-s text-ink-50 p-2">No limits tracked. Rate limits reset every 15 minutes.</div>

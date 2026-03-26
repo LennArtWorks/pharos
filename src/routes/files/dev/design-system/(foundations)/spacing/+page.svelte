@@ -81,7 +81,7 @@
 		<div class="flex flex-wrap gap-4">
 			{#each mainHeights as height}
 				<button
-					class="bg-level-0 hover:bg-level-1 border-border group rounded-m p-m flex min-w-[200px] flex-1 flex-col border text-left transition-colors"
+					class="bg-level-0 hover:bg-level-1 border-border group rounded-m p-m flex min-w-50 flex-1 flex-col border text-left transition-colors"
 					data-tooltip={getTooltip(`h-main-${height.name}`)}
 					onclick={() => copyToClipboard(`h-main-${height.name}`)}>
 					<span class="text-ink-90 mb-1 font-mono font-bold">h-main-{height.name}</span>

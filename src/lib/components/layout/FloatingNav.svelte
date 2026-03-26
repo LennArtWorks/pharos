@@ -59,7 +59,7 @@
 					class="-mb-2xs flex w-full items-center justify-start px-1 text-left group-hover:mb-0">
 					<div
 						class={cn(
-							'h-[2px] shrink-0 rounded-full',
+							'h-0.5 shrink-0 rounded-full',
 							item.level === 3 ? 'w-1.5' : item.level === 2 ? 'w-2.5' : 'w-4',
 							isActive ? 'bg-ink-90' : 'bg-ink-40 group-hover:bg-ink-50',
 							'group-hover:w-0 group-hover:opacity-0'

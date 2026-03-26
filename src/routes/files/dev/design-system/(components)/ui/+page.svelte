@@ -57,7 +57,7 @@
 					</Button>
 				</div>
 
-				<div class="bg-level-0 border-border mt-auto flex min-h-[120px] items-center justify-center rounded-lg border p-6">
+				<div class="bg-level-0 border-border mt-auto flex min-h-30 items-center justify-center rounded-lg border p-6">
 					{#if comp.name === 'Button'}
 						<Button variant="primary">Click Me</Button>
 					{:else if comp.name === 'Input'}

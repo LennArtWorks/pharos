@@ -3,10 +3,10 @@
 	import { PERMISSIONS } from '$lib/config/permissions';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import * as Select from '$lib/components/ui/Select';
-	import SyncButton from '$lib/components/layout/overlays/contents/SyncButton.svelte';
+	import SyncButton from '$lib/components/layout/overlays/settings/OrgSettings/SyncButton.svelte';
 	import { locale } from '$lib/language/i18n.svelte';
 	import { onMount } from 'svelte';
-	import OverlayTemplateSettings from '../templates/OverlayTemplateSettings.svelte';
+	import OverlayTemplateSettings from '../../templates/OverlayTemplateSettings.svelte';
 
 	let { closeOverlay }: { closeOverlay: () => void } = $props();
 

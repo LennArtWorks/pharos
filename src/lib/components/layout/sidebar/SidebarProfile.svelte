@@ -18,10 +18,8 @@
 			</button>
 
 			<form method="POST" action="/logout">
-				<Button type="submit" variant="tertiary" size="s" aria-label="Logout">
-					{#snippet children()}
-						<Icon name="logout" class="h-main-2xs" />
-					{/snippet}
+				<Button type="submit" variant="tertiary" size="s" aria-label="Logout" icon>
+					<Icon name="collapse" class="h-main-2xs" />
 				</Button>
 			</form>
 		</div>

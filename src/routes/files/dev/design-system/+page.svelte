@@ -88,7 +88,7 @@
 
 			<div class="text-ink-50 group-hover:text-ink-90 mt-auto flex items-center gap-2 transition-colors">
 				<Icon name="key" class="h-5 w-5" />
-				<div class="bg-ink-50 group-hover:bg-ink-90 h-[2px] w-4 transition-colors"></div>
+				<div class="bg-ink-50 group-hover:bg-ink-90 h-0.5 w-4 transition-colors"></div>
 				<Icon name="person" class="h-5 w-5" />
 			</div>
 		</a>
