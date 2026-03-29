@@ -1,7 +1,7 @@
 import { getCloudClient, type CloudConfig } from './origin/client';
 import { getMetaCache, setMetaCache } from '../cache';
 import { SYSTEM_CONFIG, type FSRNode, FILE_TYPE_CONFIG } from '$lib/config/filesystem';
-import { buildNodeFilename, getFileConfig, getUIFileType } from '$lib/utils/filesystem';
+import { buildNodeFilename, getFileConfig, getUIFileType } from '$lib/utils/config/filesystem';
 
 export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
   if (!orgConfig) throw new Error("No organization config provided to getFileSystemMeta");

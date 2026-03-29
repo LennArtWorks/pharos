@@ -1,23 +1,24 @@
-
-/* ---------------------------------------------------------------- *
- *  check for user role
- * ---------------------------------------------------------------- */
-
 import type { LayoutServerLoad } from './$types';
-import { DEFAULT_ROLES } from '$lib/config/permissions';
-import { generateAnonymousUser, generateRandomColor, generateRandomName } from '$lib/utils/user';
-
+import { DEFAULT_ROLES, SETUP_ROLES } from '$lib/config/cloudfiles/roles';
+import { generateAnonymousSessionUser } from '$lib/config/cloudfiles/user';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
+  // Fallback to our config's guest role if orgConfig isn't loaded yet
+  const guestRole = locals.orgConfig?.guestRole || SETUP_ROLES.GUEST;
+
+  // Since hooks.server.ts already generates an anonymous user for guests, 
+  // locals.user should always exist. The fallback here is just for type safety.
   const user = locals.user ? {
     id: locals.user.id,
-    name: locals.user.name || generateRandomName(),
-    color: generateRandomColor(),
-    role: locals.user.role
-  } : generateAnonymousUser();
+    name: locals.user.name,
+    color: locals.user.color,
+    role: locals.user.role,
+    overrides: locals.user.overrides || []
+  } : generateAnonymousSessionUser(guestRole);
 
   return {
     user,
+    // Provide activeRoles to the frontend so `has()` can calculate permissions
     activeRoles: locals.orgConfig?.roles || DEFAULT_ROLES
   };
 };

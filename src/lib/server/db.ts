@@ -19,6 +19,7 @@ db.exec(`
     cloud_password_encrypted TEXT NOT NULL,
     cloud_directory TEXT NOT NULL,
     is_active INTEGER DEFAULT 1,
+    roles_json TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 

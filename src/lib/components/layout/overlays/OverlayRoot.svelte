@@ -3,7 +3,7 @@
 	import { closeOverlay } from '$lib/utils/overlay';
 
 	// 1. Import all your overlay contents
-	import OrgSettings from './settings/OrgSettings/OrgSettings.svelte';
+	import OrgSettings from './content/settings/OrgSettings/OrgSettings.svelte';
 	import DevOrganisationsEditor from '$lib/components/dev/layout/overlays/contents/DevOrganisationsEditor.svelte';
 
 	// 2. Map the URL parameter string to the imported component

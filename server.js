@@ -35,7 +35,7 @@ import { readJsonDocument, writeJsonDocument } from './src/lib/server/cloud/file
 import { getCloudClient } from './src/lib/server/cloud/origin/client.ts';
 import { getMetaCache } from './src/lib/server/cache.ts';
 import { decrypt } from './src/lib/server/auth/crypto.ts';
-import { getFileConfig, buildNodeFilename } from './src/lib/utils/filesystem.ts'; // NEW IMPORT
+import { getFileConfig, buildNodeFilename } from './src/lib/utils/config/filesystem.ts';
 
 const PORT = process.env.PORT || 3000;
 const app = express();

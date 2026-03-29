@@ -15,7 +15,7 @@
 	} = $props();
 </script>
 
-<div class="bg-level-1 flex h-full w-full flex-col">
+<div class="flex h-full w-full flex-col">
 	<div class="border-border bg-level-0 flex shrink-0 items-center justify-between border-b p-6">
 		<h2 class="text-label-xl text-ink-90 font-bold">{title}</h2>
 		<button type="button" onclick={onclose} class="text-ink-50 hover:text-ink-90 cursor-pointer transition-colors outline-none">

@@ -12,24 +12,24 @@ export const FILE_TYPE_CONFIG = {
   internal: {
     sysfile: {
       active: true, type: "file", icon: 'settings', ext: ['.fsrsys'],
-      component: "ContentTypeNotSupported", websocket: false, defaultContent: {}
+      component: "ContentTypeNotSupported", websocket: false, defaultContent: { name: "New Sysfile" }
     },
     sysfolder: {
       active: true, type: "folder", icon: 'folder', ext: ['.sysfolder'],
-      component: "ContentTypeFolder", websocket: false, defaultContent: {}
+      component: "ContentTypeFolder", websocket: false, defaultContent: { name: "New Sysfolder" }
     },
     folder: {
       active: true, type: "folder", icon: 'folder', ext: [''],
-      component: "ContentTypeFolder", websocket: false, defaultContent: {}
+      component: "ContentTypeFolder", websocket: false, defaultContent: { name: "New Folder" }
     },
     workspace: {
       active: true, type: "workspace", icon: '', ext: ['.workspace'],
-      component: "ContentTypeWorkspace", websocket: false, defaultContent: {}
+      component: "ContentTypeWorkspace", websocket: false, defaultContent: { name: "New Workspace" }
     },
     document: {
       active: true, type: "file", icon: 'file', ext: ['.fsrdoc'],
       component: "ContentTypeDocument", websocket: true,
-      defaultContent: { type: "doc", name: "New Document", content: [{ type: "paragraph", content: [] }] }
+      defaultContent: { name: "New Document", type: "doc", content: [{ type: "paragraph", content: [] }] }
     },
     tasks: {
       active: false, type: "file", icon: 'checkbox', ext: ['.fsrtasks'],

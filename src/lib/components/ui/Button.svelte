@@ -9,7 +9,7 @@
 		leading?: Snippet;
 		label?: Snippet;
 		trailing?: Snippet;
-		variant?: 'primary' | 'secondary' | 'tertiary' | 'template' | 'unstyled';
+		variant?: 'primary' | 'secondary' | 'tertiary' | 'empty' | 'unstyled';
 		size?: 'xs' | 's' | 'sm' | 'm' | 'l' | 'xl';
 		active?: boolean;
 		disabled?: boolean;
@@ -28,7 +28,7 @@
 		primary: 'bg-button hover:bg-button-hover-high text-ink-10',
 		secondary: 'bg-transparent ring ring-inset ring-border hover:bg-button-hover-low text-ink-90',
 		tertiary: 'bg-transparent hover:bg-button-hover-low text-ink-90',
-		template: 'bg-transparent border-custom-dashed hover:bg-button-hover-low text-ink-50',
+		empty: 'bg-transparent border-custom-dashed hover:bg-button-hover-low text-ink-50',
 		unstyled: 'bg-transparent p-0 text-ink-50 hover:text-ink-90 transition-colors'
 	};
 
@@ -45,7 +45,7 @@
 	// Horizontal Padding (Ignored if icon=true)
 	const paddingClasses = $derived({
 		xs: icon ? 'w-main-xs justify-center p-0' : 'px-s',
-		s: icon ? 'w-main-s justify-center p-0' : 'pl-2xs pr-xs', // Working padding for small size
+		s: icon ? 'w-main-s justify-center p-0' : 'pl-3xs pr-2xs', // Working padding for small size
 		sm: icon ? 'w-main-s justify-center p-0' : 'px-m',
 		m: icon ? 'w-main-m justify-center p-0' : 'px-xl',
 		l: icon ? 'w-main-l justify-center p-0' : 'px-l',

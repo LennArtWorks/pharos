@@ -155,7 +155,7 @@
 		{/if}
 
 		<Button
-			variant={template ? 'template' : 'tertiary'}
+			variant={template ? 'empty' : 'tertiary'}
 			{size}
 			active={active || isEditing}
 			disabled={disabled || loading}

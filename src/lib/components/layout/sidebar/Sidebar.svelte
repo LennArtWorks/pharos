@@ -63,7 +63,7 @@
 	</Button>
 
 	<Button variant="primary" size="l" href="../"><Icon name="arrow-left" />{t('back')}</Button>
-	<Button variant="template" size="s"><Icon name="arrow-left" />Template</Button> -->
+	<Button variant="empty" size="s"><Icon name="arrow-left" />Template</Button> -->
 
 	<section data-uiname="top-part" class="h-main-l flex items-center justify-between">
 		<p class="font-label-m">Organisation</p>

@@ -2,7 +2,9 @@ import { json } from '@sveltejs/kit';
 import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
 import { getFileSystemMeta, resolvePhysicalPath } from '$lib/server/cloud/service';
 import { readJsonDocument, writeJsonDocument } from '$lib/server/cloud/filetypes/json';
-import { readSecureFile, writeSecureFile } from '$lib/server/cloud/secureHandler'; // NEW IMPORTS
+import { readSecureFile, writeSecureFile } from '$lib/server/auth/secureHandler';
+import { PERMISSIONS } from '$lib/config/permissions';
+import { hasPermission } from '$lib/utils/config/permissions';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
@@ -10,7 +12,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   if (!id) return json({ error: 'Missing file ID' }, { status: 400 });
 
   const orgConfig = locals.orgConfig;
-  if (!orgConfig) return json({ error: 'Unauthorized' }, { status: 401 });
+  if (!orgConfig || !locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+  // SECURITY: Check if they can read files
+  if (!hasPermission(locals.user.role, PERMISSIONS.FILES.READ, orgConfig.roles || {}, locals.user.overrides || [])) {
+    return json({ error: 'Permission denied.' }, { status: 403 });
+  }
 
   try {
     const meta = await getFileSystemMeta(orgConfig);
@@ -21,8 +28,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     if (!physicalPath) return json({ error: 'Could not resolve physical path' }, { status: 404 });
 
     let documentData;
-
-    // ROUTING LOGIC: If wrapped in .fsrsecure, decrypt it. Otherwise, read standard JSON.
     if (node.isSecure) {
       documentData = await readSecureFile(orgConfig, physicalPath);
     } else {
@@ -38,15 +43,18 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const orgConfig = locals.orgConfig;
-  if (!orgConfig) return json({ error: 'Unauthorized' }, { status: 401 });
+  if (!orgConfig || !locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+  // SECURITY: Check if they can edit files
+  if (!hasPermission(locals.user.role, PERMISSIONS.FILES.EDIT, orgConfig.roles || {}, locals.user.overrides || [])) {
+    return json({ error: 'Permission denied.' }, { status: 403 });
+  }
 
   try {
     const body = await request.json();
     const { id, content } = body;
 
-    if (!id || content === undefined) {
-      return json({ error: 'Invalid payload' }, { status: 400 });
-    }
+    if (!id || content === undefined) return json({ error: 'Invalid payload' }, { status: 400 });
 
     const meta = await getFileSystemMeta(orgConfig);
     const node = meta.nodes[id];
@@ -55,9 +63,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const physicalPath = await resolvePhysicalPath(orgConfig, id);
     if (!physicalPath) return json({ error: 'Could not resolve physical path' }, { status: 404 });
 
-    // ROUTING LOGIC: Encrypt on the way out if wrapped
     if (node.isSecure) {
-      // We use standard writeSecureFile here, not the backup version!
       await writeSecureFile(orgConfig, physicalPath, content);
     } else {
       const client = getCloudClient(orgConfig as CloudConfig);

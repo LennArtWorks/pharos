@@ -2,7 +2,7 @@
 	import type { FSRNode } from '$lib/config/filesystem';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
-	import { getFileConfig } from '$lib/utils/filesystem';
+	import { getFileConfig } from '$lib/utils/config/filesystem';
 
 	let { node }: { node: FSRNode } = $props();
 

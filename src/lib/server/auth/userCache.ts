@@ -4,7 +4,8 @@ interface UserProfile {
   id: string;
   name: string;
   role: string;
-  color?: string; // Adding color since we use it in the UI
+  color?: string;
+  overrides?: string[];
 }
 
 const cache = new Map<string, { data: UserProfile; expires: number }>();

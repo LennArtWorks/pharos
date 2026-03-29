@@ -3,8 +3,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import { dev } from '$app/environment';
 	import FloatingNav, { type NavSection } from '$lib/components/layout/FloatingNav.svelte';
+	import { GLOBAL_SETTINGS } from '$lib/config/globalsettings.js';
 
 	let { form } = $props();
 
@@ -68,7 +68,7 @@
 </script>
 
 <div class="login-page bg-level-0 flex h-screen w-full items-center justify-center bg-cover bg-center bg-no-repeat">
-	{#if dev}
+	{#if GLOBAL_SETTINGS.DEV.IS_DEVMODE}
 		<div class="fixed top-1/2 left-4 z-50 -translate-y-1/2">
 			<FloatingNav sections={devSections} />
 		</div>
@@ -210,7 +210,7 @@
 					<Button variant="primary" type="submit" name="actionType" value="setup" disabled={isLoading} class="w-full justify-center">
 						{isLoading ? 'processing...' : 'login'}
 					</Button>
-					<Button variant="template" type="submit" name="actionType" value="skip" disabled={isLoading} class="w-full justify-center">Skip for now</Button>
+					<Button variant="empty" type="submit" name="actionType" value="skip" disabled={isLoading} class="w-full justify-center">Skip for now</Button>
 				</div>
 
 				<div class="mt-4 flex flex-col gap-4">

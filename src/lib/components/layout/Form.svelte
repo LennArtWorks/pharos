@@ -5,7 +5,7 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLFormAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils';
-	import { has, FORM_PERMISSION_KEY } from '$lib/utils/permissions';
+	import { has, FORM_PERMISSION_KEY } from '$lib/utils/config/permissions';
 
 	type BaseProps = {
 		children: Snippet;

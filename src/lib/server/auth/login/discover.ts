@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import crypto from 'crypto';
 import db from '$lib/server/db';
 import { checkRateLimit } from '$lib/server/auth/rateLimit';
-import { sendOtpEmail } from '$lib/server/email'; // Uncomment when Zoho is ready
+import { sendOtpEmail } from '$lib/server/notifications/email';
 
 export const discover = async ({ request, getClientAddress, locals }: any) => {
   const data = await request.formData();

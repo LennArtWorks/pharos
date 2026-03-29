@@ -4,7 +4,7 @@
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils';
 	import Icon from '$lib/components/ui/Icon.svelte';
-	import { has, FORM_PERMISSION_KEY } from '$lib/utils/permissions';
+	import { has, FORM_PERMISSION_KEY } from '$lib/utils/config/permissions';
 
 	type BaseProps = {
 		value?: string | number | null;

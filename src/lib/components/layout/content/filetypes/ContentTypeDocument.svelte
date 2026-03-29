@@ -16,7 +16,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 
-	import { has } from '$lib/utils/permissions';
+	import { has } from '$lib/utils/config/permissions';
 	import { PERMISSIONS } from '$lib/config/permissions';
 
 	let { node }: { node: FSRNode } = $props();

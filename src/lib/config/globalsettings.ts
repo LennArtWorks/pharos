@@ -1,4 +1,12 @@
 export const GLOBAL_SETTINGS = {
+  DEV: {
+    IS_DEVMODE: false,
+    DEV_ACCOUNTS: {
+      DEV_ADMIN: { id: 'dev_admin', name: "Dev Admin", email: 'dev@admin', role: 'Admin', overrides: [] },
+      DEV_READONLY: { id: 'dev_readonly', name: "Dev Readonly", email: 'dev@readonly', role: 'Admin', overrides: [] },
+      DEV_NOACCESS: { id: 'dev_noaccess', name: "Dev Noaccess", email: 'dev@noaccess', role: 'Admin', overrides: [] },
+    }
+  },
   APP_INFO: {
     // Used in titles, emails, and UI
     NAME: 'FSR-OS',
@@ -17,6 +25,9 @@ export const GLOBAL_SETTINGS = {
   },
   FILES: {
     AUTOSAVE_DELAY_MS: 1500,
+
+    // 5 seconds groups rapid changes (like a burst of renaming/moving) into one API call.
+    TREE_SYNC_DEBOUNCE_MS: 5000,
   },
   WEBSOCKETS: {
     SERVER_SYNC_INTERVAL_MS: 10000,

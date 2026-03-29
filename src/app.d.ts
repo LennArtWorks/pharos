@@ -14,13 +14,20 @@ declare global {
 				decrypted_password?: string;
 				roles?: Record<string, string[]>;
 				roles_json?: string | null;
+				guestRole?: string;
+				newUserRole?: string;
 			};
 			user: {
 				id: string;
 				role: string;
 				name?: string;
 				color?: string;
+				overrides?: string[];
 			} | null;
+			operator?: {
+				tier: 'designer' | 'developer' | 'support' | 'owner';
+				isSimulating: boolean;
+			};
 		}
 	}
 }

@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import db from '$lib/server/db';
-import { readSecureFile } from '$lib/server/cloud/secureHandler';
+import { readSecureFile } from '$lib/server/auth/secureHandler';
 import { SYSTEM_CONFIG } from '$lib/config/filesystem';
 import { createSession } from './sessionUtils';
 import * as OTPAuth from 'otpauth';

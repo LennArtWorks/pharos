@@ -2,6 +2,7 @@
 import crypto from 'crypto';
 import type { Database } from 'better-sqlite3';
 import { GLOBAL_SETTINGS } from '$lib/config/globalsettings';
+import { SESSION_COOKIE } from '$lib/config/cookies/session';
 
 export function createSession(db: Database, cookies: any, orgId: string, accountId: string) {
   const sessionId = crypto.randomUUID();
@@ -12,11 +13,5 @@ export function createSession(db: Database, cookies: any, orgId: string, account
     VALUES (?, ?, ?, ?)
   `).run(sessionId, orgId, accountId, sessionExpiresAt);
 
-  cookies.set('fsr_session', sessionId, {
-    path: '/',
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: GLOBAL_SETTINGS.ACCOUNT.LOGIN_SESSION_DURATION
-  });
+  cookies.set(SESSION_COOKIE.NAME, sessionId, SESSION_COOKIE.OPTIONS);
 }

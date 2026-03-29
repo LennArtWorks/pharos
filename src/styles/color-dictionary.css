@@ -52,9 +52,7 @@
    Colored Semantics                
 ** ------------------------------- */
 
-:root,
 .theme-neutral {
-
   /* level-1 = layout */
   --color-level-1: var(--color-neutral-200);
   --color-level-1-hover: var(--color-neutral-250);
@@ -65,6 +63,40 @@
   --color-level-2-hover: var(--color-neutral-150);
   --color-level-2-active: var(--color-accent-200);
 }
+
+.theme-accent {
+  /* level-1 = layout */
+  --color-level-1: var(--color-accent-200);
+  --color-level-1-hover: var(--color-accent-300);
+  --color-level-1-active: var(--color-accent-400);
+
+  /* level-2 = content */
+  --color-level-2: var(--color-accent-100);
+  --color-level-2-hover: var(--color-accent-200);
+  --color-level-2-active: var(--color-accent-300);
+
+  /* ink / text */
+  --color-ink-90: var(--color-accent-600);
+  /* --color-ink-80: var(--color-accent-800);
+  --color-ink-70: var(--color-accent-700);
+  --color-ink-60: var(--color-accent-600);
+  --color-ink-50: var(--color-accent-500);
+  --color-ink-40: var(--color-accent-400);
+  --color-ink-30: var(--color-accent-300);
+  --color-ink-20: var(--color-accent-200);
+  --color-ink-10: var(--color-accent-100); */
+
+  /* publics */
+  --color-border: var(--color-accent-300);
+
+  /* buttons */
+  --color-button: var(--color-accent-900);
+  --color-button-hover-high: var(--color-accent-800);
+  --color-button-hover-low: var(--color-accent-200);
+  --color-button-active: var(--color-accent-300);
+}
+
+
 
 /* ------------------------------- **
    Primitive Colors                

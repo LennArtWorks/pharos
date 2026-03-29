@@ -11,8 +11,8 @@
 	import ContentTypeTasks from './filetypes/ContentTypeTasks.svelte';
 	import ContentTypeNotSupported from './filetypes/ContentTypeNotSupported.svelte';
 	import ContentTypeForbidden from './filetypes/ContentTypeForbidden.svelte';
-	import { hasPermission } from '$lib/config/permissions';
-	import { getFileConfig } from '$lib/utils/filesystem';
+	import { hasPermission } from '$lib/utils/config/permissions';
+	import { getFileConfig } from '$lib/utils/config/filesystem';
 
 	let { node }: { node: FSRNode | null } = $props();
 	type FSRComponent = Component<{ node: FSRNode }>;

@@ -1,9 +1,14 @@
 import db from "$lib/server/db";
 import { decrypt } from '$lib/server/auth/crypto';
-import { DEFAULT_ROLES } from "$lib/config/permissions";
+import { DEFAULT_ROLES, SETUP_ROLES } from "$lib/config/cloudfiles/roles";
+// import { generateAnonymousSessionUser } from "$lib/config/cloudfiles/user";
 import { getCachedUser, setCachedUser } from "$lib/server/auth/userCache";
-import { readSecureFile } from "$lib/server/cloud/secureHandler";
+import { readSecureFile } from "$lib/server/auth/secureHandler";
 import { SYSTEM_CONFIG } from "$lib/config/filesystem";
+import { GLOBAL_SETTINGS } from "$lib/config/globalsettings";
+import { dev } from '$app/environment';
+import { SESSION_COOKIE } from '$lib/config/cookies/session';
+import { generateAnonymousSessionUser } from "$lib/config/cloudfiles/user";
 
 interface OrganisationRow {
   organisation_id: string;
@@ -20,84 +25,89 @@ interface OrganisationRow {
 
 export async function handle({ event, resolve }) {
   const subdomain = event.url.hostname.split('.')[0];
-  console.log(`[HOOK] Request: ${event.url.pathname} | Subdomain parsed: ${subdomain}`);
-
   const org = db.prepare('SELECT * FROM organisations WHERE subdomain = ?').get(subdomain) as OrganisationRow | undefined;
 
   if (org) {
     let parsedRoles = DEFAULT_ROLES;
+    let guestRole = SETUP_ROLES.GUEST;
+    let newUserRole = SETUP_ROLES.NEW_USER;
+
     try {
       if (org.roles_json) {
         const parsed = JSON.parse(org.roles_json);
-        if (Object.keys(parsed).length > 0) {
+
+        if (parsed.roles && Object.keys(parsed.roles).length > 0) {
+          parsedRoles = parsed.roles;
+          guestRole = parsed.guestRole || guestRole;
+          newUserRole = parsed.newUserRole || newUserRole;
+        } else if (Object.keys(parsed).length > 0 && !parsed.roles) {
+          // Legacy flat structure catch
           parsedRoles = parsed;
         }
       }
-    } catch (e) { /* fallback to default */ }
+    } catch (e) {
+      // JSON failed, keep defaults 
+    }
 
-    // Reconstruct full config with decrypted password
+    // BULLETPROOF CHECK: If somehow parsedRoles is still empty, force defaults
+    if (Object.keys(parsedRoles).length === 0) {
+      parsedRoles = DEFAULT_ROLES;
+    }
+
     const orgConfig = {
       ...org,
       decrypted_password: decrypt(org.cloud_password_encrypted),
-      roles: parsedRoles
+      roles: parsedRoles,
+      guestRole,
+      newUserRole
     };
 
     event.locals.orgConfig = orgConfig;
 
-    const sessionId = event.cookies.get('fsr_session');
+    const sessionId = event.cookies.get(SESSION_COOKIE.NAME);
     let currentUser = null;
 
     if (sessionId) {
-      const session = db.prepare(`
-        SELECT account_id, expires_at 
-        FROM sessions 
-        WHERE id = ? AND organisation_id = ?
-      `).get(sessionId, org.organisation_id) as { account_id: string, expires_at: number } | undefined;
+      const session = db.prepare(`SELECT account_id, expires_at FROM sessions WHERE id = ? AND organisation_id = ?`)
+        .get(sessionId, org.organisation_id) as { account_id: string, expires_at: number } | undefined;
 
       if (session && session.expires_at > Date.now()) {
-        const accountId = session.account_id;
+        currentUser = getCachedUser(session.account_id);
 
-        // 1. Check RAM Cache
-        currentUser = getCachedUser(accountId);
-
-        // 2. Fetch from WebDAV if not in cache
         if (!currentUser) {
           try {
-            const profilePath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/accounts.sysfolder/${accountId}.fsrsys.fsrsecure`;
+            const profilePath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.ACCOUNTS_FOLDER.join('')}/${session.account_id}.fsrsys.fsrsecure`;
             const profileData = await readSecureFile(orgConfig, profilePath);
 
             if (profileData) {
               currentUser = {
-                id: accountId,
-                // Drill into .profile and .access correctly!
+                id: session.account_id,
                 name: profileData.profile?.displayName || profileData.profile?.firstName || 'Unknown User',
-                role: profileData.access?.roles?.[0] || 'Member',
-                color: profileData.profile?.color || '#888888' // Fallback color just in case
+                role: profileData.access?.roles?.[0] || newUserRole,
+                color: profileData.profile?.color || '#888888',
+                overrides: profileData.access?.overrides || [] // <--- Ensure overrides load into memory!
               };
-            } else {
-              throw new Error("Profile file not found");
+              setCachedUser(session.account_id, currentUser);
             }
           } catch (e) {
-            // Fallback for missing profiles during development
-            console.log(`[AUTH] Profile missing for ${accountId}, using fallback.`);
-            currentUser = {
-              id: accountId,
-              name: 'New User',
-              role: 'Admin'
-            };
+            console.log(`[AUTH] Profile missing, using fallback.`);
           }
-
-          // Cache the result
-          setCachedUser(accountId, currentUser);
         }
       } else if (session) {
-        // Expired Session - Clean it up
         db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
-        event.cookies.delete('fsr_session', { path: '/' });
+        event.cookies.delete(SESSION_COOKIE.NAME, { path: SESSION_COOKIE.OPTIONS.path });
       }
     }
 
+    if (!currentUser) {
+      currentUser = generateAnonymousSessionUser(guestRole) as any;
+    }
+
     event.locals.user = currentUser;
+
+    if (dev || GLOBAL_SETTINGS.DEV.IS_DEVMODE) {
+      event.locals.user = GLOBAL_SETTINGS.DEV.DEV_ACCOUNTS.DEV_ADMIN as any;
+    }
   }
 
   return await resolve(event);

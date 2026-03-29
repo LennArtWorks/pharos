@@ -2,6 +2,8 @@
 	import { afterNavigate } from '$app/navigation';
 	import Sidebar from '$lib/components/layout/sidebar/Sidebar.svelte';
 	import ContentHeader from '$lib/components/layout/content/ContentHeader.svelte';
+	import ContextMenu from '$lib/components/layout/ContextMenu.svelte';
+	import { closeContextMenu, openContextMenu } from '$lib/state/contextMenu.svelte';
 
 	let { children } = $props();
 
@@ -32,3 +34,7 @@
 		</section>
 	</main>
 </div>
+
+<svelte:window onmousedown={closeContextMenu} onscroll={closeContextMenu} onresize={closeContextMenu} oncontextmenu={(e) => openContextMenu(e, 'general')} />
+
+<ContextMenu />

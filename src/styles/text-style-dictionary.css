@@ -51,14 +51,14 @@
 
 @utility font-label-s {
   font-family: var(--font-sans);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 @utility font-label-xs {
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }

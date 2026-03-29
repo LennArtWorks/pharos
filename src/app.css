@@ -133,7 +133,7 @@ button {
    Specific Stylings                
 ** ------------------------------- */
 
-.sidebar-section>*>.sidebar-section {
+.sidebar-section .sidebar-section {
   padding-left: var(--setup-spacing-m);
-  margin-top: var(--setup-spacing-xl);
+  margin-top: var(--setup-spacing-2xs);
 }
