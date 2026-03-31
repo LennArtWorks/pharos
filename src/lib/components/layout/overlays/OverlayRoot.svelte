@@ -4,7 +4,7 @@
 
 	// 1. Import all your overlay contents
 	import OrgSettings from './content/settings/OrgSettings/OrgSettings.svelte';
-	import DevOrganisationsEditor from '$lib/components/dev/layout/overlays/contents/DevOrganisationsEditor.svelte';
+	import DevOrganisationsEditor from '$lib/components/layout/overlays/content/DevOrganisationsEditor.svelte';
 
 	// 2. Map the URL parameter string to the imported component
 	const overlayRegistry: Record<string, any> = {

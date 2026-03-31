@@ -27,6 +27,8 @@ declare global {
 			operator?: {
 				tier: 'designer' | 'developer' | 'support' | 'owner';
 				isSimulating: boolean;
+				isDevMode: boolean;
+				email: string;
 			};
 		}
 	}

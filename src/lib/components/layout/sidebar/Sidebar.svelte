@@ -57,7 +57,7 @@
 
 	<!-- <Button variant="primary" onclick={() => console.log('Navigating...')}><Icon name="settings" />{t('dashboard')}</Button>
 
-	<Button variant="secondary" href="/files/dev/icons" onclick={() => console.log('Opening Settings...')}>
+	<Button variant="secondary" href="/dev/icons" onclick={() => console.log('Opening Settings...')}>
 		<Icon name="settings" />
 		<span>{t('iconOverview')}</span>
 	</Button>
@@ -78,7 +78,7 @@
 					</Button>
 				</Popover.Trigger>
 
-				<Popover.Content class="w-48">
+				<Popover.Content class="w-48" side="bottom" align="start">
 					<Button variant="tertiary" size="s" href="/" class="w-full justify-start">
 						{#snippet leading()}
 							<Icon name="web" />

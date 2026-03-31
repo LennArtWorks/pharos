@@ -3,7 +3,6 @@ import { PERMISSIONS } from '$lib/config/permissions';
 import { hasPermission } from '$lib/utils/config/permissions';
 import { readSecureFile, writeSecureFile } from '$lib/server/auth/secureHandler';
 import { SYSTEM_CONFIG } from '$lib/config/filesystem';
-import { GLOBAL_SETTINGS } from '$lib/config/globalsettings';
 
 export async function GET({ locals }) {
   if (!locals.orgConfig || !locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,21 +23,13 @@ export async function GET({ locals }) {
       users.push({
         id: info.accountId,
         email: email,
-        // Match the new nested structure from config/cloudfiles/accounts.ts
         name: info.displayName || info.name || 'Unknown',
         role: info.access?.roles?.[0] || info.role || 'Guest',
         overrides: info.access?.overrides || info.overrides || []
       });
     }
 
-    if (GLOBAL_SETTINGS.DEV.IS_DEVMODE) {
-      Object.values(GLOBAL_SETTINGS.DEV.DEV_ACCOUNTS).forEach(devAcc => {
-        users.push({ id: devAcc.id, email: devAcc.email, name: devAcc.name, role: devAcc.role, overrides: [] });
-      });
-    }
-
-    const availableRoles = locals.orgConfig.roles || {};
-    return json({ users, roles: availableRoles });
+    return json({ users, roles: locals.orgConfig.roles || {} });
   } catch (error: any) {
     return json({ error: 'Failed to load accounts' }, { status: 500 });
   }

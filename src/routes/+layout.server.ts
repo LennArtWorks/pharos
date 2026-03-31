@@ -18,7 +18,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
   return {
     user,
-    // Provide activeRoles to the frontend so `has()` can calculate permissions
+    operator: locals.operator || null,
     activeRoles: locals.orgConfig?.roles || DEFAULT_ROLES
   };
 };

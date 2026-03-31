@@ -1,14 +1,14 @@
 import Database from 'better-sqlite3';
 
 // Initialize the SQLite database file
-const db = new Database('organisations.db', { verbose: console.log });
+const db = new Database('databases/organisations.db', { verbose: console.log });
 
 // Enable foreign keys for cascading deletes
 db.pragma('foreign_keys = ON');
 
 // Initialize the schema if it doesn't exist
 db.exec(`
-  -- 1. TENANTS TABLE (Existing)
+  -- 1. Organisations TABLE (Existing)
   CREATE TABLE IF NOT EXISTS organisations (
     organisation_id TEXT PRIMARY KEY,
     subdomain TEXT UNIQUE NOT NULL,
@@ -52,6 +52,17 @@ db.exec(`
     key TEXT PRIMARY KEY, -- Combination of IP + Endpoint + Organisation (e.g., '192.168.1.1:/login:org_123')
     hits INTEGER DEFAULT 1,
     window_start INTEGER NOT NULL -- Timestamp of the first request in the current window
+  );
+
+  -- 5. AUDIT LOGS (GOD MODE ACCOUNTABILITY)
+  -- Tracks all critical actions taken by Platform Operators
+  CREATE TABLE IF NOT EXISTS audit_logs (
+    id TEXT PRIMARY KEY,
+    organisation_id TEXT, -- Can be NULL if it's a global action
+    operator_email TEXT NOT NULL,
+    action TEXT NOT NULL, -- e.g., 'SIMULATE_ROLE', 'DELETE_ORG', 'FLUSH_CACHE'
+    details TEXT, -- JSON string with extra context (e.g., '{"simulated_role": "Guest"}')
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
 

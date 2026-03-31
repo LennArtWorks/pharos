@@ -11,12 +11,30 @@
 	let width = $state(0);
 	let height = $state(0);
 
-	let safeX = $derived(typeof window !== 'undefined' && contextMenu.x + 10 + width > window.innerWidth ? contextMenu.x - width - 10 : contextMenu.x + 10);
-	let safeY = $derived(typeof window !== 'undefined' && contextMenu.y + 10 + height > window.innerHeight ? contextMenu.y - height - 10 : contextMenu.y + 10);
+	let safeX = $state(contextMenu.x + 10);
+	let safeY = $state(contextMenu.y + 10);
+
+	let flipSubmenu = $state(false);
+
+	// Calculate the bounds purely on the client inside the effect
+	$effect(() => {
+		// We only care if it's open
+		if (!contextMenu.isOpen) {
+			activeSubmenu = null;
+			return;
+		}
+
+		// Now we are safely on the client, window is guaranteed to exist!
+		safeX = contextMenu.x + 10 + width > window.innerWidth ? contextMenu.x - width - 10 : contextMenu.x + 10;
+
+		safeY = contextMenu.y + 10 + height > window.innerHeight ? contextMenu.y - height - 10 : contextMenu.y + 10;
+
+		flipSubmenu = safeX + width + 180 > window.innerWidth;
+	});
 
 	// Sub-menu state
 	let activeSubmenu = $state<string | null>(null);
-	let flipSubmenu = $derived(typeof window !== 'undefined' && safeX + width + 180 > window.innerWidth);
+	// let flipSubmenu = $derived(typeof window !== 'undefined' && safeX + width + 180 > window.innerWidth);
 
 	$effect(() => {
 		if (!contextMenu.isOpen) activeSubmenu = null;
@@ -35,7 +53,7 @@
 	<div
 		bind:clientWidth={width}
 		bind:clientHeight={height}
-		style="left: {safeX}px; top: {safeY}px;"
+		style="left: {safeX}px; top: {safeY}px; transition: none"
 		class="bg-level-1 border-border rounded-m fixed z-[9999] flex min-w-48 flex-col gap-1 border p-1 shadow-lg"
 		onmousedown={(e) => e.stopPropagation()}
 		oncontextmenu={(e) => {

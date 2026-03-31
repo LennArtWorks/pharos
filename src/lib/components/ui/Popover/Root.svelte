@@ -1,23 +1,21 @@
 <script lang="ts">
 	import { setPopoverContext } from './context.svelte';
 	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
 
-	let {
-		children,
-		closeOnClick = false
-	}: {
+	interface Props extends HTMLAttributes<HTMLDivElement> {
 		children: Snippet;
 		closeOnClick?: boolean;
-	} = $props();
+	}
 
+	let { children, closeOnClick = false, class: className = '', ...rest }: Props = $props();
 	const ctx = setPopoverContext(closeOnClick);
 
-	// Keep the context synced if the prop changes dynamically
 	$effect(() => {
 		ctx.closeOnClick = closeOnClick;
 	});
 </script>
 
-<div class="relative inline-flex">
+<div class="relative inline-flex {className}" {...rest}>
 	{@render children()}
 </div>

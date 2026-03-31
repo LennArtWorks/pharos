@@ -49,7 +49,7 @@
 
 	<div class="relative flex flex-1 flex-col overflow-hidden">
 		<div class="flex-1 overflow-y-auto p-12">
-			<div class="mx-auto max-w-3xl">
+			<div>
 				{@render children()}
 			</div>
 		</div>

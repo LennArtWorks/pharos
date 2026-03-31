@@ -5,8 +5,18 @@
 	import GeneralSettings from './pages/GeneralSettings.svelte';
 	import AccountsSettings from './pages/AccountsSettings.svelte';
 	import RolesSettings from './pages/RolesSettings.svelte';
+	import { PERMISSIONS } from '$lib/config/permissions';
+	import { has } from '$lib/utils/config/permissions';
 
 	let { closeOverlay }: { closeOverlay: () => void } = $props();
+
+	// 🚨 1. Kick unauthorized users out instantly!
+	$effect(() => {
+		// Replace PERMISSIONS.SETTINGS.VIEW with whatever your actual permission constant is
+		if (!has(PERMISSIONS.SYSTEM.SETTINGS.VIEW)) {
+			closeOverlay();
+		}
+	});
 
 	let activeTab = $state('general');
 	let hasUnsavedChanges = $state(false);
@@ -54,21 +64,23 @@
 	}
 </script>
 
-<OverlayTemplateSidebar onclose={closeOverlay} {sidebarGroups} bind:activeTab>
-	{#snippet children()}
-		{#if activeTab === 'general'}
-			<GeneralSettings bind:hasUnsavedChanges />
-		{:else if activeTab === 'accounts'}
-			<AccountsSettings />
-		{:else if activeTab === 'roles'}
-			<RolesSettings bind:this={rolesComponent} bind:hasUnsavedChanges />
-		{:else}
-			<div class="text-ink-50 mt-12 flex w-full justify-center italic">Placeholder</div>
-		{/if}
-	{/snippet}
+{#if has(PERMISSIONS.SYSTEM.SETTINGS.VIEW)}
+	<OverlayTemplateSidebar onclose={closeOverlay} {sidebarGroups} bind:activeTab>
+		{#snippet children()}
+			{#if activeTab === 'general'}
+				<GeneralSettings bind:hasUnsavedChanges />
+			{:else if activeTab === 'accounts'}
+				<AccountsSettings />
+			{:else if activeTab === 'roles'}
+				<RolesSettings bind:this={rolesComponent} bind:hasUnsavedChanges />
+			{:else}
+				<div class="text-ink-50 mt-12 flex w-full justify-center italic">Placeholder</div>
+			{/if}
+		{/snippet}
 
-	{#snippet footer()}
-		<Button variant="secondary" onclick={closeOverlay}>Cancel</Button>
-		<Button variant="primary" disabled={!hasUnsavedChanges} onclick={handleSave}>Save Changes</Button>
-	{/snippet}
-</OverlayTemplateSidebar>
+		{#snippet footer()}
+			<Button variant="secondary" onclick={closeOverlay}>Cancel</Button>
+			<Button variant="primary" disabled={!hasUnsavedChanges} onclick={handleSave}>Save Changes</Button>
+		{/snippet}
+	</OverlayTemplateSidebar>
+{/if}

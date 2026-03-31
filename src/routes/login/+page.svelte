@@ -1,4 +1,6 @@
 <script lang="ts">
+	import '../../styles/app.css';
+
 	import Form from '$lib/components/layout/Form.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -6,7 +8,7 @@
 	import FloatingNav, { type NavSection } from '$lib/components/layout/FloatingNav.svelte';
 	import { GLOBAL_SETTINGS } from '$lib/config/globalsettings.js';
 
-	let { form } = $props();
+	let { form, data } = $props();
 
 	let email = $state(form?.email || '');
 	let otp = $state('');
@@ -68,7 +70,7 @@
 </script>
 
 <div class="login-page bg-level-0 flex h-screen w-full items-center justify-center bg-cover bg-center bg-no-repeat">
-	{#if GLOBAL_SETTINGS.DEV.IS_DEVMODE}
+	{#if data.operator?.isDevMode || false}
 		<div class="fixed top-1/2 left-4 z-50 -translate-y-1/2">
 			<FloatingNav sections={devSections} />
 		</div>
