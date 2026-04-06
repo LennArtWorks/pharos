@@ -6,6 +6,8 @@ import { readSecureFile, writeSecureFile } from '$lib/server/auth/secureHandler'
 import { PERMISSIONS } from '$lib/config/permissions';
 import { hasPermission } from '$lib/utils/config/permissions';
 import type { RequestHandler } from './$types';
+import { logOrganisationAction } from '$lib/server/audit';
+import { queueCloudSync } from '$lib/server/cloud/syncQueue';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const id = url.searchParams.get('id');
@@ -69,6 +71,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       const client = getCloudClient(orgConfig as CloudConfig);
       await writeJsonDocument(client, physicalPath, content);
     }
+
+    const nodeName = node.name || 'Unknown';
+    logOrganisationAction(
+      orgConfig.organisation_id,
+      locals.user.id,
+      'FILE_UPDATE',
+      `Edited content of "${nodeName}" (${id})`
+    );
+    queueCloudSync(orgConfig);
 
     return json({ success: true, id });
   } catch (error: any) {

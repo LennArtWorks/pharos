@@ -6,9 +6,10 @@ import { hasPermission } from '$lib/utils/config/permissions';
 import { getFileSystemMeta, resolvePhysicalPath } from '$lib/server/cloud/service';
 import { writeSecureFile } from '$lib/server/auth/secureHandler';
 import { setMetaCache } from '$lib/server/cache';
-import { queueMetaSync, broadcastTreeUpdate } from '$lib/server/cloud/syncQueue';
+import { queueCloudSync, broadcastTreeUpdate } from '$lib/server/cloud/syncQueue';
 import { buildNodeFilename } from '$lib/utils/config/filesystem';
 import { generateBaseNode } from '$lib/config/cloudfiles/meta';
+import { logOrganisationAction } from '$lib/server/audit';
 
 export async function POST({ request, locals }) {
   if (!locals.orgConfig || !locals.user) return json({ error: 'Organization not found' }, { status: 400 });
@@ -31,26 +32,41 @@ export async function POST({ request, locals }) {
     let parentPath = parentId ? (await resolvePhysicalPath(locals.orgConfig, parentId) || '') : '';
     const physicalName = buildNodeFilename(id, typeConfig.ext[0], { isSecure });
     const fullPath = `/${parentPath}/${physicalName}`.replace(/\/+/g, '/');
-    const defaultContent = typeConfig.defaultContent || {};
 
-    if (isSecure) {
-      await writeSecureFile(locals.orgConfig, fullPath, defaultContent);
+    // THE FIX: Workspaces and Folders MUST be physical WebDAV directories, not JSON files!
+    if (typeConfig.type === 'workspace' || typeConfig.type === 'folder') {
+      await client.createDirectory(fullPath);
     } else {
-      await client.putFileContents(fullPath, JSON.stringify(defaultContent, null, 2));
+      const defaultContent = typeConfig.defaultContent || {};
+      if (isSecure) {
+        await writeSecureFile(locals.orgConfig, fullPath, defaultContent);
+      } else {
+        await client.putFileContents(fullPath, JSON.stringify(defaultContent, null, 2));
+      }
     }
 
-    // 2. LOGICAL OPERATION (Using our clean blueprint!)
+    // 2. LOGICAL OPERATION
     meta.nodes[id] = generateBaseNode(name, parentId || null, typeConfig.ext[0], isSecure, false);
 
     meta._meta.lastUpdated = Date.now();
     setMetaCache(locals.orgConfig.organisation_id, meta);
 
-    // 3. BACKGROUND TASKS
-    queueMetaSync(locals.orgConfig);
+    // 3. AUDIT LOGGING
+    const actionName = typeConfig.type === 'workspace' ? 'WORKSPACE_CREATE' : 'FILE_CREATE';
+    logOrganisationAction(
+      locals.orgConfig.organisation_id,
+      locals.user.id,
+      actionName,
+      `Created ${type} "${name}" (${id}) in parent ${parentId || 'root'}`
+    );
+
+    // 4. BACKGROUND TASKS
+    queueCloudSync(locals.orgConfig);
     broadcastTreeUpdate(locals.orgConfig.organisation_id);
 
     return json({ success: true, id });
   } catch (error: any) {
+    console.error("[Create API Error]", error);
     return json({ error: 'Failed to create item' }, { status: 500 });
   }
 }

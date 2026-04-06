@@ -1,21 +1,62 @@
+// src/routes/dev/backend/+page.server.ts
 import db from '$lib/server/db';
 import fs from 'fs';
 import path from 'path';
 import { GLOBAL_SETTINGS } from '$lib/config/globalsettings';
 import { FILE_TYPE_CONFIG, SYSTEM_CONFIG } from '$lib/config/filesystem';
 import { getCachedUser } from '$lib/server/auth/userCache';
+import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
+import { peekAuditLogs } from '$lib/server/cache';
 
 export const load = async ({ locals }) => {
   const orgCount = (db.prepare('SELECT COUNT(*) as c FROM organisations').get() as { c: number }).c;
   const allSessions = db.prepare('SELECT * FROM sessions ORDER BY created_at DESC LIMIT 50').all() as any[];
   const rateLimits = db.prepare('SELECT * FROM rate_limits ORDER BY window_start DESC LIMIT 20').all() as any[];
 
-  // NEW: Fetch Audit Logs
-  const auditLogs = db.prepare('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100').all() as any[];
-
   const now = Date.now();
   let activeCount = 0;
   const roleBreakdown: Record<string, number> = {};
+
+  // NEW: Fetch Audit Logs directly from the Organization's WebDAV + RAM
+  let auditLogs: any[] = [];
+
+  function parseLogLine(line: string) {
+    const match = line.match(/^\[(.*?)\] \[(.*?)\] \[(.*?)\] - (.*)$/);
+    if (!match) return null;
+    return {
+      created_at: match[1],
+      operator_email: match[2],
+      action: match[3],
+      details: match[4]
+    };
+  }
+
+  if (locals.orgConfig) {
+    const orgId = locals.orgConfig.organisation_id;
+    const client = getCloudClient(locals.orgConfig as CloudConfig);
+    const logPath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/audit.log`;
+
+    try {
+      // 1. Get saved logs from Sciebo
+      const rawContent = await client.getFileContents(logPath, { format: 'text' });
+      const savedLines = (rawContent as string).split('\n').filter(Boolean);
+
+      // 2. Get live pending logs from RAM
+      const pendingLines = peekAuditLogs(orgId);
+
+      // 3. Combine, parse, and reverse so newest is at the top
+      auditLogs = [...savedLines, ...pendingLines]
+        .map(parseLogLine)
+        .filter(Boolean)
+        .reverse()
+        .slice(0, 100);
+
+    } catch (e) {
+      // If WebDAV read fails (or file doesn't exist yet), just show RAM buffer
+      const pendingLines = peekAuditLogs(orgId);
+      auditLogs = pendingLines.map(parseLogLine).filter(Boolean).reverse();
+    }
+  }
 
   const enrichedSessions = allSessions.map(session => {
     const isActive = session.expires_at > now;
@@ -55,7 +96,7 @@ export const load = async ({ locals }) => {
     stats: {
       orgs: orgCount,
       rateLimits,
-      auditLogs, // <--- Added to payload
+      auditLogs,
       sessions: {
         total: enrichedSessions.length,
         active: activeCount,

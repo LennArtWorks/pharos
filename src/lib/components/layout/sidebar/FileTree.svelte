@@ -4,12 +4,14 @@
 
 	import SidebarSection from '$lib/components/layout/sidebar/SidebarSection.svelte';
 	import File from '$lib/components/blocks/File.svelte';
+	import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
 	import { FILE_TYPE_CONFIG, type FSRNode } from '$lib/config/filesystem';
 	import { PERMISSIONS } from '$lib/config/permissions';
-	import { has } from '$lib/utils/config/permissions'; // FIXED PATH
+	import { has } from '$lib/utils/config/permissions';
 	import { getFileConfig } from '$lib/utils/config/filesystem';
 	import { contextMenu, openContextMenu } from '$lib/state/contextMenu.svelte';
+	import type { ContextMenuItem } from '$lib/state/contextMenu.svelte';
 
 	import { apiCreateNode, apiRenameNode, apiDeleteNode, apiSortNode } from '$lib/utils/fileOperations';
 
@@ -18,7 +20,6 @@
 	let activeId = $derived(page.url.pathname.split('/').pop() || null);
 
 	let editingId = $state<string | null>(null);
-	let toastMessage = $state('');
 	let dropStates = $state<Record<string, 'before' | 'after' | 'inside' | null>>({});
 
 	onMount(async () => {
@@ -30,12 +31,41 @@
 		if (res.ok) tree = await res.json();
 	}
 
-	function showToast(msg: string) {
-		toastMessage = msg;
-		setTimeout(() => (toastMessage = ''), 3000);
+	function getContextMenuItems(node: FSRNode): ContextMenuItem[] {
+		const items: ContextMenuItem[] = [];
+
+		if (has(PERMISSIONS.FILES.EDIT)) {
+			items.push({ id: 'rename', type: 'action', label: 'Rename', icon: 'pencil', action: 'rename' });
+		}
+
+		if (has(PERMISSIONS.FILES.CREATE)) {
+			const fileTypeItems: ContextMenuItem[] = Object.entries(FILE_TYPE_CONFIG.internal)
+				.filter(([id, config]) => config.active && !['sysfolder', 'sysfile'].includes(id))
+				.map(([id, config]) => ({
+					id: `create-${id}`,
+					type: 'action',
+					label: id === 'workspace' ? 'Workspace' : id,
+					icon: config.icon as FigmaIconName,
+					action: `create:${id}`
+				}));
+
+			items.push({
+				id: 'create-menu',
+				type: 'submenu',
+				label: 'Create New...',
+				icon: 'add',
+				items: [...fileTypeItems, { id: 'div-upload', type: 'divider' }, { id: 'upload-file', type: 'action', label: 'Upload File...', icon: 'upload', action: 'create:upload' }]
+			});
+		}
+
+		if (has(PERMISSIONS.FILES.DELETE)) {
+			if (items.length > 0) items.push({ id: 'div-delete', type: 'divider' });
+			items.push({ id: 'delete', type: 'action', label: 'Move to Trash', icon: 'trash', action: 'delete', danger: true });
+		}
+
+		return items;
 	}
 
-	// --- Context Menu Listener ---
 	$effect(() => {
 		if (contextMenu.actionRequested) {
 			const action = contextMenu.actionRequested;
@@ -50,25 +80,26 @@
 				handleDelete(node.id);
 			} else if (action.startsWith('create:')) {
 				const fileType = action.split(':')[1];
-				// Ensure files go INSIDE folders/workspaces, but NEXT TO standard files
 				const parentId = node.type === 'workspace' || node.type === 'folder' ? node.id : node.parentId;
 				handleCreate(fileType, parentId);
 			}
 		}
 	});
 
-	// --- File Operations (UI Layer) ---
 	async function handleCreate(type: string, parentId: string | null = null) {
-		// 1. Create a fake temporary node
+		if (type === 'upload') {
+			console.log('Upload workflow not connected yet.');
+			return;
+		}
+
 		const tempId = `temp_${Date.now()}`;
 		const extension = FILE_TYPE_CONFIG.internal[type as keyof typeof FILE_TYPE_CONFIG.internal]?.ext[0] || '';
-
 		const tempNode: FSRNode = {
 			id: tempId,
-			parentId: parentId,
+			parentId,
 			type: type === 'workspace' ? 'workspace' : type === 'folder' ? 'folder' : 'file',
 			name: `New ${type}`,
-			extension: extension,
+			extension,
 			uiFileType: type as any,
 			physicalName: `temp${extension}`,
 			updatedAt: Date.now(),
@@ -76,54 +107,31 @@
 			children: []
 		};
 
-		// 2. Optimistically insert it into the local tree
 		const insertNode = (nodes: FSRNode[]): FSRNode[] => {
 			if (parentId === null) return [...nodes, tempNode];
 			return nodes.map((n) => (n.id === parentId ? { ...n, children: [...(n.children || []), tempNode] } : { ...n, children: insertNode(n.children || []) }));
 		};
 		tree = insertNode(tree);
-
-		// 3. Instantly open the rename input for the user
 		editingId = tempId;
 
 		try {
-			// 4. Fire the API in the background
 			const { id: realId } = await apiCreateNode(type, parentId);
-
-			// 5. Swap the temp ID for the real ID quietly
-			const swapId = (nodes: FSRNode[]): FSRNode[] => {
-				return nodes.map((n) => {
-					if (n.id === tempId) return { ...n, id: realId };
-					return { ...n, children: swapId(n.children || []) };
-				});
-			};
+			const swapId = (nodes: FSRNode[]): FSRNode[] => nodes.map((n) => (n.id === tempId ? { ...n, id: realId } : { ...n, children: swapId(n.children || []) }));
 			tree = swapId(tree);
-
-			// If the user hasn't finished renaming yet, update editingId to the real one
 			if (editingId === tempId) editingId = realId;
 		} catch (err: any) {
-			// Rollback if the cloud fails
-			const removeNode = (nodes: FSRNode[]): FSRNode[] => {
-				return nodes.filter((n) => n.id !== tempId).map((n) => ({ ...n, children: removeNode(n.children || []) }));
-			};
+			const removeNode = (nodes: FSRNode[]): FSRNode[] => nodes.filter((n) => n.id !== tempId).map((n) => ({ ...n, children: removeNode(n.children || []) }));
 			tree = removeNode(tree);
 			editingId = null;
-			alert(err.message || 'Network error, file creation reverted.');
 		}
 	}
 
 	async function handleDelete(id: string) {
 		try {
 			await apiDeleteNode(id);
-			// Optimistic UI: Filter it out immediately so it vanishes instantly
-			const removeNode = (nodes: FSRNode[]): FSRNode[] => {
-				return nodes.filter((n) => n.id !== id).map((n) => ({ ...n, children: removeNode(n.children || []) }));
-			};
+			const removeNode = (nodes: FSRNode[]): FSRNode[] => nodes.filter((n) => n.id !== id).map((n) => ({ ...n, children: removeNode(n.children || []) }));
 			tree = removeNode(tree);
-			showToast('Moved to trash');
-		} catch (err: any) {
-			alert(err.message);
-		}
+		} catch (err: any) {}
 	}
 
 	async function handleRenameSubmit(node: FSRNode, newName: string) {
@@ -132,24 +140,17 @@
 			editingId = null;
 			return;
 		}
-
 		const oldName = node.name;
-
-		// 1. TRUE OPTIMISTIC UI: Update the local state instantly
 		node.name = cleanName;
 		editingId = null;
 
 		try {
-			// 2. Fire the API call in the background
 			await apiRenameNode(node.id, cleanName);
 		} catch (err: any) {
-			// 3. Rollback if the Sciebo cloud fails
 			node.name = oldName;
-			alert(err.message || 'Network error, name reverted.');
 		}
 	}
 
-	// --- Drag & Drop ---
 	function handleDragStart(e: DragEvent, id: string) {
 		if (e.dataTransfer) {
 			e.dataTransfer.effectAllowed = 'move';
@@ -168,12 +169,9 @@
 		const rect = target.getBoundingClientRect();
 		const y = e.clientY - rect.top;
 
-		// Strict constraint: Standard files cannot receive "inside" drops
 		if (targetNode.type === 'file') {
-			if (y < rect.height / 2) dropStates[targetNode.id] = 'before';
-			else dropStates[targetNode.id] = 'after';
+			dropStates[targetNode.id] = y < rect.height / 2 ? 'before' : 'after';
 		} else {
-			// Workspaces or Folders
 			if (y < rect.height * 0.25) dropStates[targetNode.id] = 'before';
 			else if (y > rect.height * 0.75) dropStates[targetNode.id] = 'after';
 			else dropStates[targetNode.id] = 'inside';
@@ -194,12 +192,9 @@
 
 		if (!draggedId || draggedId === targetId || !action) return;
 
-		// --- OPTIMISTIC UI: Snap it instantly ---
-
-		// 1. Find the node we are dragging
 		let draggedNode: FSRNode | null = null;
-		const extractNode = (nodes: FSRNode[]): FSRNode[] => {
-			return nodes.filter((n) => {
+		const extractNode = (nodes: FSRNode[]): FSRNode[] =>
+			nodes.filter((n) => {
 				if (n.id === draggedId) {
 					draggedNode = n;
 					return false;
@@ -207,40 +202,44 @@
 				n.children = extractNode(n.children || []);
 				return true;
 			});
-		};
 
-		// 2. Remove it from its old position
 		let newTree = extractNode(tree);
 
-		// 3. Insert it into its new position
 		if (draggedNode) {
-			const insertNode = (nodes: FSRNode[]): FSRNode[] => {
+			// FIX: Explicitly assign parentId based on the action so derived states ($rootNodes) don't duplicate rendering.
+			const insertNode = (nodes: FSRNode[], currentParentId: string | null): FSRNode[] => {
 				let result: FSRNode[] = [];
 				for (const n of nodes) {
 					if (n.id === targetId) {
-						if (action === 'before') result.push(draggedNode!);
-						if (action === 'inside') n.children = [...(n.children || []), draggedNode!];
+						if (action === 'before') {
+							draggedNode!.parentId = currentParentId;
+							result.push(draggedNode!);
+						}
+						if (action === 'inside') {
+							draggedNode!.parentId = n.id;
+							n.children = [...(n.children || []), draggedNode!];
+						}
 						result.push(n);
-						if (action === 'after') result.push(draggedNode!);
+						if (action === 'after') {
+							draggedNode!.parentId = currentParentId;
+							result.push(draggedNode!);
+						}
 					} else {
-						n.children = insertNode(n.children || []);
+						n.children = insertNode(n.children || [], n.id);
 						result.push(n);
 					}
 				}
 				return result;
 			};
-			tree = insertNode(newTree);
+			tree = insertNode(newTree, null);
 		}
 
-		// --- BACKGROUND API CALL ---
 		try {
 			await apiSortNode(draggedId, targetId, action);
-			// Quietly fetch the server's exact order just to be 100% in sync
 			const res = await fetch('/api/filesystem', { credentials: 'include' });
 			if (res.ok) tree = await res.json();
 		} catch (err: any) {
-			alert(err.message || 'Failed to move file. Reverting.');
-			await fetchTree(); // Revert on failure
+			await fetchTree();
 		}
 	}
 
@@ -252,10 +251,27 @@
 
 {#snippet renderNodes(nodes: FSRNode[])}
 	{#each nodes as node (node.id)}
-		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node)}>
+		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node, getContextMenuItems(node))}>
 			{#if node.type === 'workspace'}
-				<SidebarSection title={node.name} onAdd={() => handleCreate('document', node.id)}>
-					{@render renderNodes(node.children || [])}
+				<SidebarSection
+					title={node.name}
+					onAdd={(type) => handleCreate(type, node.id)}
+					onNameChange={(newName) => handleRenameSubmit(node, newName)}
+					draggable={true}
+					ondragstart={(e: DragEvent) => handleDragStart(e, node.id)}
+					ondragover={(e: DragEvent) => handleDragOver(e, node)}
+					ondragleave={(e: DragEvent) => handleDragLeave(e, node.id)}
+					ondrop={(e: DragEvent) => handleDrop(e, node.id)}
+					dropState={dropStates[node.id]}>
+					{#if !node.children || node.children.length === 0}
+						{#if dropStates[node.id] === 'inside'}
+							<div data-uiname="empty-drop-zone" class="border-accent-500 bg-accent-500/10 text-accent-500 rounded-m ml-xs border-2 border-dashed py-3 text-center text-xs font-medium">Drop here</div>
+						{:else}
+							<div class="text-ink-40 ml-m py-1 text-xs italic">Empty</div>
+						{/if}
+					{:else}
+						{@render renderNodes(node.children)}
+					{/if}
 				</SidebarSection>
 			{:else}
 				<File

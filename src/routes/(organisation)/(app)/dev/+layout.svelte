@@ -41,17 +41,17 @@
 		<Select.Root bind:value={currentMode}>
 			<Select.Trigger class="bg-level-2">
 				{#if currentMode === 'mode-light'}
-					<Icon name="sun" class="text-ink-50 mr-2" />
+					<Icon name="sun" class="text-ink-70 mr-2" />
 				{:else}
-					<Icon name="moon" class="text-ink-50 mr-2" />
+					<Icon name="moon" class="text-ink-70 mr-2" />
 				{/if}
 			</Select.Trigger>
 			<Select.Content>
 				<Select.Item value="mode-light" default={currentMode === 'mode-light'}>
-					<Icon name="sun" class="text-ink-50 mr-2" />
+					<Icon name="sun" class="text-ink-70 mr-2" />
 				</Select.Item>
 				<Select.Item value="mode-dark" default={currentMode === 'mode-dark'}>
-					<Icon name="moon" class="text-ink-50 mr-2" />
+					<Icon name="moon" class="text-ink-70 mr-2" />
 				</Select.Item>
 			</Select.Content>
 		</Select.Root>

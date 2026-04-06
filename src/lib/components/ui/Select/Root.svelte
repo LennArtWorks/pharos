@@ -1,25 +1,25 @@
 <script lang="ts">
 	import { setSelectContext } from '$lib/components/ui/Select/context.svelte';
-
 	import * as Popover from '$lib/components/ui/Popover';
-
 	import type { Snippet } from 'svelte';
+	import { cn } from '$lib/utils';
 
-	let { value = $bindable(null), children }: { value?: string | number | null; children: Snippet } = $props();
+	let { value = $bindable(null), class: className = '', children }: { value?: string | number | null; class?: string; children: Snippet } = $props();
 
 	const ctx = setSelectContext();
 
+	// Push external bindings down to the internal context
 	$effect(() => {
-		ctx.value = value;
+		if (value !== undefined) ctx.value = value;
 	});
 
+	// Bubble internal selections up to the parent binding
 	$effect(() => {
-		value = ctx.value;
+		if (ctx.value !== undefined) value = ctx.value;
 	});
 </script>
 
-<Popover.Root>
-	<div class="w-full">
-		{@render children()}
-	</div>
+<!-- Notice the inline-flex fix to prevent squishing -->
+<Popover.Root class={cn('w-full', className)}>
+	{@render children()}
 </Popover.Root>

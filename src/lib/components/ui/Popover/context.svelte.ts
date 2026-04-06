@@ -3,6 +3,7 @@ import { getContext, setContext } from 'svelte';
 export class PopoverState {
   isOpen = $state(false);
   closeOnClick = $state(false);
+  triggerNode = $state<HTMLElement | null>(null); // NEW: Track the trigger DOM node
 
   constructor(closeOnClick: boolean = false) {
     this.closeOnClick = closeOnClick;

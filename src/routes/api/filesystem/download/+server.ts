@@ -1,6 +1,11 @@
+// src/routes/api/filesystem/download/+server.ts
 import { error } from '@sveltejs/kit';
 import { getCloudClient, type CloudConfig } from '$lib/server/cloud/origin/client';
 import { getFileSystemMeta, resolvePhysicalPath } from '$lib/server/cloud/service';
+import { PERMISSIONS } from '$lib/config/permissions';
+import { hasPermission } from '$lib/utils/config/permissions';
+import { logOrganisationAction } from '$lib/server/audit';
+import { queueCloudSync } from '$lib/server/cloud/syncQueue';
 import { Readable } from 'stream';
 import type { RequestHandler } from './$types';
 
@@ -9,7 +14,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   if (!id) throw error(400, 'Missing file ID');
 
   const orgConfig = locals.orgConfig;
-  if (!orgConfig) throw error(401, 'Unauthorized');
+  if (!orgConfig || !locals.user) throw error(401, 'Unauthorized');
+
+  // STRICT PERMISSION CHECK ADDED
+  if (!hasPermission(locals.user.role, PERMISSIONS.FILES.READ, orgConfig.roles || {}, locals.user.overrides || [])) {
+    throw error(403, 'Permission denied. Cannot download files.');
+  }
 
   try {
     const meta = await getFileSystemMeta(orgConfig);
@@ -22,21 +32,23 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
     const client = getCloudClient(orgConfig as CloudConfig);
 
-    // 1. Create a Node.js ReadStream directly from WebDAV
     const nodeStream = client.createReadStream(physicalPath);
-
-    // 2. Convert the Node Stream to a Web Standard ReadableStream (required by SvelteKit)
     const webStream = Readable.toWeb(nodeStream);
-
-    // 3. Construct the human-readable filename for the user's download prompt
     const downloadName = `${node.name}${node.extension || ''}`;
 
-    // 4. Return the streaming response!
+    // Log the download action and trigger sync
+    logOrganisationAction(
+      orgConfig.organisation_id,
+      locals.user.id,
+      'FILE_DOWNLOAD',
+      `Downloaded file: ${downloadName} (${id})`
+    );
+    queueCloudSync(orgConfig);
+
     return new Response(webStream as any, {
       headers: {
-        // This header forces the browser to download the file instead of trying to open it
         'Content-Disposition': `attachment; filename="${encodeURIComponent(downloadName)}"`,
-        'Content-Type': 'application/octet-stream' // Generic binary type
+        'Content-Type': 'application/octet-stream'
       }
     });
 

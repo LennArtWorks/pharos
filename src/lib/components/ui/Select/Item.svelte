@@ -9,7 +9,7 @@
 		label,
 		children,
 		default: isDefault = false,
-		...rest // Capture data-uiname
+		...rest
 	}: {
 		value: string | number | null;
 		label?: string;
@@ -23,24 +23,18 @@
 
 	function selectItem() {
 		selectCtx.value = value;
-		const textLabel = label ?? (value !== null && value !== undefined ? String(value) : '');
-		selectCtx.label = textLabel;
-		selectCtx.contentSnippet = children || null;
 		popoverCtx.close();
 	}
 
 	$effect(() => {
+		// 1. Initialization injection (only runs if the global value is strictly null)
 		if (isDefault && selectCtx.value === null) {
 			selectCtx.value = value;
-			const textLabel = label ?? (value !== null && value !== undefined ? String(value) : '');
-			selectCtx.label = textLabel;
-			selectCtx.contentSnippet = children || null;
 		}
 
-		// Keep context synced if value matches
+		// 2. Sync visual presentation when this item becomes active
 		if (selectCtx.value === value) {
-			const textLabel = label ?? (value !== null && value !== undefined ? String(value) : '');
-			selectCtx.label = textLabel;
+			selectCtx.label = label ?? (value !== null && value !== undefined ? String(value) : '');
 			selectCtx.contentSnippet = children || null;
 		}
 	});

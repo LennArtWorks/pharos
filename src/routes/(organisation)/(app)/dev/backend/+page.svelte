@@ -3,6 +3,7 @@
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Divider from '$lib/components/ui/Divider.svelte';
 	import * as Popover from '$lib/components/ui/Popover';
+	import { cn } from '$lib/utils.js';
 
 	let { data } = $props();
 	const { context, stats, system, config } = data;
@@ -12,6 +13,31 @@
 			dateStyle: 'medium',
 			timeStyle: 'medium'
 		}).format(new Date(ts));
+
+	// UI States for the Audit Terminal
+	let searchQuery = $state('');
+	let showOnlyOperators = $state(false);
+
+	let filteredAuditLogs = $derived(
+		stats.auditLogs.filter((log: any) => {
+			const matchesSearch =
+				log.operator_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				log.details.toLowerCase().includes(searchQuery.toLowerCase());
+
+			const matchesOperator = showOnlyOperators ? log.operator_email.includes('SYSTEM_OPERATOR') : true;
+
+			return matchesSearch && matchesOperator;
+		})
+	);
+
+	function toggleUserFilter(email: string) {
+		if (searchQuery === email) {
+			searchQuery = ''; // Toggle off
+		} else {
+			searchQuery = email; // Toggle on
+		}
+	}
 </script>
 
 <div class="gap-3xl flex min-h-screen flex-col">
@@ -239,40 +265,66 @@
 				<Icon name="code-block" class="stroke-ink-30" />
 				<h2 class="text-label-s text-ink-30 font-mono font-bold">System Audit Terminal // Live</h2>
 			</div>
-			<div class="flex gap-2">
+
+			<div class="flex items-center gap-4">
+				<input
+					type="text"
+					bind:value={searchQuery}
+					placeholder="Filter logs..."
+					class="bg-level-1 border-border text-ink-90 placeholder:text-ink-30 text-label-xs focus:border-accent-500 h-7 rounded border px-2 outline-none" />
+				<Button
+					variant={showOnlyOperators ? 'primary' : 'secondary'}
+					size="sm"
+					class={showOnlyOperators ? 'text-accent-500' : 'text-accent-500'}
+					onclick={() => (showOnlyOperators = !showOnlyOperators)}>
+					Operators Only
+				</Button>
 				<div class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
 			</div>
 		</div>
 
-		<div class="h-80 overflow-y-auto p-4 font-mono text-[11px] leading-relaxed sm:text-xs">
-			{#if stats.auditLogs.length === 0}
-				<div class="text-neutral-600 italic">No operator actions recorded yet.</div>
+		<div class="h-100 overflow-y-auto p-4 font-mono text-[11px] leading-relaxed sm:text-xs">
+			{#if filteredAuditLogs.length === 0}
+				<div class="text-neutral-600 italic">No logs match the current filters.</div>
 			{:else}
-				<table class="w-full text-left whitespace-nowrap">
-					<tbody class="divide-y divide-neutral-800/50">
-						{#each stats.auditLogs as log}
-							<tr class="transition-colors hover:bg-white/5">
-								<td class="w-32 py-2 pr-4 text-neutral-500">
-									{new Date(log.created_at + 'Z').toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-								</td>
-								<td class="text-accent-400 py-2 pr-4 font-bold">
-									{log.operator_email}
-								</td>
-								<td class="py-2 pr-4">
-									<span class="rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 tracking-wider text-emerald-400 uppercase">
-										{log.action}
-									</span>
-								</td>
-								<td class="py-2 pr-4 text-neutral-400">
-									{log.organisation_id ? log.organisation_id : 'GLOBAL'}
-								</td>
-								<td class="max-w-xs truncate py-2 text-neutral-500">
-									{log.details}
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+				<div class="flex flex-col gap-1">
+					{#each filteredAuditLogs as log}
+						{@const isOperator = log.operator_email.includes('SYSTEM_OPERATOR')}
+						<div
+							class="group flex items-start gap-4 rounded px-2 py-1.5 transition-colors hover:bg-white/5 {isOperator
+								? 'bg-warning-500/10 border-warning-500/20 border-l-2'
+								: 'border-l-2 border-transparent'}">
+							<!-- Time -->
+							<div class="w-16 shrink-0 pt-0.5 text-neutral-500">
+								{new Date(log.created_at + 'Z').toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+							</div>
+
+							<!-- User / Operator -->
+							<button
+								onclick={() => toggleUserFilter(log.operator_email)}
+								class="w-32 shrink-0 cursor-pointer truncate pt-0.5 text-left font-bold transition-colors hover:underline {isOperator ? 'text-red-400' : 'text-accent-400'}"
+								data-tooltip="Click to filter by user">
+								{log.operator_email.replace('SYSTEM_OPERATOR (', '').replace(')', '')}
+							</button>
+
+							<!-- Action Tag -->
+							<div class="w-38 shrink-0">
+								<span
+									class={cn(
+										'inline-block rounded border px-1.5 py-0.5 tracking-wider uppercase',
+										isOperator ? 'border-red-500/20 bg-red-500/10 text-red-400' : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+									)}>
+									{log.action}
+								</span>
+							</div>
+
+							<!-- Details (Expands naturally via flex-1 and whitespace-normal) -->
+							<div class="min-w-0 flex-1 pt-0.5 break-all text-neutral-400">
+								{log.details}
+							</div>
+						</div>
+					{/each}
+				</div>
 			{/if}
 		</div>
 	</div>

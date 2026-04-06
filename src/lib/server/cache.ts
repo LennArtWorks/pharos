@@ -10,6 +10,8 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+// --- Meta Cache Functions ---
+
 // Create a true Singleton using globalThis to bridge SvelteKit and server.js
 const _global = globalThis as any;
 if (!_global.__fsrMetaCache) {
@@ -58,4 +60,27 @@ export function getMetaCacheStats() {
 
 export function clearAllMetaCache() {
   metaCache.clear();
+}
+
+// --- Audit Cache Functions ---
+
+if (!_global.__fsrAuditCache) {
+  _global.__fsrAuditCache = new Map<string, string[]>();
+}
+const auditCache: Map<string, string[]> = _global.__fsrAuditCache;
+
+export function pushAuditLog(orgId: string, logEntry: string) {
+  const currentLogs = auditCache.get(orgId) || [];
+  currentLogs.push(logEntry);
+  auditCache.set(orgId, currentLogs);
+}
+
+export function popAuditLogs(orgId: string): string[] {
+  const logs = auditCache.get(orgId) || [];
+  auditCache.delete(orgId); // Clear the queue
+  return logs;
+}
+
+export function peekAuditLogs(orgId: string): string[] {
+  return auditCache.get(orgId) || [];
 }

@@ -1,11 +1,13 @@
 import { json } from '@sveltejs/kit';
 import { logOperatorAction } from '$lib/server/audit';
+import { queueCloudSync } from '$lib/server/cloud/syncQueue';
 
 export async function POST({ request, cookies, locals }) {
   const operator = locals.operator;
   if (!operator) return json({ error: 'Unauthorized' }, { status: 403 });
 
   const { action, role, persistent, devMode } = await request.json();
+  const orgConfig = locals.orgConfig;
   const orgId = locals.orgConfig?.organisation_id || null;
 
   // Extremely safe defaults
@@ -25,13 +27,23 @@ export async function POST({ request, cookies, locals }) {
   if (action === 'start' && role) {
     if (persistent) cookieOptions.maxAge = 30 * 24 * 60 * 60;
     cookies.set('fsr_simulation', role, cookieOptions);
-    logOperatorAction(operator.email, 'START_SIMULATION', orgId, { role, persistent });
+
+    if (orgId && orgConfig) {
+      logOperatorAction(operator.email, 'START_SIMULATION', orgId, { role, persistent });
+      queueCloudSync(orgConfig); // <-- This triggers the WebDAV flush!
+    }
+
     return json({ success: true });
   }
 
   if (action === 'stop') {
     cookies.set('fsr_simulation', '', { ...cookieOptions, maxAge: 0 });
-    logOperatorAction(operator.email, 'STOP_SIMULATION', orgId, {});
+
+    if (orgId && orgConfig) {
+      logOperatorAction(operator.email, 'STOP_SIMULATION', orgId, {});
+      queueCloudSync(orgConfig); // <-- This triggers the WebDAV flush!
+    }
+
     return json({ success: true });
   }
 

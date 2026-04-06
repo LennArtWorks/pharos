@@ -3,7 +3,8 @@ import { PERMISSIONS } from '$lib/config/permissions';
 import { hasPermission } from '$lib/utils/config/permissions';
 import { getFileSystemMeta } from '$lib/server/cloud/service';
 import { setMetaCache } from '$lib/server/cache';
-import { queueMetaSync } from '$lib/server/cloud/syncQueue';
+import { queueCloudSync } from '$lib/server/cloud/syncQueue';
+import { logOrganisationAction } from '$lib/server/audit';
 
 export async function POST({ request, locals }) {
   if (!locals.orgConfig || !locals.user) return json({ error: 'Organization not found' }, { status: 400 });
@@ -21,7 +22,15 @@ export async function POST({ request, locals }) {
     meta._meta.lastUpdated = Date.now();
     setMetaCache(locals.orgConfig.organisation_id, meta);
 
-    queueMetaSync(locals.orgConfig);
+    queueCloudSync(locals.orgConfig);
+
+    logOrganisationAction(
+      locals.orgConfig.organisation_id,
+      locals.user.id,
+      'FILE_RENAME',
+      `Renamed ${id} to "${newName.trim()}"`
+    );
+    queueCloudSync(locals.orgConfig);
 
     return json({ success: true });
   } catch (error) {

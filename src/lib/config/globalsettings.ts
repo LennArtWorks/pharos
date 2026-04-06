@@ -1,11 +1,11 @@
 export const GLOBAL_SETTINGS = {
   DEV: {
     IS_DEVMODE: false,
-    DEV_ACCOUNTS: {
-      DEV_ADMIN: { id: 'dev_admin', name: "Dev Admin", email: 'dev@admin', role: 'Admin', overrides: [] },
-      DEV_READONLY: { id: 'dev_readonly', name: "Dev Readonly", email: 'dev@readonly', role: 'Admin', overrides: [] },
-      DEV_NOACCESS: { id: 'dev_noaccess', name: "Dev Noaccess", email: 'dev@noaccess', role: 'Admin', overrides: [] },
-    }
+    // DEV_ACCOUNTS: {
+    //   DEV_ADMIN: { id: 'dev_admin', name: "Dev Admin", email: 'dev@admin', role: 'Admin', overrides: [] },
+    //   DEV_READONLY: { id: 'dev_readonly', name: "Dev Readonly", email: 'dev@readonly', role: 'Admin', overrides: [] },
+    //   DEV_NOACCESS: { id: 'dev_noaccess', name: "Dev Noaccess", email: 'dev@noaccess', role: 'Admin', overrides: [] },
+    // }
   },
   APP_INFO: {
     // Used in titles, emails, and UI
@@ -29,6 +29,18 @@ export const GLOBAL_SETTINGS = {
     // 5 seconds groups rapid changes (like a burst of renaming/moving) into one API call.
     TREE_SYNC_DEBOUNCE_MS: 5000,
   },
+  // Central definition of what should actually trigger a WebDAV log
+  AUDIT_LOG_EVENTS: [
+    'FILE_CREATE',
+    'FILE_DELETE',
+    'FILE_RENAME',
+    'FILE_MOVE',
+    'FILE_DOWNLOAD',
+    'WORKSPACE_CREATE',
+    'WORKSPACE_DELETE',
+    'PERMISSION_UPDATE',
+    'OPERATOR_SIMULATION'
+  ] as const,
   WEBSOCKETS: {
     SERVER_SYNC_INTERVAL_MS: 10000,
 

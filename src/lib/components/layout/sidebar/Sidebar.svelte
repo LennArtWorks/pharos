@@ -65,7 +65,7 @@
 	<Button variant="primary" size="l" href="../"><Icon name="arrow-left" />{t('back')}</Button>
 	<Button variant="empty" size="s"><Icon name="arrow-left" />Template</Button> -->
 
-	<section data-uiname="top-part" class="h-main-l flex items-center justify-between">
+	<section data-uiname="top-part" class="h-main-l relative flex items-center justify-between">
 		<p class="font-label-m">Organisation</p>
 		<div class="gap-2xs flex">
 			<!-- <Button variant="tertiary" size="s" href="?overlay=settings-org"><Icon name="dots" /></Button> -->
@@ -78,7 +78,7 @@
 					</Button>
 				</Popover.Trigger>
 
-				<Popover.Content class="w-48" side="bottom" align="start">
+				<Popover.Content class="w-48" side="bottom" align="center" alignToQuery="[data-uiname='top-part']">
 					<Button variant="tertiary" size="s" href="/" class="w-full justify-start">
 						{#snippet leading()}
 							<Icon name="web" />

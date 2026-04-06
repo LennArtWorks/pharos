@@ -6,13 +6,12 @@
 	import { cn } from '$lib/utils';
 	import type { Snippet } from 'svelte';
 
-	// Explicit typing fixes the "label is missing" TS error
 	let {
 		label,
 		required = false,
 		placeholder = 'Select...',
 		class: className = '',
-		children // NEW: Allow explicit trigger content
+		children
 	}: {
 		label?: string;
 		required?: boolean;
@@ -33,20 +32,24 @@
 		</label>
 	{/if}
 
-	<Popover.Trigger>
+	<Popover.Trigger class="w-full">
 		<div
 			class="h-main-m rounded-m ring-border bg-level-0 focus-within:ring-ink-90 relative flex w-full min-w-0 items-center justify-between overflow-visible ring-1 transition-all ring-inset hover:ring-2">
 			<div class="text-ink-90 px-m flex items-center truncate bg-transparent font-semibold">
 				{#if children}
-  {@render children()}
-{:else if selectCtx.value !== null && selectCtx.contentSnippet}
-  {@render selectCtx.contentSnippet()}
-{:else if selectCtx.value !== null && selectCtx.label}
-  <span>{selectCtx.label}</span> {:else if selectCtx.value !== null}
-  <span>{selectCtx.value}</span>
-{:else}
-  <span class="text-ink-50 font-normal">{placeholder}</span>
-{/if}
+					{@render children()}
+					<!-- NEW: Check that the value is neither null AND neither an empty string -->
+				{:else if selectCtx.value !== null && selectCtx.value !== ''}
+					{#if selectCtx.contentSnippet}
+						{@render selectCtx.contentSnippet()}
+					{:else if selectCtx.label}
+						<span>{selectCtx.label}</span>
+					{:else}
+						<span>{selectCtx.value}</span>
+					{/if}
+				{:else}
+					<span class="text-ink-50 font-normal">{placeholder}</span>
+				{/if}
 			</div>
 
 			<div class="pr-m text-ink-50 flex shrink-0 items-center">

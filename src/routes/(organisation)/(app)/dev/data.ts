@@ -123,9 +123,10 @@ export const uiComponents: ComponentDef[] = [
   {
     name: 'Select',
     href: '/dev/design-system/ui/select',
-    desc: 'Custom popover select supporting rich snippets, icons, and programmatic binding.',
+    desc: 'Not up to Date!!! Custom popover select supporting rich snippets, icons, and programmatic binding.',
     importStr: `import * as Select from '$lib/components/ui/Select';`,
     context: `
+      Not up to Date!!! 
       COMPONENT: Select (Svelte 5 / Bits UI)
       IMPORT: import * as Select from '$lib/components/ui/Select';
       STRUCTURE:
@@ -141,9 +142,10 @@ export const uiComponents: ComponentDef[] = [
   {
     name: 'Popover',
     href: '/dev/design-system/ui/popover',
-    desc: 'Contextual overlays with automatic viewport positioning and click-outside handling.',
+    desc: 'Not up to Date!!! Contextual overlays with automatic viewport positioning and click-outside handling.',
     importStr: `import * as Popover from '$lib/components/ui/Popover';`,
     context: `
+      Not up to Date!!! 
       COMPONENT: Popover (Svelte 5 / Bits UI)
       IMPORT: import * as Popover from '$lib/components/ui/Popover';
       STRUCTURE:

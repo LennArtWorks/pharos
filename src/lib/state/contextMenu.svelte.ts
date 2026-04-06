@@ -1,7 +1,20 @@
+// src/lib/state/contextMenu.svelte.ts
 import { tick } from 'svelte';
 import type { FSRNode } from '$lib/config/filesystem';
+import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
 export type ContextType = 'file' | 'workspace' | 'general' | null;
+
+export type ContextMenuItem = {
+  id: string;
+  type: 'action' | 'submenu' | 'divider' | 'label';
+  label?: string;
+  icon?: FigmaIconName;
+  action?: string;
+  danger?: boolean;
+  disabled?: boolean;
+  items?: ContextMenuItem[];
+};
 
 export const contextMenu = $state({
   isOpen: false,
@@ -9,19 +22,24 @@ export const contextMenu = $state({
   y: 0,
   type: null as ContextType,
   node: null as FSRNode | null,
-  actionRequested: null as string | null, // e.g., 'rename', 'delete', 'create:document'
+  items: [] as ContextMenuItem[],
+  actionRequested: null as string | null,
   payload: null as any
 });
 
-export async function openContextMenu(e: MouseEvent, type: ContextType, node: FSRNode | null = null) {
+export async function openContextMenu(e: MouseEvent, type: ContextType, node: FSRNode | null = null, items: ContextMenuItem[] = []) {
+  // NEW: Allow native browser context menu if Shift is held down.
+  if (e.shiftKey) return;
+
   e.preventDefault();
   e.stopPropagation();
 
-  contextMenu.isOpen = false; // Reset to force re-render if already open
+  contextMenu.isOpen = false;
   await tick();
 
   contextMenu.type = type;
   contextMenu.node = node;
+  contextMenu.items = items;
   contextMenu.x = e.clientX;
   contextMenu.y = e.clientY;
   contextMenu.actionRequested = null;

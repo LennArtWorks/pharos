@@ -64,7 +64,7 @@
 </script>
 
 <div class="fixed right-6 bottom-6 z-9999">
-	<Popover.Root closeOnClick={false}>
+	<Popover.Root>
 		<Popover.Trigger>
 			<div class="relative">
 				{#if isSimulating}
@@ -112,9 +112,7 @@
 							<div class="flex gap-2">
 								<div class="mb-l flex-1">
 									<Select.Root bind:value={selectedRole}>
-										<Select.Trigger class="text-label-s bg-level-2 rounded-m w-full">
-											{selectedRole || 'Select role...'}
-										</Select.Trigger>
+										<Select.Trigger class="text-label-s bg-level-2 rounded-m w-full" placeholder="Select role..." />
 										<Select.Content>
 											{#each availableRoles as role}
 												<Select.Item value={role}>{role}</Select.Item>

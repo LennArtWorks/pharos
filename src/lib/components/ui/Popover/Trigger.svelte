@@ -9,10 +9,14 @@
 </script>
 
 <div
+	bind:this={ctx.triggerNode}
 	role="button"
 	tabindex="0"
 	onkeydown={(e) => {
-		if (e.key === 'Enter' || e.key === ' ') ctx.toggle();
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			ctx.toggle();
+		}
 	}}
 	onclick={(e) => {
 		e.stopPropagation();

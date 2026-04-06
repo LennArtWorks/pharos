@@ -4,7 +4,8 @@ import { PERMISSIONS } from '$lib/config/permissions';
 import { hasPermission } from '$lib/utils/config/permissions';
 import { getFileSystemMeta, resolvePhysicalPath } from '$lib/server/cloud/service';
 import { setMetaCache } from '$lib/server/cache';
-import { queueMetaSync, broadcastTreeUpdate } from '$lib/server/cloud/syncQueue';
+import { queueCloudSync, broadcastTreeUpdate } from '$lib/server/cloud/syncQueue';
+import { logOrganisationAction } from '$lib/server/audit';
 
 export async function POST({ request, locals }) {
   if (!locals.orgConfig || !locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -58,8 +59,17 @@ export async function POST({ request, locals }) {
     // 3. CACHE & SYNC
     meta._meta.lastUpdated = Date.now();
     setMetaCache(locals.orgConfig.organisation_id, meta);
-    queueMetaSync(locals.orgConfig);
+    queueCloudSync(locals.orgConfig);
     broadcastTreeUpdate(locals.orgConfig.organisation_id);
+
+    const draggedName = draggedNode.name || 'Unknown';
+    const targetName = targetNode.name || 'root';
+    logOrganisationAction(
+      locals.orgConfig.organisation_id,
+      locals.user.id,
+      'FILE_MOVE',
+      `Moved "${draggedName}" (${draggedId}) ${action} "${targetName}" (${targetId})`
+    );
 
     return json({ success: true });
   } catch (error: any) {
