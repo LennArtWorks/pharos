@@ -7,9 +7,9 @@
 	import MouseTooltip from '$lib/components/ui/MouseTooltip.svelte';
 	import DevFloatingPanel from '$lib/components/layout/DevFloatingPanel.svelte';
 
-	import { opState } from '$lib/state/operator.svelte';
+	import { opState } from '$lib/state/dev/operator.svelte';
 	import { invalidateAll } from '$app/navigation';
-	import { addBanner, removeBanner } from '$lib/state/banners.svelte';
+	import { addBanner, removeBanner } from '$lib/state/layout/banners.svelte';
 	import SystemBanner from '$lib/components/layout/SystemBanner.svelte';
 	import { untrack } from 'svelte';
 

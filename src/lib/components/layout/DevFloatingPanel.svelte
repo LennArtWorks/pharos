@@ -5,7 +5,7 @@
 	import * as Popover from '$lib/components/ui/Popover';
 	import * as Select from '$lib/components/ui/Select';
 	import { invalidateAll } from '$app/navigation';
-	import { opState } from '$lib/state/operator.svelte';
+	import { opState } from '$lib/state/dev/operator.svelte';
 
 	let serverOperator = $derived(page.data.operator);
 	// Bind the UI to the optimistic state engine

@@ -8,10 +8,12 @@ export const GLOBAL_SETTINGS = {
     // }
   },
   APP_INFO: {
-    // Used in titles, emails, and UI
-    NAME: 'FSR-OS',
-    // The production root domain
-    BASE_DOMAIN: 'fsr-os.net',
+    NAME: 'FSR-OS', // Used in titles, emails, and UI
+    BASE_DOMAIN: 'fsr-os.net', // The production root domain
+  },
+  APP_SETTINGS: {
+    MAX_APPNAV_HISTORY: 50,
+    MAX_OPEN_TABS: 10
   },
   ACCOUNT: {
     LOGIN_SESSION_DURATION: 30 * 24 * 60 * 60

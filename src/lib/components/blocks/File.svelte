@@ -111,9 +111,9 @@
 		})()
 	);
 
-	let shouldShowLabel = $derived((!!children || isEditing) && !hideLabel);
+	// let shouldShowLabel = $derived((!!children || isEditing) && !hideLabel);
 	// Only allocate space for trailing elements if tags, assignments, OR actual child arrows exist
-	let hasTrailingElements = $derived(tags.length > 0 || !!assigned || (!!nestedItems && hasChildren));
+	// let hasTrailingElements = $derived(tags.length > 0 || !!assigned || (!!nestedItems && hasChildren));
 
 	// --- Edit Logic ---
 	let inputValue = $state('');
@@ -145,10 +145,10 @@
 	<div class="relative w-full">
 		<!-- drag and drop indicators -->
 		{#if dropState === 'before'}
-			<div class="bg-accent-500 pointer-events-none absolute -top-[3px] left-0 z-10 h-1 w-full rounded-full shadow-sm"></div>
+			<div class="bg-accent-500 pointer-events-none absolute -top-0.75 left-0 z-10 h-1 w-full rounded-full shadow-sm"></div>
 		{/if}
 		{#if dropState === 'after'}
-			<div class="bg-accent-500 pointer-events-none absolute -bottom-[3px] left-0 z-10 h-1 w-full rounded-full shadow-sm"></div>
+			<div class="bg-accent-500 pointer-events-none absolute -bottom-0.75 left-0 z-10 h-1 w-full rounded-full shadow-sm"></div>
 		{/if}
 		{#if dropState === 'inside'}
 			<div class="ring-accent-500 bg-accent-500/10 rounded-m pointer-events-none absolute inset-0 z-10 ring-2"></div>
@@ -164,7 +164,7 @@
 				className,
 				isEditing ? 'bg-level-1-hover ring-border ring-1' : '',
 				!minimized || nestedItems ? 'w-full' : '',
-				minimized && !isEditing && !nestedItems ? 'w-main-s hover:pl-s pl-s whitespace-nowrap transition-all duration-300 ease-out hover:w-40' : '',
+				minimized && !isEditing && !nestedItems ? 'w-main-s pl-s whitespace-nowrap transition-all duration-300 ease-out' : '', //hover:pl-s  hover:w-40
 				'group relative'
 			)}
 			{...rest}>

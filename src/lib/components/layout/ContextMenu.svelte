@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { contextMenu, requestContextMenuAction } from '$lib/state/contextMenu.svelte';
+	import { contextMenu, requestContextMenuAction } from '$lib/state/layout/contextMenu.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 

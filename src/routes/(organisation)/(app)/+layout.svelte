@@ -1,22 +1,53 @@
 <script lang="ts">
-	import { afterNavigate } from '$app/navigation';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import Sidebar from '$lib/components/layout/sidebar/Sidebar.svelte';
 	import ContextMenu from '$lib/components/layout/ContextMenu.svelte';
-	import { closeContextMenu, openContextMenu } from '$lib/state/contextMenu.svelte';
+	import { closeContextMenu, openContextMenu } from '$lib/state/layout/contextMenu.svelte';
 	import ContentHeader from '$lib/components/layout/content/ContentHeader.svelte';
 
-	let { children } = $props();
+	import { appNav } from '$lib/state/navigation/navigation.svelte';
+	import { VIEW_CONFIG } from '$lib/config/filesystem';
+	import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
+	import { onMount } from 'svelte';
 
-	// Create a reference to our scrollable container
+	let { children } = $props();
 	let scrollContainer: HTMLElement;
 
-	// Reset scroll position of the specific container on navigation
-	afterNavigate(({ to }) => {
-		// Ignore hash routing so anchor links still work
-		if (to?.url.hash) return;
+	onMount(() => {
+		appNav.init();
+	});
 
-		if (scrollContainer) {
-			scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+	// 1. Optimistic Highlight
+	beforeNavigate(({ to }) => {
+		if (to) appNav.optimisticPath = to.url.pathname;
+	});
+
+	afterNavigate(({ from, to, type }) => {
+		if (!to || to.url.hash) return;
+
+		// IGNORING OVERLAYS: If the pathname is identical (only searchParams changed), do nothing.
+		if (from && from.url.pathname === to.url.pathname) return;
+
+		if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+
+		if (type === 'popstate') {
+			appNav.syncWithBrowserHistory(to.url.pathname);
+		}
+
+		const path = to.url.pathname;
+
+		// 2. TRACK STATIC VIEWS
+		const viewEntry = Object.entries(VIEW_CONFIG).find(([k, v]) => v.path === path);
+		if (viewEntry) {
+			const [viewKey, viewData] = viewEntry;
+			appNav.registerVisit({
+				id: viewKey,
+				path: path,
+				type: viewKey, // Pass 'recentTopics' instead of 'folder'
+				name: viewData.label,
+				icon: (viewData.icon || 'folder') as FigmaIconName
+			});
 		}
 	});
 </script>

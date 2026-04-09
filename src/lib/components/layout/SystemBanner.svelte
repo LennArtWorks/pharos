@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { bannerState, removeBanner } from '$lib/state/banners.svelte';
+	import { bannerState, removeBanner } from '$lib/state/layout/banners.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { cn } from '$lib/utils';

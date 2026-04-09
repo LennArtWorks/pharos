@@ -10,8 +10,8 @@
 	import { PERMISSIONS } from '$lib/config/permissions';
 	import { has } from '$lib/utils/config/permissions';
 	import { getFileConfig } from '$lib/utils/config/filesystem';
-	import { contextMenu, openContextMenu } from '$lib/state/contextMenu.svelte';
-	import type { ContextMenuItem } from '$lib/state/contextMenu.svelte';
+	import { contextMenu, openContextMenu } from '$lib/state/layout/contextMenu.svelte';
+	import type { ContextMenuItem } from '$lib/state/layout/contextMenu.svelte';
 
 	import { apiCreateNode, apiRenameNode, apiDeleteNode, apiSortNode } from '$lib/utils/fileOperations';
 
