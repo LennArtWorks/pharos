@@ -1,71 +1,44 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { FSRNode } from '$lib/config/filesystem';
 	import ContentRoot from '$lib/components/layout/content/ContentRoot.svelte';
-	import { appNav } from '$lib/state/navigation/navigation.svelte';
 
-	// Import the configs to resolve the icon
+	import { fsState } from '$lib/state/navigation/filesystem.svelte';
+	import { appNav } from '$lib/state/navigation/navigation.svelte';
 	import { FILE_TYPE_CONFIG, VIEW_CONFIG } from '$lib/config/filesystem';
 	import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
 	let nodeId = $derived(page.params.id);
+	let node = $derived(nodeId ? fsState.getNode(nodeId) : null);
 
-	let node = $state<FSRNode | null>(null);
-	let isLoading = $state(true);
-
+	// 1. Ensure the tree is loaded
 	$effect(() => {
-		if (nodeId) {
-			loadFile(nodeId);
+		if (nodeId && fsState.tree.length === 0) {
+			fsState.fetchTree();
 		}
 	});
 
-	async function loadFile(id: string) {
-		isLoading = true;
-		try {
-			const res = await fetch('/api/filesystem');
-			if (res.ok) {
-				const tree: FSRNode[] = await res.json();
+	// 2. Track Navigation once the node is available
+	$effect(() => {
+		if (node) {
+			const type = node.uiFileType;
+			const resolvedIcon =
+				VIEW_CONFIG[type as keyof typeof VIEW_CONFIG]?.icon ||
+				FILE_TYPE_CONFIG.internal[type as keyof typeof FILE_TYPE_CONFIG.internal]?.icon ||
+				FILE_TYPE_CONFIG.external[type as keyof typeof FILE_TYPE_CONFIG.external]?.icon ||
+				'file';
 
-				function findNode(nodes: FSRNode[], targetId: string): FSRNode | null {
-					for (const n of nodes) {
-						if (n.id === targetId) return n;
-						if (n.children) {
-							const found = findNode(n.children, targetId);
-							if (found) return found;
-						}
-					}
-					return null;
-				}
-
-				node = findNode(tree, id);
-
-				if (node) {
-					// --- RESOLVE THE EXACT ICON FROM CONFIG ---
-					const fileType = node.uiFileType;
-					const resolvedIcon =
-						VIEW_CONFIG[fileType as keyof typeof VIEW_CONFIG]?.icon ||
-						FILE_TYPE_CONFIG.internal[fileType as keyof typeof FILE_TYPE_CONFIG.internal]?.icon ||
-						FILE_TYPE_CONFIG.external[fileType as keyof typeof FILE_TYPE_CONFIG.external]?.icon ||
-						'file';
-
-					appNav.registerVisit({
-						id: node.id,
-						path: `/files/${node.id}`,
-						type: node.uiFileType,
-						name: node.name,
-						icon: resolvedIcon as FigmaIconName // Use the safely resolved icon
-					});
-				}
-			}
-		} catch (e) {
-			console.error('Failed to load file', e);
-		} finally {
-			isLoading = false;
+			appNav.registerVisit({
+				id: node.id,
+				path: `/files/${node.id}`,
+				type: node.uiFileType,
+				name: node.name,
+				icon: resolvedIcon as FigmaIconName
+			});
 		}
-	}
+	});
 </script>
 
-{#if isLoading}
+{#if !node}
 	<div class="bg-surface-0 flex flex-1 animate-pulse items-center justify-center">
 		<div class="border-brand h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
 	</div>

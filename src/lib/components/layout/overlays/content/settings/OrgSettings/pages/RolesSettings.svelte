@@ -382,7 +382,7 @@
 					<div class="w-32">
 						<Input bind:value={newRoleInput} placeholder="New role..." class="!h-main-s text-label-s" onkeydown={(e) => e.key === 'Enter' && addRole()} />
 					</div>
-					<Button size="s" variant="secondary" icon onclick={addRole}><Icon name="add" /></Button>
+					<Button size="s" variant="secondary" iconOnly onclick={addRole}><Icon name="add" /></Button>
 				</div>
 			</div>
 		</div>

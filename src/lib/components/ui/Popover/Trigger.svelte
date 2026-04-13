@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getPopoverContext } from '$lib/components/ui/Popover/context.svelte';
+	import { getPopoverContext } from './context.svelte';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils';
@@ -10,19 +10,12 @@
 
 <div
 	bind:this={ctx.triggerNode}
-	role="button"
-	tabindex="0"
-	onkeydown={(e) => {
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			ctx.toggle();
-		}
-	}}
 	onclick={(e) => {
-		e.stopPropagation();
+		// We let the child handle stopPropagation if it wants to,
+		// otherwise it bubbles here and opens the popover.
 		ctx.toggle();
 	}}
-	class={cn('flex w-full cursor-pointer items-center outline-none', className)}
+	class={cn('inline-flex w-fit items-center', className)}
 	{...rest}>
 	{@render children()}
 </div>

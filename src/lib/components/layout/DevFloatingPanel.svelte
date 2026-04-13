@@ -73,7 +73,7 @@
 						<span class="bg-accent-500 relative inline-flex h-3 w-3 rounded-full"></span>
 					</span>
 				{/if}
-				<Button variant={isSimulating ? 'secondary' : 'tertiary'} size="l" icon class="bg-level-2 border-border border">
+				<Button variant={isSimulating ? 'secondary' : 'tertiary'} size="l" iconOnly class="bg-level-2 border-border border">
 					<Icon name="code-block" class={isSimulating ? 'text-accent-500' : 'text-ink-90'} />
 				</Button>
 			</div>

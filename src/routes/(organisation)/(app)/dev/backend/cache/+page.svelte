@@ -17,7 +17,7 @@
 <div class="gap-3xl relative flex min-h-screen flex-col">
 	<header class="border-border border-b pb-8">
 		<div class="mb-4 flex items-center gap-4">
-			<Button href="/dev/backend" variant="secondary" size="s" icon><Icon name="arrow-left" /></Button>
+			<Button href="/dev/backend" variant="secondary" size="s" iconOnly><Icon name="arrow-left" /></Button>
 			<h1 class="text-label-xl text-ink-90 font-bold">RAM Cache Insights</h1>
 		</div>
 		<p class="text-body-m text-ink-50 max-w-[70ch]">Live view of Node.js memory. These caches prevent excessive WebDAV calls and speed up the application.</p>

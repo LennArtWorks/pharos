@@ -2,7 +2,7 @@
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import Sidebar from '$lib/components/layout/sidebar/Sidebar.svelte';
-	import ContextMenu from '$lib/components/layout/ContextMenu.svelte';
+	import ContextMenu from '$lib/components/layout/ContextMenu/ContextMenu.svelte';
 	import { closeContextMenu, openContextMenu } from '$lib/state/layout/contextMenu.svelte';
 	import ContentHeader from '$lib/components/layout/content/ContentHeader.svelte';
 

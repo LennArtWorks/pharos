@@ -13,7 +13,7 @@
 	<header class="border-border border-b pb-8">
 		<div class="mb-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<Button href="/dev/backend" variant="secondary" size="s" icon><Icon name="arrow-left" /></Button>
+				<Button href="/dev/backend" variant="secondary" size="s" iconOnly><Icon name="arrow-left" /></Button>
 				<h1 class="text-label-xl text-ink-90 font-bold">Organisations</h1>
 			</div>
 			<Button variant="primary" size="s" onclick={() => openOverlay('DevOrganisationsEditor')}>
@@ -60,7 +60,7 @@
 							if (!confirm('Are you sure? This deletes all sessions!')) e.preventDefault();
 						}}>
 						<input type="hidden" name="organisation_id" value={org.organisation_id} />
-						<Button variant="tertiary" size="s" icon type="submit" class="text-error hover:text-error hover:bg-error/10">
+						<Button variant="tertiary" size="s" iconOnly type="submit" class="text-error hover:text-error hover:bg-error/10">
 							<Icon name="trash" />
 						</Button>
 					</form>

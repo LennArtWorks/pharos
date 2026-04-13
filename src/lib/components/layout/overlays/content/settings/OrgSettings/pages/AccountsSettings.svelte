@@ -183,7 +183,7 @@
 							<td class="p-3 text-right">
 								<Popover.Root closeOnClick={true}>
 									<Popover.Trigger>
-										<Button variant="tertiary" size="s" icon disabled={isDev}>
+										<Button variant="tertiary" size="s" iconOnly disabled={isDev}>
 											<Icon name="dots" />
 										</Button>
 									</Popover.Trigger>

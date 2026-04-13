@@ -4,7 +4,7 @@
 	import { cn } from '$lib/utils';
 
 	interface Props {
-		children?: Snippet;
+		children: Snippet;
 		class?: string;
 		[key: string]: any; // Allow any other button props
 	}

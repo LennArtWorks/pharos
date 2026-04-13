@@ -4,10 +4,11 @@
 	import Divider from '$lib/components/ui/Divider.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Form from '$lib/components/layout/Form.svelte';
-	import File from '$lib/components/blocks/File.svelte';
+	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import * as Select from '$lib/components/ui/Select';
 	import { enhance } from '$app/forms';
 	import { uiComponents, blocks, layouts } from '../../data';
+	import { cn } from '$lib/utils.js';
 
 	let { data } = $props();
 	let topic = $derived(data.topic);
@@ -85,28 +86,27 @@
 	<div class="bg-level-2 p-m pt-main-l border-border sticky top-0 z-10 flex items-center justify-between border-b">
 		<div>
 			{#if parentChain.length > 0}
-				<div data-uiname="breadcrumbs" class="mb-1 flex flex-wrap items-center gap-2">
+				<div data-uiname="breadcrumbs" class="mb-2 flex flex-wrap items-center gap-1">
 					{#each parentChain as parent}
-						{#if isEditing}
-							<button
-								type="button"
-								data-tooltip={editIgnoredParents.includes(parent.id) ? 'Click to Include Context' : 'Click to Ignore Context'}
-								class="hover:text-accent-500 flex cursor-pointer items-center gap-2 {editIgnoredParents.includes(parent.id) ? 'line-through opacity-50' : 'text-ink-50'}"
-								onclick={() => (editIgnoredParents = toggleArrayItem(editIgnoredParents, parent.id))}>
-								<span class="text-body-s font-mono transition-colors">{parent.title}</span>
-								<Icon name="arrow-right" class="text-ink-30" />
-							</button>
-						{:else}
-							<a
-								href="/dev/aidev/{parent.id}"
-								data-tooltip={parent.ignored ? 'Ignored in AI Context' : 'Go to Parent Topic'}
-								class="hover:text-accent-500 flex items-center gap-2 {parent.ignored ? 'line-through opacity-50' : 'text-ink-50'}">
-								<span class="text-body-s font-mono transition-colors">{parent.title}</span>
-								<Icon name="arrow-right" class="text-ink-30" />
-							</a>
-						{/if}
+						<NodeItem
+							name={parent.title}
+							variant="tertiary"
+							size="s"
+							iconHidden
+							class={cn(
+								'font-mono underline-offset-4',
+								isEditing && editIgnoredParents.includes(parent.id) ? 'line-through opacity-40' : '',
+								!isEditing && parent.ignored ? 'line-through opacity-40' : ''
+							)}
+							tagName={isEditing ? 'button' : 'a'}
+							href={isEditing ? undefined : `/dev/aidev/${parent.id}`}
+							onclick={() => {
+								if (isEditing) editIgnoredParents = toggleArrayItem(editIgnoredParents, parent.id);
+							}}
+							data-tooltip={isEditing ? 'Toggle Context Inclusion' : 'Go to Parent Topic'} />
+						<Icon name="arrow-right" class="text-ink-30 h-3 w-3" />
 					{/each}
-					<span class="text-body-s text-ink-90 font-mono font-bold">{topic.title}</span>
+					<span class="text-ink-90 px-2 font-mono text-sm font-bold">{topic.title}</span>
 				</div>
 			{/if}
 
@@ -115,13 +115,7 @@
 				{#if !isEditing && uiVisibleGlobalTopics.length > 0}
 					<div data-uiname="global-tags" class="ml-2 flex items-center gap-2">
 						{#each uiVisibleGlobalTopics as gt}
-							<a
-								href="/dev/aidev/{gt.id}"
-								class="bg-level-1 hover:bg-level-2 border-border text-label-xs text-ink-90 flex items-center gap-1.5 rounded-full border px-2 py-1 transition-colors"
-								data-tooltip="View Global Context">
-								<Icon name="sparkles" class="text-accent-500 h-3 w-3" />
-								{gt.title}
-							</a>
+							<NodeItem name={gt.title} icon="sparkles" href="/dev/aidev/{gt.id}" variant="secondary" size="s" class="rounded-full" />
 						{/each}
 					</div>
 				{/if}
@@ -138,9 +132,9 @@
 				{copiedState === 'deep' ? 'Context Copied!' : 'Copy AI Context'}
 			</Button>
 			<div class="bg-border mx-2 h-6 w-px"></div>
-			<Button variant="tertiary" size="s" icon={!isEditing} onclick={toggleEdit}>
+			<Button variant="tertiary" size="s" onclick={toggleEdit}>
 				<Icon name={isEditing ? 'x' : 'edit'} />
-				{#if isEditing}<p class="mr-xs">Cancel</p>{/if}
+				{#if isEditing}<span class="ml-xs">Cancel</span>{/if}
 			</Button>
 			{#if !isEditing}
 				<form
@@ -150,13 +144,15 @@
 					onsubmit={(e) => {
 						if (!confirm('Delete this topic?')) e.preventDefault();
 					}}>
-					<Button variant="tertiary" size="s" icon type="submit" class="text-error" data-tooltip="Delete Topic"><Icon name="trash" /></Button>
+					<Button variant="tertiary" size="s" type="submit" class="text-error" data-tooltip="Delete Topic">
+						<Icon name="trash" />
+					</Button>
 				</form>
 			{/if}
 		</div>
 	</div>
 
-	<div class=" p-8">
+	<div class="p-8">
 		{#if isEditing}
 			<Form
 				action="?/update"
@@ -192,7 +188,6 @@
 							</Select.Root>
 						</div>
 					</div>
-
 					<div class="flex flex-col gap-1">
 						<label class="text-ink-50 px-2xs font-label-s font-semibold">Human Description (Optional, UI only)</label>
 						<Input name="human_description" bind:value={editDescription} placeholder="Explain what this architecture does..." />
@@ -205,109 +200,6 @@
 							bind:value={editPrompt}
 							rows="6"
 							class="bg-level-1 border-border text-ink-90 rounded-m focus:ring-accent-500 resize-y border p-3 font-mono text-sm outline-none focus:ring-2"></textarea>
-					</div>
-
-					<div class="border-border grid grid-cols-2 gap-6 border-t pt-6">
-						<div class="flex flex-col gap-4">
-							<div class="flex flex-col gap-1">
-								<label class="text-ink-50 px-2xs font-label-s font-semibold">Global Project Context Settings</label>
-								<div class="bg-level-1 border-border rounded-m flex flex-col gap-3 border p-4">
-									<input type="hidden" name="global_mode" value={editGlobalMode} />
-									<div class="flex gap-2">
-										<Button type="button" size="xs" variant={editGlobalMode === 'ALL' ? 'primary' : 'tertiary'} onclick={() => (editGlobalMode = 'ALL')}>All</Button>
-										<Button type="button" size="xs" variant={editGlobalMode === 'CUSTOM' ? 'primary' : 'tertiary'} onclick={() => (editGlobalMode = 'CUSTOM')}>Custom</Button>
-										<Button type="button" size="xs" variant={editGlobalMode === 'NONE' ? 'primary' : 'tertiary'} onclick={() => (editGlobalMode = 'NONE')}>None</Button>
-									</div>
-
-									{#if editGlobalMode === 'CUSTOM'}
-										<div class="mt-2 flex flex-col gap-2">
-											{#each allGlobalTopics as gt}
-												<label class="flex cursor-pointer items-center gap-2">
-													<input
-														type="checkbox"
-														name="global_topics"
-														value={gt.id}
-														checked={selectedGlobals.includes(gt.id)}
-														onchange={() => (selectedGlobals = toggleArrayItem(selectedGlobals, gt.id))}
-														class="hidden" />
-													<div
-														class="flex h-4 w-4 items-center justify-center rounded border {selectedGlobals.includes(gt.id)
-															? 'bg-accent-500 border-accent-500 text-white'
-															: 'border-border bg-level-2'}">
-														{#if selectedGlobals.includes(gt.id)}<Icon name="check" class="h-3 w-3" />{/if}
-													</div>
-													<span class="text-body-s text-ink-90">{gt.title}</span>
-												</label>
-											{/each}
-										</div>
-									{/if}
-								</div>
-							</div>
-
-							<div class="flex flex-col gap-1">
-								<label class="text-ink-50 px-2xs font-label-s font-semibold">Relevant Files</label>
-								<textarea
-									name="files_list"
-									bind:value={editFiles}
-									class="bg-level-1 border-border text-ink-90 rounded-m focus:ring-accent-500 h-full min-h-[120px] resize-y border p-3 font-mono text-sm outline-none focus:ring-2"
-									placeholder="src/routes/+page.svelte"></textarea>
-							</div>
-						</div>
-
-						<div class="flex flex-col gap-4">
-							<div class="flex flex-col gap-1">
-								<label class="text-ink-50 px-2xs font-label-s font-semibold">Design Tokens Context</label>
-								<div class="bg-level-1 border-border rounded-m flex gap-4 border p-4">
-									{#each ['colors', 'icons'] as token}
-										<label class="group flex cursor-pointer items-center gap-2">
-											<input
-												type="checkbox"
-												name="tokens"
-												value={token}
-												checked={selectedTokens.includes(token)}
-												onchange={() => (selectedTokens = toggleArrayItem(selectedTokens, token))}
-												class="hidden" />
-											<div
-												class="flex h-4 w-4 shrink-0 items-center justify-center rounded border {selectedTokens.includes(token)
-													? 'bg-accent-500 border-accent-500 text-white'
-													: 'border-border bg-level-2 group-hover:border-accent-500'}">
-												{#if selectedTokens.includes(token)}<Icon name="check" class="h-3 w-3" />{/if}
-											</div>
-											<span class="text-body-s text-ink-90 group-hover:text-accent-500 font-bold capitalize transition-colors">{token}</span>
-										</label>
-									{/each}
-								</div>
-							</div>
-
-							<div class="flex flex-col gap-1">
-								<label class="text-ink-50 px-2xs font-label-s font-semibold">Required Components</label>
-								<div class="bg-level-1 border-border rounded-m flex h-[220px] flex-col gap-4 overflow-y-auto border p-4">
-									{#each [{ label: 'UI', items: uiComponents }, { label: 'Blocks/Layouts', items: [...blocks, ...layouts] }] as group}
-										<div class="flex flex-col gap-2">
-											<span class="text-label-xs text-ink-50 font-bold uppercase">{group.label}</span>
-											{#each group.items as comp}
-												<label class="group flex cursor-pointer items-center gap-2">
-													<input
-														type="checkbox"
-														name="components"
-														value={comp.name}
-														checked={selectedComponents.includes(comp.name)}
-														onchange={() => (selectedComponents = toggleArrayItem(selectedComponents, comp.name))}
-														class="hidden" />
-													<div
-														class="flex h-4 w-4 items-center justify-center rounded border {selectedComponents.includes(comp.name)
-															? 'bg-accent-500 border-accent-500 text-white'
-															: 'border-border bg-level-2 group-hover:border-accent-500'}">
-														{#if selectedComponents.includes(comp.name)}<Icon name="check" class="h-3 w-3" />{/if}
-													</div>
-													<span class="text-body-s text-ink-90 group-hover:text-accent-500 transition-colors">{comp.name}</span>
-												</label>
-											{/each}
-										</div>
-									{/each}
-								</div>
-							</div>
-						</div>
 					</div>
 
 					<div class="border-border border-t pt-4">
@@ -337,19 +229,16 @@
 				<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
 					<div class="flex flex-col gap-4">
 						<h3 class="text-label-m text-ink-90 flex items-center gap-2 font-bold"><Icon name="folder" class="text-accent-500" /> Files</h3>
-						<div class="flex flex-col gap-2">
+						<div class="flex flex-col gap-1">
 							{#if deepContext.files.length > 0}
 								{#each deepContext.files as file}
-									<div data-uiname="file-card-{file}" class="group">
-										<File mode="default" class="border-border bg-level-1 group-hover:border-accent-500 border p-2">
-											<span class="text-ink-90 font-mono">{file}</span>
-											{#snippet trailing()}
-												<Button type="button" variant="secondary" size="xs" onclick={() => copyText(file, file)} data-tooltip="Copy File Path">
-													<Icon name={copiedFiles === file ? 'check' : 'copy'} class={copiedFiles === file ? 'text-accent-500' : 'text-ink-50'} />
-												</Button>
-											{/snippet}
-										</File>
-									</div>
+									<NodeItem name={file} filetype="file" variant="tertiary" class="bg-level-1 group font-mono">
+										{#snippet trailingItems()}
+											<Button variant="secondary" size="xs" class="opacity-0 transition-opacity group-hover:opacity-100" onclick={() => copyText(file, file)}>
+												<Icon name={copiedFiles === file ? 'check' : 'copy'} class={copiedFiles === file ? 'text-accent-500' : 'text-ink-50'} />
+											</Button>
+										{/snippet}
+									</NodeItem>
 								{/each}
 							{:else}
 								<p class="text-body-s text-ink-50 italic">No files required.</p>
@@ -359,35 +248,29 @@
 
 					<div class="flex flex-col gap-4">
 						<h3 class="text-label-m text-ink-90 flex items-center gap-2 font-bold"><Icon name="layout" class="text-accent-500" /> Components</h3>
-						<div class="flex flex-col gap-2">
+						<div class="flex flex-col gap-1">
 							{#if deepContext.tokens.includes('colors')}
-								<a href="/dev/design-system/colors" class="bg-level-1 border-border hover:border-accent-500 rounded-m flex items-center justify-between border p-3 transition-colors">
-									<span class="text-label-s text-ink-90 font-bold"><Icon name="check" class="text-accent-500 mr-2" /> Colors Token</span>
-								</a>
+								<NodeItem name="Colors Token" icon="check" href="/dev/design-system/colors" variant="tertiary" class="bg-level-1" />
 							{/if}
 							{#if deepContext.tokens.includes('icons')}
-								<a href="/dev/design-system/icons" class="bg-level-1 border-border hover:border-accent-500 rounded-m flex items-center justify-between border p-3 transition-colors">
-									<span class="text-label-s text-ink-90 font-bold"><Icon name="check" class="text-accent-500 mr-2" /> Icons Token</span>
-								</a>
+								<NodeItem name="Icons Token" icon="check" href="/dev/design-system/icons" variant="tertiary" class="bg-level-1" />
 							{/if}
 
 							{#each deepContext.components as compName}
 								{@const compData = allComponents.find((c) => c.name === compName)}
 								{#if compData}
-									<div data-uiname="component-card-{compName}" class="bg-level-1 border-border rounded-m hover:border-accent-500 flex items-center justify-between border p-3 transition-colors">
-										<a href={compData.href} class="flex items-center gap-2 hover:opacity-80">
-											<Icon name="layout" class="text-accent-500 h-4 w-4" />
-											<span class="text-ink-90 font-bold">{compData.name}</span>
-										</a>
-										<div class="flex items-center gap-2">
-											<Button type="button" variant="secondary" size="xs" onclick={() => copyText(compData.context, compName + '-ctx')} data-tooltip="Copy AI Component Context">
-												<Icon name={copiedFiles === compName + '-ctx' ? 'check' : 'copy'} class={copiedFiles === compName + '-ctx' ? 'text-accent-500' : ''} /> Context
-											</Button>
-											<Button type="button" variant="secondary" size="xs" onclick={() => copyText(compData.importStr, compName + '-imp')} data-tooltip="Copy Svelte Import Statement">
-												<Icon name={copiedFiles === compName + '-imp' ? 'check' : 'copy'} class={copiedFiles === compName + '-imp' ? 'text-accent-500' : ''} /> Import
-											</Button>
-										</div>
-									</div>
+									<NodeItem name={compData.name} icon="layout" href={compData.href} variant="tertiary" class="bg-level-1 group">
+										{#snippet trailingItems()}
+											<div class="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+												<Button variant="secondary" size="xs" onclick={() => copyText(compData.context, compName + '-ctx')}>
+													<Icon name={copiedFiles === compName + '-ctx' ? 'check' : 'copy'} class="mr-1" /> Context
+												</Button>
+												<Button variant="secondary" size="xs" onclick={() => copyText(compData.importStr, compName + '-imp')}>
+													<Icon name={copiedFiles === compName + '-imp' ? 'check' : 'copy'} class="mr-1" /> Import
+												</Button>
+											</div>
+										{/snippet}
+									</NodeItem>
 								{/if}
 							{/each}
 

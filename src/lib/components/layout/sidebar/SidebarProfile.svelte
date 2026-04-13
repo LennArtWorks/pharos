@@ -20,7 +20,7 @@
 			</button>
 
 			<form method="POST" action="/logout" data-uiname="Logout-Form">
-				<Button type="submit" variant="tertiary" size="s" aria-label="Logout" icon>
+				<Button type="submit" variant="tertiary" size="s" aria-label="Logout" iconOnly>
 					<Icon name="collapse" class="h-main-2xs" />
 				</Button>
 			</form>

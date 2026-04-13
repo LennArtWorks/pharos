@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { contextMenu, requestContextMenuAction } from '$lib/state/layout/contextMenu.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte'; // Update path if needed
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
 	let width = $state(0);
@@ -12,7 +12,7 @@
 	let flipSubmenu = $state(false);
 
 	let activeSubmenuId = $state<string | null>(null);
-	let submenuTimeout: NodeJS.Timeout; // NEW: Timer for debounce
+	let submenuTimeout: NodeJS.Timeout;
 
 	$effect(() => {
 		if (!contextMenu.isOpen) {
@@ -29,7 +29,6 @@
 		if (action) requestContextMenuAction(action);
 	}
 
-	// NEW: Delay closing the submenu to bridge the visual gap
 	function handleSubmenuEnter(id: string) {
 		clearTimeout(submenuTimeout);
 		activeSubmenuId = id;
@@ -43,8 +42,6 @@
 </script>
 
 {#if contextMenu.isOpen}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<!-- ADDED: role="menu" for standard accessibility -->
 	<div
 		role="menu"
 		bind:clientWidth={width}
@@ -58,11 +55,8 @@
 			e.stopPropagation();
 		}}>
 		{#if contextMenu.items.length === 0}
-			<!-- GLOBAL EMPTY STATE -->
 			<div role="none">
-				<Button role="menuitem" variant="tertiary" size="s" class="text-ink-50 w-full cursor-default justify-start" disabled>
-					{#snippet label()}<span class="w-full text-left italic">Nothing to click here :(</span>{/snippet}
-				</Button>
+				<NodeItem role="menuitem" name="Nothing to click here :(" iconHidden disabled class="text-ink-50 cursor-default italic" />
 			</div>
 		{:else}
 			{#each contextMenu.items as item}
@@ -70,40 +64,33 @@
 					<div role="separator" class="bg-border my-1 h-px w-full"></div>
 				{:else if item.type === 'label'}
 					<div role="none">
-						<Button role="menuitem" variant="tertiary" size="s" class="text-ink-50 w-full cursor-default justify-start" disabled>
-							{#snippet label()}<span class="w-full text-left italic">{item.label}</span>{/snippet}
-						</Button>
+						<NodeItem role="menuitem" name={item.label} iconHidden disabled class="text-ink-50 cursor-default italic" />
 					</div>
 				{:else if item.type === 'action'}
 					<div role="none">
-						<Button
+						<NodeItem
 							role="menuitem"
-							variant="tertiary"
-							size="s"
 							disabled={item.disabled}
-							class="w-full justify-start {item.danger ? 'theme-accent font-medium' : ''}"
-							onclick={() => handleAction(item.action)}>
-							{#if item.icon}
-								{#snippet leading()}<Icon name={item.icon as FigmaIconName} />{/snippet}
-							{/if}
-							{#snippet label()}<span class="w-full text-left">{item.label}</span>{/snippet}
-						</Button>
+							name={item.label}
+							icon={item.icon as FigmaIconName}
+							iconHidden={!item.icon}
+							class={item.danger ? 'theme-accent font-medium' : ''}
+							onclick={() => handleAction(item.action)} />
 					</div>
 				{:else if item.type === 'submenu'}
 					<div role="none" class="relative w-full" onmouseenter={() => handleSubmenuEnter(item.id)} onmouseleave={handleSubmenuLeave}>
-						<Button
+						<NodeItem
 							role="menuitem"
 							aria-haspopup="true"
 							aria-expanded={activeSubmenuId === item.id}
-							variant="tertiary"
-							size="s"
-							class="w-full justify-start {activeSubmenuId === item.id ? 'bg-button-hover-low' : ''}">
-							{#if item.icon}
-								{#snippet leading()}<Icon name={item.icon as FigmaIconName} />{/snippet}
-							{/if}
-							{#snippet label()}<span class="w-full text-left">{item.label}</span>{/snippet}
-							{#snippet trailing()}<Icon name="arrow-right" class="text-ink-50 h-3 w-3" />{/snippet}
-						</Button>
+							name={item.label}
+							icon={item.icon as FigmaIconName}
+							iconHidden={!item.icon}
+							class={activeSubmenuId === item.id ? 'bg-button-hover-low' : ''}>
+							{#snippet trailingItems()}
+								<Icon name="arrow-right" class="text-ink-50 h-3 w-3" />
+							{/snippet}
+						</NodeItem>
 
 						{#if activeSubmenuId === item.id && item.items}
 							<div
@@ -116,13 +103,13 @@
 										<div role="separator" class="bg-border my-1 h-px w-full"></div>
 									{:else}
 										<div role="none">
-											<Button role="menuitem" variant="tertiary" size="s" class="w-full justify-start {subItem.danger ? 'theme-accent' : ''}" onclick={() => handleAction(subItem.action)}>
-												{#if subItem.icon}
-													<!-- FIX: TypeScript explicit casting to FigmaIconName -->
-													{#snippet leading()}<Icon name={subItem.icon as FigmaIconName} />{/snippet}
-												{/if}
-												{#snippet label()}<span class="w-full text-left capitalize">{subItem.label}</span>{/snippet}
-											</Button>
+											<NodeItem
+												role="menuitem"
+												name={subItem.label}
+												icon={subItem.icon as FigmaIconName}
+												iconHidden={!subItem.icon}
+												class={subItem.danger ? 'theme-accent' : 'capitalize'}
+												onclick={() => handleAction(subItem.action)} />
 										</div>
 									{/if}
 								{/each}
@@ -132,13 +119,10 @@
 				{/if}
 			{/each}
 
-			<!-- RESTRICTED: Only visible to logged-in Operators looking for telemetry -->
 			{#if page.data.operator && contextMenu.node}
 				<div role="separator" class="bg-border my-1 h-px w-full"></div>
 				<div role="none">
-					<Button role="menuitem" variant="tertiary" size="s" class="text-ink-50 w-full justify-start" onclick={() => console.log($state.snapshot(contextMenu.node))}>
-						{#snippet label()}<span class="w-full text-left text-xs">Log Node Data</span>{/snippet}
-					</Button>
+					<NodeItem role="menuitem" size="s" name="Log Node Data" iconHidden class="text-ink-50 text-xs" onclick={() => console.log($state.snapshot(contextMenu.node))} />
 				</div>
 			{/if}
 		{/if}

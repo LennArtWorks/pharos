@@ -184,25 +184,47 @@ export const uiComponents: ComponentDef[] = [
 
 export const blocks: ComponentDef[] = [
   {
-    name: 'File',
-    href: '/dev/design-system/blocks/file',
-    desc: 'Visual representation of a file node in the system.',
-    importStr: `import File from '$lib/components/blocks/File.svelte';`,
+    name: 'NodeItem',
+    href: '/dev/design-system/blocks/nodeitem',
+    desc: 'Visual primitive for any file-system entity (Files, Folders, Workspaces).',
+    importStr: `import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';`,
     context: `
-      COMPONENT: File (Svelte 5)
-      IMPORT: import File from '$lib/components/blocks/File.svelte';
+      COMPONENT: NodeItem (Svelte 5)
+      IMPORT: import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
       PROPS:
-      - filetype: UIFileIconType | string (determines the default icon)
-      - customIcon: FigmaIconName
-      - dropState: 'before' | 'after' | 'inside' | null (renders native DnD indicators)
-      - mode: 'default' | 'preview'
-      - active, template, loading, iconHidden, disabled, hideLabel, minimized, isEditing, isOpen, hasChildren: boolean
-      - tags: (string | {label: string, icon?: FigmaIconName})[]
-      - assigned: boolean | string (renders a dot indicator)
-      - bind:editValue: string
-      - href: string
-      - onsave, oncancel, onToggle: functions
-      SNIPPETS: children (main label), nestedItems (renders collapsible sub-tree if hasChildren is true)
+      - name: string (The label)
+      - filetype: UIFileIconType | string (Maps icon automatically)
+      - icon: FigmaIconName (Manual icon override)
+      - display: 'list' | 'grid' (Switches between row and card)
+      - variant: 'primary' | 'secondary' | 'tertiary' | 'empty' | 'unstyled'
+      - size: 's' | 'm' | 'l'
+      - active, isWorkspace, isEditing, minimized, loading, disabled: boolean
+      - hasChildren, isOpen: boolean (Used to render chevrons)
+      - tags: Array<string | {label: string, icon: string}>
+      - assigned: boolean (Renders dot indicator)
+      - onToggle: (isOpen: boolean) => void
+      - onSquish, onsave, oncancel: functions
+      - tagName: 'a' | 'button' | 'div' (Overrides the root wrapper tag)
+      SNIPPETS: trailingItems (Right-aligned actions), children (Custom label content)
+    `.trim()
+  },
+  {
+    name: 'TreeNodeItem',
+    href: '/dev/design-system/blocks/nodeitem',
+    desc: 'The structural skeleton for tree recursion and Drag & Drop logic.',
+    importStr: `import TreeNodeItem from '$lib/components/blocks/NodeItem/TreeNodeItem.svelte';`,
+    context: `
+      COMPONENT: TreeNodeItem (Svelte 5)
+      IMPORT: import TreeNodeItem from '$lib/components/blocks/NodeItem/TreeNodeItem.svelte';
+      BEHAVIOR: Wraps NodeItem. Handles indentation, slide transitions, and D&D line indicators.
+      PROPS:
+      - isOpen: boolean (bindable)
+      - hasChildren, isWorkspace: boolean
+      - dropState: 'before' | 'after' | 'inside' | null
+      - Standard HTMLAttributes for Drag/Drop (ondragover, ondrop, etc.)
+      SNIPPETS:
+      - content(triggerSquish): Function snippet to render the NodeItem
+      - children: Recursive slot for nested TreeNodeItems
     `.trim()
   }
 ];

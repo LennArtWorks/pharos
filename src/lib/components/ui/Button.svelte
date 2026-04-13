@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils';
-	import { goto as navigate } from '$app/navigation';
 
 	type BaseProps = {
 		children?: Snippet;
@@ -13,16 +12,42 @@
 		size?: 'xs' | 's' | 'sm' | 'm' | 'l' | 'xl';
 		active?: boolean;
 		disabled?: boolean;
+		loading?: boolean;
+		iconOnly?: boolean;
+		tagName?: 'button' | 'a' | 'div'; // <-- NEW: Allow forced tag types
 		class?: string;
-		goto?: string;
-		icon?: boolean;
+		ref?: HTMLElement | HTMLAnchorElement | null;
 	};
 
-	type Props = BaseProps & ((HTMLButtonAttributes & { href?: never }) | (HTMLAnchorAttributes & { href: string; goto?: never }));
+	type Props = BaseProps &
+		(
+			| (HTMLButtonAttributes & { href?: never; type?: 'button' | 'submit' | 'reset' })
+			| (HTMLAnchorAttributes & { href: string; type?: never })
+			| (any & { tagName: 'div' }) // Fallback for div
+		);
 
-	let { children, leading, label, trailing, variant = 'primary', size = 'm', icon = false, href, goto, active = false, disabled = false, class: className = '', onclick, ...rest }: Props = $props();
+	let {
+		children,
+		leading,
+		label,
+		trailing,
+		variant = 'primary',
+		size = 'm',
+		iconOnly = false,
+		loading = false,
+		active = false,
+		disabled = false,
+		href,
+		type = href ? undefined : 'button',
+		tagName,
+		ref = $bindable(null),
+		class: className = '',
+		onclick,
+		...rest
+	}: Props = $props();
 
-	const tag = $derived(href ? 'a' : 'button');
+	// Automatically resolve the correct HTML tag
+	const tag = $derived(tagName ? tagName : href ? 'a' : 'button');
 
 	const variantClasses = {
 		primary: 'bg-button hover:bg-button-hover-high text-ink-10',
@@ -32,7 +57,6 @@
 		unstyled: 'bg-transparent p-0 text-ink-50 hover:text-ink-90 transition-colors'
 	};
 
-	// Base sizes (Heights and Gaps)
 	const sizeClasses = {
 		xs: 'h-main-xs font-label-xs font-semibold gap-2xs',
 		s: 'h-main-s font-label-s font-semibold gap-3xs',
@@ -42,79 +66,83 @@
 		xl: 'h-main-xl font-semibold gap-xs'
 	};
 
-	// Horizontal Padding (Ignored if icon=true)
 	const paddingClasses = $derived({
-		xs: icon ? 'w-main-xs justify-center p-0' : 'px-s',
-		s: icon ? 'w-main-s justify-center p-0' : 'pl-3xs pr-2xs', // Working padding for small size
-		sm: icon ? 'w-main-s justify-center p-0' : 'px-m',
-		m: icon ? 'w-main-m justify-center p-0' : 'px-xl',
-		l: icon ? 'w-main-l justify-center p-0' : 'px-l',
-		xl: icon ? 'w-main-xl justify-center p-0' : 'px-l'
+		xs: iconOnly ? 'aspect-square p-0 justify-center' : 'px-s',
+		s: iconOnly ? 'aspect-square p-0 justify-center' : 'px-2xs',
+		sm: iconOnly ? 'aspect-square p-0 justify-center' : 'px-m',
+		m: iconOnly ? 'aspect-square p-0 justify-center' : 'px-xl',
+		l: iconOnly ? 'aspect-square p-0 justify-center' : 'px-l',
+		xl: iconOnly ? 'aspect-square p-0 justify-center' : 'px-l'
 	});
 
-	let activeVariantClass = $derived(variantClasses[variant]);
-	let activeSize = $derived(variant === 'unstyled' ? '' : `${sizeClasses[size]} ${paddingClasses[size]}`);
-
-	// Checks if the user explicitly passed text alignment classes
-	let hasTextLeft = $derived(className.includes('text-left') || className.includes('justify-start'));
+	let activeVariantClass = $derived(variantClasses[variant as keyof typeof variantClasses]);
+	let activeSize = $derived(variant === 'unstyled' ? '' : `${sizeClasses[size as keyof typeof sizeClasses]} ${paddingClasses[size as keyof typeof paddingClasses]}`);
 
 	function handleClick(e: MouseEvent) {
-		if (disabled) {
+		if (disabled || loading) {
 			e.preventDefault();
 			return;
 		}
-		if (goto) {
-			e.preventDefault();
-			navigate(goto, { noScroll: true, keepFocus: true });
-		}
 		if (onclick) {
-			// @ts-ignore
-			onclick(e);
+			/* @ts-ignore */ onclick(e);
 		}
 	}
 </script>
 
 <svelte:element
 	this={tag}
+	bind:this={ref}
 	{href}
-	{disabled}
-	aria-disabled={disabled}
+	{type}
+	role={tag === 'div' ? 'button' : undefined}
+	tabindex={tag === 'div' ? 0 : undefined}
+	disabled={disabled || loading}
+	aria-disabled={disabled || loading}
 	data-uiname="button-root"
 	onclick={handleClick}
 	class={cn(
-		'flex min-w-0 items-center justify-center overflow-hidden transition-colors outline-none',
+		'relative flex min-w-0 cursor-pointer items-center overflow-hidden transition-colors outline-none',
+		iconOnly ? 'justify-center' : 'justify-start',
 		activeSize,
 		variant !== 'unstyled' && 'rounded-m hit-area-expand',
 		activeVariantClass,
 		active && variant === 'unstyled' ? 'text-ink-90 font-bold' : '',
 		active && variant !== 'unstyled' ? 'bg-button-active text-ink-90 border-transparent' : '',
-		disabled && 'pointer-events-none cursor-not-allowed opacity-50',
+		(disabled || loading) && 'pointer-events-none cursor-not-allowed opacity-50',
 		className
 	)}
 	{...rest}>
-	{#if leading}
-		{@render leading()}
+	{#if loading && variant !== 'unstyled'}
+		<div class="absolute inset-0 z-0 animate-pulse bg-current opacity-10"></div>
 	{/if}
 
-	{#if label || children}
-		<span
-			data-uiname="button-content"
-			class={cn('flex min-w-0 flex-1 items-center truncate', icon ? 'justify-center' : label || hasTextLeft ? 'justify-start text-left' : 'justify-center text-center')}>
-			{#if label}
-				{@render label()}
-			{:else if children}
-				{@render children()}
-			{/if}
-		</span>
-	{/if}
+	<div class={cn('contents', loading ? 'invisible' : 'visible')}>
+		{#if leading}{@render leading()}{/if}
 
-	{#if trailing}
-		{@render trailing()}
+		{#if label || children}
+			<span
+				class={cn(
+					'flex min-w-0 items-center',
+					iconOnly ? 'justify-center' : 'flex-1',
+					!iconOnly && className.includes('flex-col') ? 'justify-center text-center' : '',
+					!iconOnly && !className.includes('flex-col') ? 'truncate' : ''
+				)}>
+				{#if label && !iconOnly}{@render label()}{:else if children}{@render children()}{/if}
+			</span>
+		{/if}
+
+		{#if trailing}{@render trailing()}{/if}
+	</div>
+
+	{#if loading}
+		<svg class={cn('absolute inset-0 m-auto h-4 w-4 animate-spin', iconOnly ? '' : 'left-4 mx-0')} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+			<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+			<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+		</svg>
 	{/if}
 </svelte:element>
 
 <style>
-	/* Ensure SVGs inside buttons never shrink */
 	:global([data-uiname='button-root'] svg) {
 		flex-shrink: 0;
 	}

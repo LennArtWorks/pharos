@@ -75,9 +75,13 @@ export function pushAuditLog(orgId: string, logEntry: string) {
   auditCache.set(orgId, currentLogs);
 }
 
+/**
+ * Extracts and empties the current queue for a specific organisation.
+ * This prevents data loss: new actions during flush go to a fresh array.
+ */
 export function popAuditLogs(orgId: string): string[] {
   const logs = auditCache.get(orgId) || [];
-  auditCache.delete(orgId); // Clear the queue
+  auditCache.delete(orgId);
   return logs;
 }
 

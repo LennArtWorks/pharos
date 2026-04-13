@@ -43,7 +43,7 @@
 <div class="gap-3xl flex min-h-screen flex-col">
 	<header class="border-border border-b pb-8">
 		<div class="mb-4 flex items-center gap-4">
-			<Button href="/dev" variant="secondary" size="s" icon><Icon name="arrow-left" /></Button>
+			<Button href="/dev" variant="secondary" size="s" iconOnly><Icon name="arrow-left" /></Button>
 			<h1 class="text-label-xl text-ink-90 font-bold">Backend & Infrastructure</h1>
 		</div>
 		<p class="text-body-m text-ink-50 max-w-[70ch]">Live server state, active context, database metrics, and static configuration properties.</p>

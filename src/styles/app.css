@@ -30,7 +30,7 @@ button {
   Scrollbar                
 ** ------------------------------- */
 
-  * {
+  html {
     /* Firefox */
     scrollbar-width: thin;
     scrollbar-color: var(--color-neutral-300) transparent;
@@ -38,29 +38,29 @@ button {
   }
 
   /* Chrome, Edge, and Safari */
-  *::-webkit-scrollbar {
+  html::-webkit-scrollbar {
     width: 6px;
     height: 6px;
     /* For horizontal scrollbars */
   }
 
-  *::-webkit-scrollbar-track {
+  html::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  *::-webkit-scrollbar-thumb {
+  html::-webkit-scrollbar-thumb {
     background-color: var(--color-neutral-300);
     border-radius: 20px;
   }
 
-  *::-webkit-scrollbar-thumb:hover {
+  html::-webkit-scrollbar-thumb:hover {
     /* Svelte 5 will reactively use this if you have it in your theme */
     background-color: var(--color-neutral-300);
   }
 
   /* Firefox fallback */
   @supports (not (-webkit-scrollbar: none)) {
-    * {
+    html {
       scrollbar-width: thin;
     }
   }
@@ -132,8 +132,3 @@ button {
 /* ------------------------------- **
    Specific Stylings                
 ** ------------------------------- */
-
-.sidebar-section .sidebar-section {
-  padding-left: var(--setup-spacing-m);
-  margin-top: var(--setup-spacing-2xs);
-}
