@@ -1,10 +1,10 @@
-import { FILE_TYPE_CONFIG, type FSRNode } from '$lib/config/filesystem';
+import { FILE_TYPE_CONFIG, type VNode } from '$lib/config/filesystem';
 import { PERMISSIONS } from '$lib/config/permissions';
 import { has } from '$lib/utils/config/permissions';
 import type { ContextMenuItem } from '$lib/state/layout/contextMenu.svelte';
 import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
-export function getFileContextMenuItems(node: FSRNode): ContextMenuItem[] {
+export function getFileContextMenuItems(node: VNode): ContextMenuItem[] {
   const items: ContextMenuItem[] = [];
 
   if (has(PERMISSIONS.FILES.EDIT)) {

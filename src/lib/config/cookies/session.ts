@@ -1,7 +1,7 @@
-import { GLOBAL_SETTINGS } from '../globalsettings';
+import { GLOBAL_SETTINGS, APP_COOKIE } from '../globalsettings';
 
 export const SESSION_COOKIE = {
-  NAME: 'fsr_session',
+  NAME: APP_COOKIE.SESSION,
   OPTIONS: {
     path: '/',
     httpOnly: true,

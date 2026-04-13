@@ -1,10 +1,26 @@
 <script lang="ts">
-	import type { FSRNode } from '$lib/config/filesystem';
-	let { node }: { node: FSRNode } = $props();
+	import { goto } from '$app/navigation';
+	import type { VNode } from '$lib/config/filesystem';
+	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
+
+	let { node }: { node: VNode } = $props();
+
+	let children = $derived(node.children ?? []);
+	let emptyLabel = $derived(node.type === 'workspace' ? 'This workspace is empty' : 'This folder is empty');
 </script>
 
-<div class="p-8">
-	<h1 class="mb-4 text-3xl font-bold">{node.name}</h1>
-	<p class="text-ink-50">This is a placeholder for the Folder/Workspace Grid View.</p>
-	<p class="text-ink-30 mt-4 text-sm">ID: {node.id}</p>
-</div>
+{#if children.length === 0}
+	<div class="text-ink-40 flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
+		<p>{emptyLabel}</p>
+	</div>
+{:else}
+	<div class="flex flex-wrap gap-4 p-8">
+		{#each children as child (child.id)}
+			<NodeItem
+				node={child}
+				display="grid"
+				tagName="button"
+				ondblclick={() => goto(`/files/${child.id}`)} />
+		{/each}
+	</div>
+{/if}

@@ -14,11 +14,15 @@ export async function POST({ request, locals }) {
 
   const { id, newName } = await request.json();
 
+  if (!id || typeof id !== 'string') return json({ error: 'Invalid id' }, { status: 400 });
+  const cleanName = typeof newName === 'string' ? newName.trim().replace(/\0/g, '') : '';
+  if (!cleanName || cleanName.length > 255) return json({ error: 'Name must be 1–255 characters' }, { status: 400 });
+
   try {
     const meta = await getFileSystemMeta(locals.orgConfig);
     if (!meta.nodes[id]) return json({ error: 'Not found' }, { status: 404 });
 
-    meta.nodes[id].name = newName.trim();
+    meta.nodes[id].name = cleanName;
     meta._meta.lastUpdated = Date.now();
     setMetaCache(locals.orgConfig.organisation_id, meta);
 
@@ -28,7 +32,7 @@ export async function POST({ request, locals }) {
       locals.orgConfig.organisation_id,
       locals.user.id,
       'FILE_RENAME',
-      `Renamed ${id} to "${newName.trim()}"`
+      `Renamed ${id} to "${cleanName}"`
     );
     queueCloudSync(locals.orgConfig);
 

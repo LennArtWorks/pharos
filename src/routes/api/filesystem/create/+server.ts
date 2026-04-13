@@ -18,10 +18,17 @@ export async function POST({ request, locals }) {
   }
 
   const { type, parentId, name } = await request.json();
-  const id = `${SYSTEM_CONFIG.ID_PREFIX}_${crypto.randomUUID().replace(/-/g, '').substring(0, 12)}`;
-  const typeConfig = FILE_TYPE_CONFIG.internal[type as keyof typeof FILE_TYPE_CONFIG.internal];
 
-  if (!typeConfig) return json({ error: 'Unknown file type' }, { status: 400 });
+  // Validate type against the known internal type keys to prevent arbitrary injection
+  const validTypes = Object.keys(FILE_TYPE_CONFIG.internal) as (keyof typeof FILE_TYPE_CONFIG.internal)[];
+  if (!type || !validTypes.includes(type)) return json({ error: 'Unknown file type' }, { status: 400 });
+
+  const cleanName = typeof name === 'string' ? name.trim().replace(/\0/g, '').substring(0, 255) : '';
+  if (!cleanName) return json({ error: 'Name is required' }, { status: 400 });
+
+  const _rawId = crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+  const id = SYSTEM_CONFIG.ID_PREFIX ? `${SYSTEM_CONFIG.ID_PREFIX}_${_rawId}` : _rawId;
+  const typeConfig = FILE_TYPE_CONFIG.internal[type as keyof typeof FILE_TYPE_CONFIG.internal];
 
   try {
     const meta = await getFileSystemMeta(locals.orgConfig);
@@ -46,7 +53,7 @@ export async function POST({ request, locals }) {
     }
 
     // 2. LOGICAL OPERATION
-    meta.nodes[id] = generateBaseNode(name, parentId || null, typeConfig.ext[0], isSecure, false);
+    meta.nodes[id] = generateBaseNode(cleanName, parentId || null, typeConfig.ext[0], isSecure, false);
 
     meta._meta.lastUpdated = Date.now();
     setMetaCache(locals.orgConfig.organisation_id, meta);
@@ -57,7 +64,7 @@ export async function POST({ request, locals }) {
       locals.orgConfig.organisation_id,
       locals.user.id,
       actionName,
-      `Created ${type} "${name}" (${id}) in parent ${parentId || 'root'}`
+      `Created ${type} "${cleanName}" (${id}) in parent ${parentId || 'root'}`
     );
 
     // 4. BACKGROUND TASKS

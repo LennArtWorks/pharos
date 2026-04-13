@@ -4,7 +4,7 @@ import { DEFAULT_ROLES, SETUP_ROLES } from "$lib/config/cloudfiles/roles";
 import { getCachedUser, setCachedUser } from "$lib/server/auth/userCache";
 import { readSecureFile } from "$lib/server/auth/secureHandler";
 import { SYSTEM_CONFIG } from "$lib/config/filesystem";
-import { GLOBAL_SETTINGS } from "$lib/config/globalsettings";
+import { GLOBAL_SETTINGS, APP_COOKIE, APP_EXTENSIONS } from "$lib/config/globalsettings";
 import { dev } from '$app/environment';
 import { SESSION_COOKIE } from '$lib/config/cookies/session';
 import { generateAnonymousSessionUser } from "$lib/config/cloudfiles/user";
@@ -91,7 +91,7 @@ export async function handle({ event, resolve }) {
 
           if (!currentUser) {
             try {
-              const profilePath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.ACCOUNTS_FOLDER.join('')}/${session.account_id}.fsrsys.fsrsecure`;
+              const profilePath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.ACCOUNTS_FOLDER.join('')}/${session.account_id}${APP_EXTENSIONS.SYS}${APP_EXTENSIONS.SECURE_MODIFIER}`;
               const profileData = await readSecureFile(orgConfig, profilePath);
 
               if (profileData) {
@@ -140,10 +140,10 @@ export async function handle({ event, resolve }) {
       // 🚨 GOD MODE: ROLE SIMULATOR & DEV MODE
       // ==========================================
       let isSimulating = false;
-      let isDevMode = event.cookies.get('fsr_devmode') === 'true';
+      let isDevMode = event.cookies.get(APP_COOKIE.DEVMODE) === 'true';
 
       if (operatorTier === 'support' || operatorTier === 'owner') {
-        const simulatedRole = event.cookies.get('fsr_simulation');
+        const simulatedRole = event.cookies.get(APP_COOKIE.SIMULATION);
         if (simulatedRole) {
           isSimulating = true;
           if (simulatedRole === 'Guest (Not Logged In)') {

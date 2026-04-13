@@ -1,3 +1,5 @@
+import { APP_EXTENSIONS, GLOBAL_SETTINGS } from './globalsettings';
+
 // Navigation views mapped to their icons and route paths
 export const VIEW_CONFIG = {
   recentTopics: { active: true, icon: 'home', label: "Recent Topics", path: '/files/recent' },
@@ -11,11 +13,11 @@ export const FILE_TYPE_CONFIG = {
   // Internal OS files mapped to their icons and extensions
   internal: {
     sysfile: {
-      active: true, type: "file", icon: 'settings', ext: ['.fsrsys'],
+      active: true, type: "file", icon: 'settings', ext: [APP_EXTENSIONS.SYS],
       component: "ContentTypeNotSupported", websocket: false, defaultContent: { name: "New Sysfile" }
     },
     sysfolder: {
-      active: true, type: "folder", icon: 'folder', ext: ['.sysfolder'],
+      active: true, type: "folder", icon: 'folder', ext: [APP_EXTENSIONS.SYSFOLDER],
       component: "ContentTypeFolder", websocket: false, defaultContent: { name: "New Sysfolder" }
     },
     folder: {
@@ -23,23 +25,23 @@ export const FILE_TYPE_CONFIG = {
       component: "ContentTypeFolder", websocket: false, defaultContent: { name: "New Folder" }
     },
     workspace: {
-      active: true, type: "workspace", icon: '', ext: ['.workspace'],
-      component: "ContentTypeWorkspace", websocket: false, defaultContent: { name: "New Workspace" }
+      active: true, type: "workspace", icon: '', ext: [APP_EXTENSIONS.WORKSPACE],
+      component: "ContentTypeFolder", websocket: false, defaultContent: { name: "New Workspace" }
     },
     document: {
-      active: true, type: "file", icon: 'file', ext: ['.fsrdoc'],
+      active: true, type: "file", icon: 'file', ext: [APP_EXTENSIONS.DOC],
       component: "ContentTypeDocument", websocket: true,
       defaultContent: { name: "New Document", type: "doc", content: [{ type: "paragraph", content: [] }] }
     },
+    event: {
+      active: true, type: "folder", icon: 'calendar', ext: [APP_EXTENSIONS.EVENT],
+      component: "ContentTypeEvent", websocket: false,
+      defaultContent: { name: "New Event", date: null, attendees: [] }
+    },
     tasks: {
-      active: false, type: "file", icon: 'checkbox', ext: ['.fsrtasks'],
+      active: false, type: "file", icon: 'checkbox', ext: [APP_EXTENSIONS.TASKS],
       component: "ContentTypeTasks", websocket: true,
       defaultContent: { name: "New Tasksboard", columns: [{ id: "todo", title: "To Do", tasks: [] }] }
-    },
-    event: {
-      active: false, type: "file", icon: 'calendar', ext: ['.fsrevt'],
-      component: "ContentTypeNotSupported", websocket: true,
-      defaultContent: { name: "New Event", date: null, attendees: [] }
     },
   },
   // Standard external files
@@ -52,19 +54,21 @@ export const FILE_TYPE_CONFIG = {
 } as const;
 
 export const FILE_MODIFIERS = {
-  // extension for ecrypted files (they will be encrypted when laying on the cloud)
-  SECURE: '.fsrsecure',
+  // Extension appended to encrypted files laying on the cloud
+  SECURE: APP_EXTENSIONS.SECURE_MODIFIER,
 };
 
 export const SYSTEM_CONFIG = {
-  // The OS-internal folder for meta.fsrsys
-  ID_PREFIX: 'fsr',
+  // Prefix for node IDs. Derived from APP_INFO — '' means pure UUID with no prefix.
+  ID_PREFIX: GLOBAL_SETTINGS.APP_INFO.NODE_ID_PREFIX,
   CONFIG_FOLDER: '.config', // stores the special system files (like meta, roles, accounts)
-  META_FILE: ['meta', FILE_TYPE_CONFIG.internal.sysfile.ext[0]],
-  ROLES_FILE: ['roles', FILE_TYPE_CONFIG.internal.sysfile.ext[0]],
-  ACCOUNTS_FILE: ['accounts', `${FILE_TYPE_CONFIG.internal.sysfile.ext[0]}${FILE_MODIFIERS.SECURE}`],
-  ACCOUNTS_FOLDER: ['accounts', `${FILE_TYPE_CONFIG.internal.sysfolder.ext[0]}`],
-  SECURE_BACKUP_FOLDER: ['backups-secure', `${FILE_TYPE_CONFIG.internal.sysfolder.ext[0]}`], // stores only backups for system relevant secure files
+  META_FILE: ['meta', APP_EXTENSIONS.SYS],
+  DATES_FILE: ['dates', APP_EXTENSIONS.SYS],
+  OUTDATED_DATES_FILE: ['outdated-dates', APP_EXTENSIONS.SYS],
+  ROLES_FILE: ['roles', APP_EXTENSIONS.SYS],
+  ACCOUNTS_FILE: ['accounts', `${APP_EXTENSIONS.SYS}${APP_EXTENSIONS.SECURE_MODIFIER}`],
+  ACCOUNTS_FOLDER: ['accounts', APP_EXTENSIONS.SYSFOLDER],
+  SECURE_BACKUP_FOLDER: ['backups-secure', APP_EXTENSIONS.SYSFOLDER],
   DEFAULT_WORKSPACE: 'Workspace',
   HIDDEN_PREFIXES: ['.', '_'], // completely hidden from the os at any time
 
@@ -72,14 +76,27 @@ export const SYSTEM_CONFIG = {
   SYSTEM_FILE_TYPES: ['sysfolder', 'sysfile'] as const
 } as const;
 
+// Configuration for floating/metadata items that don't represent physical WebDAV files
+export const FLOATING_ITEM_CONFIG = {
+  dates: {
+    standard: { icon: 'calendar', label: 'Date' },
+    start: { icon: 'play', label: 'Start Date' },
+    deadline: { icon: 'flag', label: 'Deadline' }
+  }
+  // Future additions: 'assignments', 'status', etc. can go here
+} as const;
+
+export type DateVariant = keyof typeof FLOATING_ITEM_CONFIG.dates;
+
 // Types
 export type UIFileIconType =
   | keyof typeof VIEW_CONFIG
   | keyof typeof FILE_TYPE_CONFIG.internal
   | keyof typeof FILE_TYPE_CONFIG.external;
 
-// structure of a node/file listed in meta.fsrsys
-export interface FSRNode {
+// Structure of a node/file listed in the meta index.
+// "Virtual Node" — represents a logical file system entry; the physical file lives on WebDAV.
+export interface VNode {
   id: string;
   parentId: string | null;
   type: 'workspace' | 'folder' | 'file';
@@ -93,11 +110,21 @@ export interface FSRNode {
   isSecure?: boolean;
   tags?: string[];
   customFields?: Record<string, any>;
-  children?: FSRNode[];
+  children?: VNode[];
 }
 
-// header of the meta.fsrsys
-export interface FSRMeta {
+// Structure of a standalone floating date entry (stored in dates.appsys)
+export interface FloatingDate {
+  id: string;
+  title: string;
+  variant: DateVariant;
+  timestamp: number; // The actual target date/time
+  createdAt: number;
+  targetNodeId?: string; // Optional: If the date gets assigned to a specific VNode later
+}
+
+// Header of the meta index file (meta.appsys)
+export interface AppMeta {
   _meta: { schemaVersion: string; lastUpdated: number; description: string };
-  nodes: Record<string, Omit<FSRNode, 'id' | 'children' | 'uiFileType' | 'physicalName' | 'type'> & { isSecure?: boolean }>;
+  nodes: Record<string, Omit<VNode, 'id' | 'children' | 'uiFileType' | 'physicalName' | 'type'> & { isSecure?: boolean }>;
 }

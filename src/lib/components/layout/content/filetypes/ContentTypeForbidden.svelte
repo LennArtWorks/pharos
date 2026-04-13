@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { FSRNode } from '$lib/config/filesystem';
-	let { node }: { node: FSRNode } = $props();
+	import type { VNode } from '$lib/config/filesystem';
+	let { node }: { node: VNode } = $props();
 </script>
 
 <div class="p-8">

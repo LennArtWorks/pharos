@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
 // Initialize the SQLite database file
-const db = new Database('databases/organisations.db', { verbose: console.log });
+const db = new Database('databases/organisations.db');
 
 // Enable foreign keys for cascading deletes
 db.pragma('foreign_keys = ON');

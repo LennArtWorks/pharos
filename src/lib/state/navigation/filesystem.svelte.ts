@@ -1,9 +1,9 @@
-import type { FSRNode } from '$lib/config/filesystem';
+import type { VNode } from '$lib/config/filesystem';
 import { apiRenameNode } from '$lib/utils/fileOperations'; // Import the API call
 
 class FileSystemEngine {
-  tree = $state<FSRNode[]>([]);
-  nodeMap = $state<Map<string, FSRNode>>(new Map());
+  tree = $state<VNode[]>([]);
+  nodeMap = $state<Map<string, VNode>>(new Map());
   isFetching = $state(false);
 
   // NEW: Globally shared editing state
@@ -24,8 +24,8 @@ class FileSystemEngine {
   }
 
   rebuildMap() {
-    const map = new Map<string, FSRNode>();
-    const traverse = (nodes: FSRNode[]) => {
+    const map = new Map<string, VNode>();
+    const traverse = (nodes: VNode[]) => {
       for (const n of nodes) {
         map.set(n.id, n);
         if (n.children) traverse(n.children);
@@ -39,8 +39,8 @@ class FileSystemEngine {
     return this.nodeMap.get(id);
   }
 
-  getLineage(id: string): FSRNode[] {
-    const lineage: FSRNode[] = [];
+  getLineage(id: string): VNode[] {
+    const lineage: VNode[] = [];
     let current = this.nodeMap.get(id);
     while (current) {
       lineage.unshift(current);
@@ -49,7 +49,7 @@ class FileSystemEngine {
     return lineage;
   }
 
-  getSiblings(id: string): FSRNode[] {
+  getSiblings(id: string): VNode[] {
     const node = this.nodeMap.get(id);
     if (!node) return [];
     if (!node.parentId) return this.tree.filter(n => n.parentId === null);

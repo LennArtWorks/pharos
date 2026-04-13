@@ -12,14 +12,14 @@
 	import Collaboration from '@tiptap/extension-collaboration';
 	import CollaborationCaret from '@tiptap/extension-collaboration-caret';
 
-	import type { FSRNode } from '$lib/config/filesystem';
+	import type { VNode } from '$lib/config/filesystem';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 
 	import { has } from '$lib/utils/config/permissions';
 	import { PERMISSIONS } from '$lib/config/permissions';
 
-	let { node }: { node: FSRNode } = $props();
+	let { node }: { node: VNode } = $props();
 
 	let editorElement: HTMLElement;
 	let bubbleMenuElement: HTMLElement;

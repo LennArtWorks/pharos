@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { logOperatorAction } from '$lib/server/audit';
 import { queueCloudSync } from '$lib/server/cloud/syncQueue';
+import { APP_COOKIE } from '$lib/config/globalsettings';
 
 export async function POST({ request, cookies, locals }) {
   const operator = locals.operator;
@@ -17,7 +18,7 @@ export async function POST({ request, cookies, locals }) {
   // 1. Handle DevMode (NO MORE DELETE! We overwrite with string 'true' or 'false')
   if (devMode !== undefined) {
     console.log(`[DEV API] Setting DevMode to: ${devMode}`);
-    cookies.set('fsr_devmode', devMode ? 'true' : 'false', { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 });
+    cookies.set(APP_COOKIE.DEVMODE, devMode ? 'true' : 'false', { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 });
     return json({ success: true });
   }
 
@@ -26,7 +27,7 @@ export async function POST({ request, cookies, locals }) {
 
   if (action === 'start' && role) {
     if (persistent) cookieOptions.maxAge = 30 * 24 * 60 * 60;
-    cookies.set('fsr_simulation', role, cookieOptions);
+    cookies.set(APP_COOKIE.SIMULATION, role, cookieOptions);
 
     if (orgId && orgConfig) {
       logOperatorAction(operator.email, 'START_SIMULATION', orgId, { role, persistent });
@@ -37,7 +38,7 @@ export async function POST({ request, cookies, locals }) {
   }
 
   if (action === 'stop') {
-    cookies.set('fsr_simulation', '', { ...cookieOptions, maxAge: 0 });
+    cookies.set(APP_COOKIE.SIMULATION, '', { ...cookieOptions, maxAge: 0 });
 
     if (orgId && orgConfig) {
       logOperatorAction(operator.email, 'STOP_SIMULATION', orgId, {});

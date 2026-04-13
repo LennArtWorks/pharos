@@ -6,7 +6,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
-	import { FILE_TYPE_CONFIG, type FSRNode } from '$lib/config/filesystem';
+	import { FILE_TYPE_CONFIG, type VNode } from '$lib/config/filesystem';
 	import { PERMISSIONS } from '$lib/config/permissions';
 	import { has } from '$lib/utils/config/permissions';
 	import { getFileConfig } from '$lib/utils/config/filesystem';
@@ -30,14 +30,14 @@
 		.filter(([id, config]) => config.active && !['sysfolder', 'sysfile'].includes(id))
 		.map(([id, config]) => ({ id, ...config }));
 
-	const canEdit = (node: FSRNode) => has(node.type === 'workspace' ? PERMISSIONS.WORKSPACE.EDIT : PERMISSIONS.FILES.EDIT);
-	const canMove = (node: FSRNode) => has(node.type === 'workspace' ? PERMISSIONS.WORKSPACE.MOVE : PERMISSIONS.FILES.MOVE);
-	const canCreate = (node: FSRNode) => has(node.type === 'workspace' ? PERMISSIONS.WORKSPACE.CREATE : PERMISSIONS.FILES.CREATE);
+	const canEdit = (node: VNode) => has(node.type === 'workspace' ? PERMISSIONS.WORKSPACE.EDIT : PERMISSIONS.FILES.EDIT);
+	const canMove = (node: VNode) => has(node.type === 'workspace' ? PERMISSIONS.WORKSPACE.MOVE : PERMISSIONS.FILES.MOVE);
+	const canCreate = (node: VNode) => has(node.type === 'workspace' ? PERMISSIONS.WORKSPACE.CREATE : PERMISSIONS.FILES.CREATE);
 
 	function toggleExpanded(id: string, state: boolean) {
 		expandedStates[id] = state;
 	}
-	function syncTree(newTree: FSRNode[]) {
+	function syncTree(newTree: VNode[]) {
 		fsState.tree = newTree;
 		fsState.rebuildMap();
 	}
@@ -63,7 +63,7 @@
 		if (type === 'upload') return;
 		const tempId = `temp_${Date.now()}`;
 		const extension = FILE_TYPE_CONFIG.internal[type as keyof typeof FILE_TYPE_CONFIG.internal]?.ext[0] || '';
-		const tempNode: FSRNode = {
+		const tempNode: VNode = {
 			id: tempId,
 			parentId,
 			type: type === 'workspace' ? 'workspace' : type === 'folder' ? 'folder' : 'file',
@@ -76,7 +76,7 @@
 			children: []
 		};
 
-		const insertNode = (nodes: FSRNode[]): FSRNode[] => {
+		const insertNode = (nodes: VNode[]): VNode[] => {
 			if (parentId === null) return [...nodes, tempNode];
 			return nodes.map((n) => (n.id === parentId ? { ...n, children: [...(n.children || []), tempNode] } : { ...n, children: insertNode(n.children || []) }));
 		};
@@ -85,11 +85,11 @@
 
 		try {
 			const { id: realId } = await apiCreateNode(type, parentId);
-			const swapId = (nodes: FSRNode[]): FSRNode[] => nodes.map((n) => (n.id === tempId ? { ...n, id: realId } : { ...n, children: swapId(n.children || []) }));
+			const swapId = (nodes: VNode[]): VNode[] => nodes.map((n) => (n.id === tempId ? { ...n, id: realId } : { ...n, children: swapId(n.children || []) }));
 			syncTree(swapId(fsState.tree));
 			if (editingId === tempId) editingId = realId;
 		} catch (err: any) {
-			const removeNode = (nodes: FSRNode[]): FSRNode[] => nodes.filter((n) => n.id !== tempId).map((n) => ({ ...n, children: removeNode(n.children || []) }));
+			const removeNode = (nodes: VNode[]): VNode[] => nodes.filter((n) => n.id !== tempId).map((n) => ({ ...n, children: removeNode(n.children || []) }));
 			syncTree(removeNode(fsState.tree));
 			editingId = null;
 		}
@@ -98,12 +98,12 @@
 	async function handleDelete(id: string) {
 		try {
 			await apiDeleteNode(id);
-			const removeNode = (nodes: FSRNode[]): FSRNode[] => nodes.filter((n) => n.id !== id).map((n) => ({ ...n, children: removeNode(n.children || []) }));
+			const removeNode = (nodes: VNode[]): VNode[] => nodes.filter((n) => n.id !== id).map((n) => ({ ...n, children: removeNode(n.children || []) }));
 			syncTree(removeNode(fsState.tree));
 		} catch (err: any) {}
 	}
 
-	async function handleRenameSubmit(node: FSRNode, newName: string) {
+	async function handleRenameSubmit(node: VNode, newName: string) {
 		const cleanName = newName.trim();
 
 		// If nothing changed, just close edit mode
@@ -137,7 +137,7 @@
 		e.stopPropagation();
 	}
 
-	function handleDragOver(e: DragEvent, targetNode: FSRNode) {
+	function handleDragOver(e: DragEvent, targetNode: VNode) {
 		if (!e.dataTransfer?.types.includes('application/fsr-node-id')) return;
 		e.preventDefault();
 		e.stopPropagation();
@@ -166,8 +166,8 @@
 		dropStates[targetId] = null;
 		if (!draggedId || draggedId === targetId || !action) return;
 
-		let draggedNode: FSRNode | null = null;
-		const extractNode = (nodes: FSRNode[]): FSRNode[] =>
+		let draggedNode: VNode | null = null;
+		const extractNode = (nodes: VNode[]): VNode[] =>
 			nodes.filter((n) => {
 				if (n.id === draggedId) {
 					draggedNode = n;
@@ -179,8 +179,8 @@
 
 		let newTree = extractNode(fsState.tree);
 		if (draggedNode) {
-			const insertNode = (nodes: FSRNode[], currentParentId: string | null): FSRNode[] => {
-				let result: FSRNode[] = [];
+			const insertNode = (nodes: VNode[], currentParentId: string | null): VNode[] => {
+				let result: VNode[] = [];
 				for (const n of nodes) {
 					if (n.id === targetId) {
 						if (action === 'before') {
@@ -216,13 +216,13 @@
 		}
 	}
 
-	function getDisplayName(node: FSRNode) {
+	function getDisplayName(node: VNode) {
 		const config = getFileConfig(node.extension);
 		return config.type !== 'file' || node.uiFileType in FILE_TYPE_CONFIG.internal ? node.name : node.name + node.extension;
 	}
 </script>
 
-{#snippet renderNodes(nodes: FSRNode[])}
+{#snippet renderNodes(nodes: VNode[])}
 	{#each nodes as node (node.id)}
 		{@const isOpen = expandedStates[node.id] ?? node.type === 'workspace'}
 

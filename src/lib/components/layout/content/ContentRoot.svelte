@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { SYSTEM_CONFIG, type FSRNode } from '$lib/config/filesystem';
+	import { SYSTEM_CONFIG, type VNode } from '$lib/config/filesystem';
 	import { page } from '$app/state';
 	import type { Component } from 'svelte';
 
 	// Import the actual Svelte components
 	import ContentTypeFolder from './filetypes/ContentTypeFolder.svelte';
-	import ContentTypeWorkspace from './filetypes/ContentTypeWorkspace.svelte';
 	import ContentTypeDocument from './filetypes/ContentTypeDocument.svelte';
 	import ContentTypePreview from './filetypes/ContentTypePreview.svelte';
 	import ContentTypeTasks from './filetypes/ContentTypeTasks.svelte';
@@ -14,32 +13,31 @@
 	import { hasPermission } from '$lib/utils/config/permissions';
 	import { getFileConfig } from '$lib/utils/config/filesystem';
 
-	let { node }: { node: FSRNode | null } = $props();
-	type FSRComponent = Component<{ node: FSRNode }>;
+	let { node }: { node: VNode | null } = $props();
+	type AppComponent = Component<{ node: VNode }>;
 
-	// This is the "Bridge" between your config strings and the actual code
-	const componentRegistry = {
+	// Bridge between config component-name strings and actual imported components.
+	// ContentTypeWorkspace is merged into ContentTypeFolder (both show the same grid view).
+	const componentRegistry: Record<string, AppComponent> = {
 		ContentTypeFolder,
-		ContentTypeWorkspace,
+		ContentTypeWorkspace: ContentTypeFolder,
 		ContentTypeDocument,
-		ContentTypePreview,
-		ContentTypeTasks,
+		// ContentTypePreview,
+		// ContentTypeTasks,
 		ContentTypeNotSupported
 	};
 
-	let ActiveComponent = $derived(() => {
+	let currentUser = $derived(page.data.user);
+	let activeRoles = $derived(page.data.activeRoles);
+
+	let ActiveComponent = $derived.by(() => {
 		if (!node) return null;
 		const config = getFileConfig(node.extension);
-		return (componentRegistry[config.component] || ContentTypeNotSupported) as FSRComponent;
+		return (componentRegistry[config.component] || ContentTypeNotSupported) as AppComponent;
 	});
 
-	let hasAccess = $derived(() => {
+	let hasAccess = $derived.by(() => {
 		if (!node) return false;
-
-		// Extract user and roles from the layout load function
-		let currentUser = $derived(page.data.user);
-		let activeRoles = $derived(page.data.activeRoles);
-
 		if (!currentUser) return false;
 
 		// Check if this filetype belongs to the restricted SYSTEM_FILE_TYPES list
@@ -58,7 +56,7 @@
 		<ContentTypeForbidden {node} />
 	{:else}
 		{#key node.id}
-			{@const Component = ActiveComponent()}
+			{@const Component = ActiveComponent ?? ContentTypeNotSupported}
 			<Component {node} />
 		{/key}
 	{/if}

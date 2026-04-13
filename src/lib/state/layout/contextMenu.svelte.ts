@@ -1,6 +1,6 @@
 // src/lib/state/contextMenu.svelte.ts
 import { tick } from 'svelte';
-import type { FSRNode } from '$lib/config/filesystem';
+import type { VNode } from '$lib/config/filesystem';
 import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
 export type ContextType = 'file' | 'workspace' | 'general' | null;
@@ -21,13 +21,13 @@ export const contextMenu = $state({
   x: 0,
   y: 0,
   type: null as ContextType,
-  node: null as FSRNode | null,
+  node: null as VNode | null,
   items: [] as ContextMenuItem[],
   actionRequested: null as string | null,
   payload: null as any
 });
 
-export async function openContextMenu(e: MouseEvent, type: ContextType, node: FSRNode | null = null, items: ContextMenuItem[] = []) {
+export async function openContextMenu(e: MouseEvent, type: ContextType, node: VNode | null = null, items: ContextMenuItem[] = []) {
   // NEW: Allow native browser context menu if Shift is held down.
   if (e.shiftKey) return;
 

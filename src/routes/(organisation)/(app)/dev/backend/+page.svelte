@@ -18,6 +18,26 @@
 	let searchQuery = $state('');
 	let showOnlyOperators = $state(false);
 
+	// --- Migration ---
+	type MigrationResult = { total: number; migrated: number; skipped: number; errors: string[] };
+	let migrationState = $state<'idle' | 'running' | 'done' | 'error'>('idle');
+	let migrationResult = $state<MigrationResult | null>(null);
+
+	async function runMigration() {
+		migrationState = 'running';
+		migrationResult = null;
+		try {
+			const res = await fetch('/api/dev/migrate', { method: 'POST', credentials: 'include' });
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || 'Unknown error');
+			migrationResult = data as MigrationResult;
+			migrationState = 'done';
+		} catch (e: any) {
+			migrationResult = { total: 0, migrated: 0, skipped: 0, errors: [e.message] };
+			migrationState = 'error';
+		}
+	}
+
 	let filteredAuditLogs = $derived(
 		stats.auditLogs.filter((log: any) => {
 			const matchesSearch =
@@ -256,6 +276,52 @@
 					{/each}
 				</div>
 			</div>
+		</div>
+	</div>
+
+	<div class="bg-level-1 border-border flex flex-col rounded-xl border">
+		<div class="border-border bg-level-2 flex items-center gap-3 rounded-t-xl border-b p-4">
+			<Icon name="settings" class="text-warning-500 h-5 w-5" />
+			<h2 class="text-label-m text-ink-90 font-bold">System Migration</h2>
+			<span class="text-label-xs bg-warning-500/10 text-warning-500 ml-auto rounded-md px-2 py-0.5 font-bold">Destructive</span>
+		</div>
+		<div class="flex flex-col gap-4 p-6">
+			<p class="text-body-s text-ink-50 max-w-[70ch]">
+				Renames all files on WebDAV storage from legacy extensions (<code class="bg-level-2 rounded px-1 font-mono">.fsrdoc</code>, <code class="bg-level-2 rounded px-1 font-mono">.fsrsys</code>, …) and ID prefixes (<code class="bg-level-2 rounded px-1 font-mono">fsr_</code>) to the current <code class="bg-level-2 rounded px-1 font-mono">APP_INFO</code> config values. Updates the meta index automatically. Safe to re-run — already-migrated files are skipped.
+			</p>
+
+			<div class="border-warning-500/20 bg-warning-500/5 rounded-lg border p-3">
+				<p class="text-warning-600 text-label-xs font-bold">Before running: ask all users to log out and close the app. In-flight WebDAV operations during migration may fail.</p>
+			</div>
+
+			<div class="flex items-center gap-4">
+				<Button
+					variant="secondary"
+					size="s"
+					disabled={migrationState === 'running'}
+					onclick={runMigration}>
+					{#snippet leading()}<Icon name={migrationState === 'running' ? 'settings' : 'upload'} class={migrationState === 'running' ? 'animate-spin' : ''} />{/snippet}
+					{#snippet label()}{migrationState === 'running' ? 'Migrating…' : 'Run Migration'}{/snippet}
+				</Button>
+
+				{#if migrationState === 'done' && migrationResult}
+					<span class="text-label-s text-accent-500 font-bold">
+						✓ Done — {migrationResult.migrated} renamed, {migrationResult.skipped} skipped
+					</span>
+				{/if}
+				{#if migrationState === 'error' && migrationResult}
+					<span class="text-label-s text-error font-bold">Migration failed</span>
+				{/if}
+			</div>
+
+			{#if migrationResult && migrationResult.errors.length > 0}
+				<div class="bg-level-0 border-border max-h-40 overflow-y-auto rounded-lg border p-3">
+					<p class="text-label-xs text-error mb-2 font-bold">Errors ({migrationResult.errors.length})</p>
+					{#each migrationResult.errors as err}
+						<p class="text-body-xs text-ink-50 font-mono leading-relaxed">{err}</p>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 

@@ -1,6 +1,6 @@
 import { getCloudClient, type CloudConfig } from './origin/client';
 import { getMetaCache, setMetaCache } from '../cache';
-import { SYSTEM_CONFIG, type FSRNode, FILE_TYPE_CONFIG } from '$lib/config/filesystem';
+import { SYSTEM_CONFIG, type VNode, FILE_TYPE_CONFIG } from '$lib/config/filesystem';
 import { buildNodeFilename, getFileConfig, getUIFileType } from '$lib/utils/config/filesystem';
 
 export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
@@ -28,8 +28,8 @@ export async function getFileSystemMeta(orgConfig: App.Locals['orgConfig']) {
   }
 }
 
-export function transformNodesToTree(nodes: Record<string, any>): FSRNode[] {
-  const nodeArray: FSRNode[] = Object.entries(nodes).map(([id, node]) => {
+export function transformNodesToTree(nodes: Record<string, any>): VNode[] {
+  const nodeArray: VNode[] = Object.entries(nodes).map(([id, node]) => {
     const config = getFileConfig(node.extension);
 
     return {
@@ -42,12 +42,12 @@ export function transformNodesToTree(nodes: Record<string, any>): FSRNode[] {
         isTemplate: node.isTemplate
       }),
       children: []
-    } as FSRNode;
+    } as VNode;
   });
 
   // Build the recursive tree structure
   const map = new Map(nodeArray.map((node) => [node.id, node]));
-  const root: FSRNode[] = [];
+  const root: VNode[] = [];
 
   nodeArray.forEach((node) => {
     if (node.parentId && map.has(node.parentId)) {

@@ -1,14 +1,14 @@
 import { getCloudClient, type CloudConfig } from './origin/client';
 import { setMetaCache } from '../cache';
-import { FILE_TYPE_CONFIG, SYSTEM_CONFIG, type FSRMeta } from '$lib/config/filesystem';
+import { FILE_TYPE_CONFIG, SYSTEM_CONFIG, type AppMeta } from '$lib/config/filesystem';
 import { createHash } from 'crypto';
 import { parseNodeFilename } from '$lib/utils/config/filesystem';
 import { generateDefaultMetaIndex, generateBaseNode } from '$lib/config/cloudfiles/meta';
 
 function generateNodeId(path: string): string {
   const cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
-  const hash = createHash('md5').update(cleanPath).digest('hex').substring(0, 12);
-  return `${SYSTEM_CONFIG.ID_PREFIX}_${hash}`;
+  const hash = createHash('md5').update(cleanPath).digest('hex').substring(0, 16);
+  return SYSTEM_CONFIG.ID_PREFIX ? `${SYSTEM_CONFIG.ID_PREFIX}_${hash}` : hash;
 }
 
 function getParentPath(path: string): string {
@@ -29,7 +29,7 @@ export async function syncCloudIndex(orgConfig: App.Locals['orgConfig']) {
   const metaPath = `${configPath}/${SYSTEM_CONFIG.META_FILE.join('')}`;
 
   // 1. Use the new Blueprint Factory!
-  let existingMeta: FSRMeta = generateDefaultMetaIndex();
+  let existingMeta: AppMeta = generateDefaultMetaIndex();
 
   try {
     const raw = await client.getFileContents(metaPath, { format: "text" });

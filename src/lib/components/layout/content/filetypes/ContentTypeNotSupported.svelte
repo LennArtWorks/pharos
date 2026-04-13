@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { FSRNode } from '$lib/config/filesystem';
+	import type { VNode } from '$lib/config/filesystem';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 	import { getFileConfig } from '$lib/utils/config/filesystem';
 
-	let { node }: { node: FSRNode } = $props();
+	let { node }: { node: VNode } = $props();
 
 	// Dynamically pull the exact config for this extension
 	let config = $derived(getFileConfig(node.extension));
@@ -36,7 +36,7 @@
 	<h2 class="text-text-primary mb-2 text-2xl font-semibold">Preview not available</h2>
 
 	<p class="text-text-secondary mb-8 max-w-md">
-		FSR-OS does not currently support viewing or editing <strong class="text-text-primary font-medium">{node.extension || 'this'}</strong> files directly in the browser. You can download it to view it locally.
+		PHAROS does not currently support viewing or editing <strong class="text-text-primary font-medium">{node.extension || 'this'}</strong> files directly in the browser. You can download it to view it locally.
 	</p>
 
 	<div class="bg-level-1 border-border mb-8 w-full max-w-sm rounded-lg border p-4 text-left shadow-sm">

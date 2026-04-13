@@ -4,7 +4,7 @@
 	import Tag from '$lib/components/ui/Tag.svelte';
 	import { cn } from '$lib/utils';
 
-	import { FILE_TYPE_CONFIG, VIEW_CONFIG, type UIFileIconType, type FSRNode } from '$lib/config/filesystem';
+	import { FILE_TYPE_CONFIG, VIEW_CONFIG, type UIFileIconType, type VNode } from '$lib/config/filesystem';
 	import type { Snippet } from 'svelte';
 	import InlineInput from '$lib/components/ui/InlineInput.svelte';
 
@@ -18,7 +18,7 @@
 	interface Props {
 		children?: Snippet;
 		name?: string;
-		node?: FSRNode;
+		node?: VNode;
 		filetype?: UIFileIconType | string;
 		icon?: FigmaIconName;
 		iconHidden?: boolean;
