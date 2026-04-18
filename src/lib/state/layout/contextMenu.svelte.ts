@@ -3,7 +3,7 @@ import { tick } from 'svelte';
 import type { VNode } from '$lib/config/filesystem';
 import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
-export type ContextType = 'file' | 'workspace' | 'general' | null;
+export type ContextType = 'file' | 'workspace' | 'general' | 'date-entry' | null;
 
 export type ContextMenuItem = {
   id: string;

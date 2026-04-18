@@ -1,7 +1,7 @@
 // src/lib/server/cloud/syncQueue.ts
 import { dev } from '$app/environment';
 import { getCloudClient, type CloudConfig } from './origin/client';
-import { getMetaCache, popAuditLogs } from '../cache';
+import { getMetaCache, getDatesCache, popAuditLogs } from '../cache';
 import { SYSTEM_CONFIG } from '$lib/config/filesystem';
 import { GLOBAL_SETTINGS } from '$lib/config/globalsettings';
 
@@ -31,14 +31,21 @@ async function performCloudSync(orgConfig: App.Locals['orgConfig']) {
   const orgId = orgConfig.organisation_id;
 
   try {
-    // A. Flush Meta.fsrsys
+    // A. Flush meta.appsys
     const meta = getMetaCache(orgId);
     if (meta) {
       const metaPath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.META_FILE.join('')}`;
       await client.putFileContents(metaPath, JSON.stringify(meta, null, 2));
     }
 
-    // B. Flush Audit Logs
+    // B. Flush dates.appsys
+    const dates = getDatesCache(orgId);
+    if (dates) {
+      const datesPath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.DATES_FILE.join('')}`;
+      await client.putFileContents(datesPath, JSON.stringify(dates, null, 2));
+    }
+
+    // C. Flush Audit Logs
     const pendingLogs = popAuditLogs(orgId);
     if (pendingLogs.length > 0) {
       const logPath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/audit.log`;

@@ -118,7 +118,24 @@ export interface FloatingDate {
   id: string;
   title: string;
   variant: DateVariant;
-  timestamp: number; // The actual target date/time
+
+  // --- Time ---
+  // `timestamp` is always the start (or the sole point in time for deadline/start variants).
+  timestamp: number;
+  // `timestampEnd` defines the end of a timeframe. Only meaningful for variant === 'standard'.
+  // deadline and start variants represent a single instant and must not set this field.
+  timestampEnd?: number;
+  // When true the time-of-day component of timestamp/timestampEnd is ignored (whole-day entry).
+  allDay: boolean;
+
+  // --- Content ---
+  description?: string;
+
+  // --- People ---
+  // Array of user IDs (matching the usr_* ID format from GLOBAL_SETTINGS).
+  assignees?: string[];
+
+  // --- System ---
   createdAt: number;
   targetNodeId?: string; // Optional: If the date gets assigned to a specific VNode later
 }
@@ -127,4 +144,11 @@ export interface FloatingDate {
 export interface AppMeta {
   _meta: { schemaVersion: string; lastUpdated: number; description: string };
   nodes: Record<string, Omit<VNode, 'id' | 'children' | 'uiFileType' | 'physicalName' | 'type'> & { isSecure?: boolean }>;
+}
+
+// Header of the dates index file (dates.appsys)
+// Keys are FloatingDate IDs; values omit `id` (derived from key, same lean-JSON pattern as AppMeta).
+export interface AppDates {
+  _meta: { schemaVersion: string; lastUpdated: number; description: string };
+  dates: Record<string, Omit<FloatingDate, 'id'>>;
 }

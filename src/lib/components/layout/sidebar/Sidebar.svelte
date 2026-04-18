@@ -43,7 +43,7 @@
 	let viewsOpen = $state(true);
 </script>
 
-<aside class="bg-level-1 px-l gap-2xs relative flex h-full max-h-full min-h-0 flex-col" onpointermove={handleResize} onpointerup={stopResizing} onpointerleave={stopResizing}>
+<aside class="bg-level-1 px-s gap-2xs relative flex h-full max-h-full min-h-0 flex-col" onpointermove={handleResize} onpointerup={stopResizing} onpointerleave={stopResizing}>
 	<button
 		data-uiname="sidebar-resizer"
 		aria-label="click and drag to resize, double click for original size"

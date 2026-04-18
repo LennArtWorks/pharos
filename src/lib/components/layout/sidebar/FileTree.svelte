@@ -5,6 +5,7 @@
 	import * as Popover from '$lib/components/ui/Popover';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
+	import Tag from '$lib/components/ui/Tag.svelte';
 
 	import { FILE_TYPE_CONFIG, type VNode } from '$lib/config/filesystem';
 	import { PERMISSIONS } from '$lib/config/permissions';
@@ -15,6 +16,8 @@
 	import { apiCreateNode, apiRenameNode, apiDeleteNode, apiSortNode } from '$lib/utils/fileOperations';
 
 	import { fsState } from '$lib/state/navigation/filesystem.svelte';
+	import { datesState } from '$lib/state/navigation/dates.svelte';
+	import { openDateCreate } from '$lib/state/layout/dateCreate.svelte';
 	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import TreeNodeItem from '$lib/components/blocks/NodeItem/TreeNodeItem.svelte';
 	import { goto } from '$app/navigation';
@@ -44,10 +47,14 @@
 
 	onMount(async () => {
 		await fsState.fetchTree();
+		datesState.fetchDates();
 	});
 
 	$effect(() => {
 		if (contextMenu.actionRequested) {
+			// Skip actions intended for other consumers (e.g. calendar page handles date-entry)
+			if (contextMenu.type === 'date-entry') return;
+
 			const action = contextMenu.actionRequested;
 			const node = contextMenu.node;
 			contextMenu.actionRequested = null;
@@ -55,6 +62,7 @@
 
 			if (action === 'rename') editingId = node.id;
 			else if (action === 'delete') handleDelete(node.id);
+			else if (action === 'add-date') openDateCreate({ targetNodeId: node.id, targetNodeName: node.name });
 			else if (action.startsWith('create:')) handleCreate(action.split(':')[1], node.type === 'workspace' || node.type === 'folder' ? node.id : node.parentId);
 		}
 	});
@@ -216,6 +224,12 @@
 		}
 	}
 
+	/** Formats a Unix ms timestamp as DD.MM for compact date tags. */
+	function formatDateShort(ts: number): string {
+		const d = new Date(ts);
+		return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+	}
+
 	function getDisplayName(node: VNode) {
 		const config = getFileConfig(node.extension);
 		return config.type !== 'file' || node.uiFileType in FILE_TYPE_CONFIG.internal ? node.name : node.name + node.extension;
@@ -226,7 +240,7 @@
 	{#each nodes as node (node.id)}
 		{@const isOpen = expandedStates[node.id] ?? node.type === 'workspace'}
 
-		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node, getFileContextMenuItems(node))}>
+		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node, getFileContextMenuItems(node, datesState.forNode(node.id).length > 0))}>
 			<TreeNodeItem
 				{isOpen}
 				hasChildren={node.children && node.children.length > 0}
@@ -299,6 +313,26 @@
 										</Popover.Root>
 									{/if}
 								</div>
+							{/if}
+
+							<!-- Date tags for files and folders — shows up to 2 attached dates -->
+							{#if node.type !== 'workspace' && editingId !== node.id}
+								{@const nodeDates = datesState.forNode(node.id)}
+								{#each nodeDates.slice(0, 2) as date}
+									<Tag
+										onclick={(e: MouseEvent) => {
+											e.preventDefault();
+											e.stopPropagation();
+											// TODO (Phase 3): Open the date detail popover for this specific date entry.
+											// For now, navigate to the calendar view as a placeholder.
+											goto('/files/calendar');
+										}}>
+										<div class="flex items-center gap-1">
+											<Icon name="calendar" class="h-3 w-3" />
+											{formatDateShort(date.timestamp)}
+										</div>
+									</Tag>
+								{/each}
 							{/if}
 						{/snippet}
 					</NodeItem>

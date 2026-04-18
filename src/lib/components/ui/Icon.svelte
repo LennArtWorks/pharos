@@ -258,4 +258,4 @@
 	let isMissing = $derived(!iconMap[name]);
 </script>
 
-<SelectedIcon {stroke} {...rest} class="{hasSize ? '' : 'h-main-xs'} {isMissing ? 'text-red-500' : 'text-current'} {className}" />
+<SelectedIcon {stroke} {...rest} class="{hasSize ? '' : 'h-main-2xs'} {isMissing ? 'text-red-500' : 'text-current'} {className}" />

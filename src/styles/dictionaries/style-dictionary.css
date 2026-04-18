@@ -19,11 +19,11 @@
 
   /* Standard Heights */
   /* main icon size */
-  --spacing-main-2xs: 1.1875rem;
+  --spacing-main-2xs: 1.25rem;
   /* tag size */
-  --spacing-main-xs: 1.25rem;
+  --spacing-main-xs: 1.5rem;
   /* small button and file size */
-  --spacing-main-s: 1.75rem;
+  --spacing-main-s: 1.875rem;
   /* regular button size */
   --spacing-main-m: 2.8125rem;
   /* content header and file preview size */

@@ -4,7 +4,7 @@ import { has } from '$lib/utils/config/permissions';
 import type { ContextMenuItem } from '$lib/state/layout/contextMenu.svelte';
 import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
-export function getFileContextMenuItems(node: VNode): ContextMenuItem[] {
+export function getFileContextMenuItems(node: VNode, hasDates: boolean = false): ContextMenuItem[] {
   const items: ContextMenuItem[] = [];
 
   if (has(PERMISSIONS.FILES.EDIT)) {
@@ -29,6 +29,19 @@ export function getFileContextMenuItems(node: VNode): ContextMenuItem[] {
       icon: 'add',
       items: [...fileTypeItems, { id: 'div-upload', type: 'divider' }, { id: 'upload-file', type: 'action', label: 'Upload File...', icon: 'upload', action: 'create:upload' }]
     });
+  }
+
+  // "Add Date" / "Edit Date" for files and folders — workspaces are excluded
+  if (node.type !== 'workspace') {
+    if (items.length > 0) items.push({ id: 'div-date', type: 'divider' });
+
+    if (hasDates) {
+      // TODO (Phase 3): Clicking "Edit Date" should open the date detail popover for the
+      // existing date(s) on this node. Currently the action is a no-op placeholder.
+      items.push({ id: 'edit-date', type: 'action', label: 'Edit Date', icon: 'calendar', action: 'edit-date' });
+    } else {
+      items.push({ id: 'add-date', type: 'action', label: 'Add Date', icon: 'calendar', action: 'add-date' });
+    }
   }
 
   if (has(PERMISSIONS.FILES.DELETE)) {

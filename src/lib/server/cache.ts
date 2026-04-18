@@ -62,6 +62,38 @@ export function clearAllMetaCache() {
   metaCache.clear();
 }
 
+// --- Dates Cache Functions ---
+
+if (!_global.__fsrDatesCache) {
+  _global.__fsrDatesCache = new Map<string, CacheEntry>();
+}
+
+const datesCache: Map<string, CacheEntry> = _global.__fsrDatesCache;
+
+export function getDatesCache(orgId: string): any | null {
+  const entry = datesCache.get(orgId);
+  if (!entry) return null;
+
+  if (Date.now() > entry.expiresAt) {
+    datesCache.delete(orgId);
+    return null;
+  }
+  return entry.data;
+}
+
+export function hasDatesCache(orgId: string): boolean {
+  const entry = datesCache.get(orgId);
+  return !!entry && Date.now() <= entry.expiresAt;
+}
+
+export function setDatesCache(orgId: string, data: any, ttlMs: number = DEFAULT_TTL) {
+  datesCache.set(orgId, { data, expiresAt: Date.now() + ttlMs });
+}
+
+export function clearDatesCache(orgId: string) {
+  datesCache.delete(orgId);
+}
+
 // --- Audit Cache Functions ---
 
 if (!_global.__fsrAuditCache) {
