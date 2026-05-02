@@ -1,5 +1,28 @@
 # PHAROS - Technical Status & Dependencies
 
+## Recently Completed Features
+
+### ✅ Phase 4-A — Assign Feature
+- `VNode.assignees?: string[]` added to filesystem config; persisted automatically via AppMeta
+- `GET /api/organisation/members` — lightweight member list (auth only, no MANAGE_USERS gate)
+- `POST /api/filesystem/assign` — node assignee update; self-assign open to all, assign-others gated behind `FILES.EDIT`
+- `membersState` — idempotent member fetch engine
+- `assign.svelte.ts` — overlay open/close state (mirrors dateCreate pattern)
+- `AssigneeSelector.svelte` — fixed-position member picker; optimistic toggle; dismisses on Escape / backdrop click
+- File context menu: "Assign" item wired to AssigneeSelector for nodes
+- Calendar context menu: "Assign" item wired to AssigneeSelector for date entries
+- `CalendarEntry.nodeAssignees` — visual inheritance (aggregator reads attached node's assignees; no data written to children)
+- MonthNode: accent bar color (`bg-accent-100 text-accent-600`) + `•` dot prefix on timed pills when current user is assigned
+- NodeItem: assigned dot moved from right (trailing) to left (leading), color changed to `bg-accent-600`
+
+### ✅ Phase 3 — Calendar Month View
+- `CalendarHeader.svelte` — view switcher (ToggleGroup), navigation, "+ add date"
+- `ToggleGroup.svelte` — spring-animated sliding pill, reusable UI primitive
+- `MonthView.svelte` — grid with per-week rows, Dividers between rows, spanning bar math
+- `MonthNode.svelte` — bar variant (all-day) + pill variant (timed), pip indicators, JS-driven spanning hover coordination
+
+---
+
 ## Current Implementation Status
 
 ### ✅ Completed (Foundation)

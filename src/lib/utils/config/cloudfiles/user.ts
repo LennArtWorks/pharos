@@ -33,9 +33,9 @@ export function createNewUser(email: string, mfaSecret: string | null = null, pr
 
   return {
     accountId,
-    // The object that gets injected into accounts.fsrsys -> identities[email]
+    // The object that gets injected into accounts.appsys -> identities[email]
     identityEntry: generateUserIdentity(accountId, email, finalName, role, mfaSecret),
-    // The object that gets written to usr_XXXX.fsrsys.fsrsecure
+    // The object that gets written to usr_XXXX.appsys.appsecure
     profileEntry: generateDefaultUserProfile(accountId)
   };
 }

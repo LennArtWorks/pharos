@@ -1,4 +1,4 @@
-import type { FloatingDate, DateVariant } from '$lib/config/filesystem';
+import type { AppDate, DateVariant } from '$lib/config/filesystem';
 
 // Payload shapes used by the API helpers and this engine
 export interface CreateDatePayload {
@@ -11,6 +11,9 @@ export interface CreateDatePayload {
   /** Defaults to true. Set false for a timed entry. */
   allDay?: boolean;
   description?: string;
+  location?: string;
+  link?: string;
+  tags?: string[];
   /** Array of user IDs to assign. */
   assignees?: string[];
   targetNodeId?: string;
@@ -24,12 +27,15 @@ export interface UpdateDatePayload {
   timestampEnd?: number | null;
   allDay?: boolean;
   description?: string;
+  location?: string;
+  link?: string;
+  tags?: string[];
   assignees?: string[];
   targetNodeId?: string;
 }
 
 class DatesEngine {
-  dates = $state<FloatingDate[]>([]);
+  dates = $state<AppDate[]>([]);
   isFetching = $state(false);
 
   /** True once at least one successful fetch has completed. */
@@ -49,11 +55,21 @@ class DatesEngine {
     }
   }
 
+  /** Inserts a temporary preview entry — used for create mode live preview. */
+  insertPreview(entry: AppDate): void {
+    this.dates = [...this.dates, entry];
+  }
+
+  /** Removes a preview entry — used on cancel or panel close. */
+  removePreview(id: string): void {
+    this.dates = this.dates.filter((d) => d.id !== id);
+  }
+
   /**
-   * Optimistically inserts a placeholder, calls the API, then replaces the
-   * placeholder with the real ID returned by the server.
+   * Calls the API, then either replaces the preview entry in-place (if previewId
+   * is given) or appends the new record. Replacing avoids a positional jump.
    */
-  async createDate(payload: CreateDatePayload): Promise<string | null> {
+  async createDate(payload: CreateDatePayload, previewId?: string): Promise<string | null> {
     const res = await fetch('/api/dates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -66,11 +82,12 @@ class DatesEngine {
     }
     const { id } = await res.json();
 
-    // Add the hydrated record to local state without a round-trip
-    this.dates = [
-      ...this.dates,
-      { id, ...payload, createdAt: Date.now() } as FloatingDate
-    ];
+    const hydrated = { id, ...payload, createdAt: Date.now() } as AppDate;
+    if (previewId) {
+      this.dates = this.dates.map((d) => (d.id === previewId ? hydrated : d));
+    } else {
+      this.dates = [...this.dates, hydrated];
+    }
     return id;
   }
 
@@ -99,7 +116,7 @@ class DatesEngine {
     this.dates = this.dates.map(d => {
       if (d.id !== id) return d;
       const { timestampEnd, ...rest } = updates;
-      const patched: FloatingDate = { ...d, ...rest };
+      const patched: AppDate = { ...d, ...rest };
       if (timestampEnd === null) delete patched.timestampEnd;
       else if (timestampEnd !== undefined) patched.timestampEnd = timestampEnd;
       return patched;
@@ -119,13 +136,30 @@ class DatesEngine {
     }
   }
 
+  /** Applies updates to local state only — no API call. Used for live edit preview. */
+  previewUpdate(id: string, updates: UpdateDatePayload): void {
+    this.dates = this.dates.map((d) => {
+      if (d.id !== id) return d;
+      const { timestampEnd, ...rest } = updates;
+      const patched: AppDate = { ...d, ...rest };
+      if (timestampEnd === null) delete patched.timestampEnd;
+      else if (timestampEnd !== undefined) patched.timestampEnd = timestampEnd;
+      return patched;
+    });
+  }
+
+  /** Restores a previously saved snapshot — used by cancel in edit mode. */
+  revertToSnapshot(id: string, snapshot: AppDate): void {
+    this.dates = this.dates.map((d) => (d.id === id ? snapshot : d));
+  }
+
   /** Returns dates sorted chronologically by timestamp. */
-  get sorted(): FloatingDate[] {
+  get sorted(): AppDate[] {
     return [...this.dates].sort((a, b) => a.timestamp - b.timestamp);
   }
 
   /** Returns the subset of dates tied to a specific VNode. */
-  forNode(nodeId: string): FloatingDate[] {
+  forNode(nodeId: string): AppDate[] {
     return this.dates.filter(d => d.targetNodeId === nodeId);
   }
 }

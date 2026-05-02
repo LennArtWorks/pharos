@@ -28,7 +28,7 @@
 			<div class="border-border bg-level-2 flex items-center justify-between rounded-t-xl border-b p-4">
 				<div class="flex items-center gap-3">
 					<Icon name="folder" class="text-accent-500 h-5 w-5" />
-					<h2 class="text-label-m text-ink-90 font-bold">File System Registry (meta.fsrsys)</h2>
+					<h2 class="text-label-m text-ink-90 font-bold">File System Registry (meta.appsys)</h2>
 				</div>
 				<form method="POST" action="?/flushMeta" use:enhance>
 					<Button variant="secondary" size="s" type="submit">Flush Meta Cache</Button>

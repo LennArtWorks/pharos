@@ -51,8 +51,8 @@ export function closeContextMenu() {
   contextMenu.actionRequested = null;
 }
 
-export function requestContextMenuAction(action: string, payload: any = null) {
+export function requestContextMenuAction(action: string, payload?: any) {
   contextMenu.actionRequested = action;
-  contextMenu.payload = payload;
+  if (payload !== undefined) contextMenu.payload = payload;
   contextMenu.isOpen = false;
 }

@@ -3,6 +3,7 @@ import { PERMISSIONS } from '$lib/config/permissions';
 import { hasPermission } from '$lib/utils/config/permissions';
 import { readSecureFile, writeSecureFile } from '$lib/server/auth/secureHandler';
 import { SYSTEM_CONFIG } from '$lib/config/filesystem';
+import { APP_EXTENSIONS } from '$lib/config/globalsettings';
 
 export async function GET({ locals }) {
   if (!locals.orgConfig || !locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -64,7 +65,7 @@ export async function PATCH({ request, locals }) {
       await writeSecureFile(locals.orgConfig, authPath, authData);
     }
 
-    const profilePath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.ACCOUNTS_FOLDER.join('')}/${targetAccountId}.fsrsys.fsrsecure`;
+    const profilePath = `/${SYSTEM_CONFIG.CONFIG_FOLDER}/${SYSTEM_CONFIG.ACCOUNTS_FOLDER.join('')}/${targetAccountId}${APP_EXTENSIONS.SYS}${APP_EXTENSIONS.SECURE_MODIFIER}`;
     const profileData = await readSecureFile(locals.orgConfig, profilePath);
 
     if (profileData) {

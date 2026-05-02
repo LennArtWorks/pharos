@@ -1,5 +1,8 @@
 import { translations, type Language, type TranslationKey } from './i18n';
 import { browser } from '$app/environment';
+import { GLOBAL_SETTINGS } from '$lib/config/globalsettings';
+
+const LANG_KEY = `${GLOBAL_SETTINGS.APP_INFO.COOKIE_PREFIX}_lang`;
 
 class LocaleState {
   // 1. Initial State: Check LocalStorage -> then Browser Lang -> then Default to English
@@ -8,7 +11,7 @@ class LocaleState {
   private getInitialLang(): Language {
     if (!browser) return 'en';
 
-    const saved = localStorage.getItem('fsr_os_lang') as Language;
+    const saved = localStorage.getItem(LANG_KEY) as Language;
     if (saved && translations[saved]) return saved;
 
     const browserLang = navigator.language.split('-')[0] as Language;
@@ -19,7 +22,7 @@ class LocaleState {
   setLanguage(lang: Language) {
     this.current = lang;
     if (browser) {
-      localStorage.setItem('fsr_os_lang', lang);
+      localStorage.setItem(LANG_KEY, lang);
     }
   }
 

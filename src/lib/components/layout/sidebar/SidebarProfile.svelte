@@ -6,7 +6,7 @@
 	let { user } = $props<{ user: { id: string; name: string; role: string; color?: string } | null }>();
 </script>
 
-<div data-uiname="SidebarProfile-Wrapper" class="border-border gap-xs py-l mt-auto flex flex-col justify-center border-t">
+<div data-uiname="SidebarProfile-Wrapper" class="border-border gap-xs py-l mt-auto flex flex-col justify-center">
 	{#if user && user.role !== SETUP_ROLES.GUEST}
 		<div data-uiname="Authenticated-User-Card" class="px-2xs flex items-center justify-between">
 			<button data-uiname="User-Profile-Trigger" class="gap-xs flex min-w-0 items-center transition-opacity hover:opacity-80">

@@ -109,12 +109,15 @@ export interface VNode {
   isTemplate?: boolean;
   isSecure?: boolean;
   tags?: string[];
+  assignees?: string[];
   customFields?: Record<string, any>;
   children?: VNode[];
 }
 
-// Structure of a standalone floating date entry (stored in dates.appsys)
-export interface FloatingDate {
+// Unified date entry stored in dates.appsys.
+// Can be standalone (targetNodeId absent) or attached to any node (file, task, event, etc.)
+// via targetNodeId — no longer stored in VNode.customFields.
+export interface AppDate {
   id: string;
   title: string;
   variant: DateVariant;
@@ -130,14 +133,22 @@ export interface FloatingDate {
 
   // --- Content ---
   description?: string;
+  location?: string;
+  link?: string;
+  /** Date-specific tags. UI deferred — stored now for future tag management feature. */
+  tags?: string[];
 
   // --- People ---
   // Array of user IDs (matching the usr_* ID format from GLOBAL_SETTINGS).
   assignees?: string[];
 
+  // --- Attachment ---
+  // The VNode this date is attached to (file, folder, task, event, etc.).
+  // Absent = floating/standalone date. Set = attached to that node.
+  targetNodeId?: string;
+
   // --- System ---
   createdAt: number;
-  targetNodeId?: string; // Optional: If the date gets assigned to a specific VNode later
 }
 
 // Header of the meta index file (meta.appsys)
@@ -147,8 +158,8 @@ export interface AppMeta {
 }
 
 // Header of the dates index file (dates.appsys)
-// Keys are FloatingDate IDs; values omit `id` (derived from key, same lean-JSON pattern as AppMeta).
+// Keys are AppDate IDs; values omit `id` (derived from key, same lean-JSON pattern as AppMeta).
 export interface AppDates {
   _meta: { schemaVersion: string; lastUpdated: number; description: string };
-  dates: Record<string, Omit<FloatingDate, 'id'>>;
+  dates: Record<string, Omit<AppDate, 'id'>>;
 }

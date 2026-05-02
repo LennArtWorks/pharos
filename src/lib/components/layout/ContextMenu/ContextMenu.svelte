@@ -1,29 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { contextMenu, requestContextMenuAction } from '$lib/state/layout/contextMenu.svelte';
-	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte'; // Update path if needed
+	import FloatingPopover from '$lib/components/ui/FloatingPopover.svelte';
+	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
-	let width = $state(0);
-	let height = $state(0);
-
-	let safeX = $state(contextMenu.x + 10);
-	let safeY = $state(contextMenu.y + 10);
-	let flipSubmenu = $state(false);
-
 	let activeSubmenuId = $state<string | null>(null);
-	let submenuTimeout: NodeJS.Timeout;
-
-	$effect(() => {
-		if (!contextMenu.isOpen) {
-			activeSubmenuId = null;
-			return;
-		}
-
-		safeX = contextMenu.x + 10 + width > window.innerWidth ? contextMenu.x - width - 10 : contextMenu.x + 10;
-		safeY = contextMenu.y + 10 + height > window.innerHeight ? contextMenu.y - height - 10 : contextMenu.y + 10;
-		flipSubmenu = safeX + width + 180 > window.innerWidth;
-	});
+	let submenuTimeout: ReturnType<typeof setTimeout>;
 
 	function handleAction(action?: string) {
 		if (action) requestContextMenuAction(action);
@@ -39,21 +22,22 @@
 			activeSubmenuId = null;
 		}, 250);
 	}
+
+	function handleClose() {
+		contextMenu.isOpen = false;
+		activeSubmenuId = null;
+	}
 </script>
 
 {#if contextMenu.isOpen}
-	<div
-		role="menu"
-		bind:clientWidth={width}
-		bind:clientHeight={height}
-		style="left: {safeX}px; top: {safeY}px; transition: none"
-		data-uiname="context-menu-shell"
-		class="bg-level-1 border-border rounded-m fixed z-[9999] flex min-w-48 flex-col gap-1 border p-1 shadow-lg"
-		onmousedown={(e) => e.stopPropagation()}
-		oncontextmenu={(e) => {
-			e.preventDefault();
-			e.stopPropagation();
-		}}>
+	<FloatingPopover
+		x={contextMenu.x + 10}
+		y={contextMenu.y + 10}
+		onclose={handleClose}
+		class="bg-level-1 z-9999 min-w-48 gap-1 p-1"
+		aria-label="Context menu"
+		role="menu">
+
 		{#if contextMenu.items.length === 0}
 			<div role="none">
 				<NodeItem role="menuitem" name="Nothing to click here :(" iconHidden disabled class="text-ink-50 cursor-default italic" />
@@ -93,9 +77,9 @@
 						</NodeItem>
 
 						{#if activeSubmenuId === item.id && item.items}
+							{@const flipSubmenu = contextMenu.x + 10 + 192 + 180 > window.innerWidth}
 							<div
 								role="menu"
-								data-uiname={`context-submenu-${item.id}`}
 								class="bg-level-1 border-border rounded-m absolute top-0 flex min-w-44 flex-col gap-1 border p-1 shadow-lg"
 								style={flipSubmenu ? 'right: 100%; margin-right: 4px;' : 'left: 100%; margin-left: 4px;'}>
 								{#each item.items as subItem}
@@ -126,5 +110,5 @@
 				</div>
 			{/if}
 		{/if}
-	</div>
+	</FloatingPopover>
 {/if}

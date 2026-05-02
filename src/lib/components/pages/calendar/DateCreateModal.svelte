@@ -41,11 +41,7 @@
 		loading = false;
 	});
 
-	const modalTitle = $derived(
-		dateCreateContext.targetNodeName
-			? `Add Date to "${dateCreateContext.targetNodeName}"`
-			: 'New Date'
-	);
+	const modalTitle = $derived(dateCreateContext.targetNodeName ? `Add Date to "${dateCreateContext.targetNodeName}"` : 'New Date');
 
 	function handleEscape(e: KeyboardEvent) {
 		if (e.key === 'Escape') closeOverlay();
@@ -107,14 +103,12 @@
 		<!-- Variant toggle group -->
 		<div class="flex flex-col gap-1">
 			<span class="font-label-s text-ink-70 font-semibold">Type</span>
-			<div class="ring-border flex overflow-hidden rounded-m ring-1 ring-inset" role="group" aria-label="Date type">
+			<div class="ring-border rounded-m flex overflow-hidden ring-1 ring-inset" role="group" aria-label="Date type">
 				{#each variants as v}
 					<button
 						type="button"
-						class="h-main-m flex-1 px-m font-label-s font-semibold transition-colors
-							{variant === v.key
-								? 'bg-button text-ink-10'
-								: 'bg-transparent text-ink-90 hover:bg-button-hover-low'}"
+						class="h-main-m px-m font-label-s flex-1 font-semibold transition-colors
+							{variant === v.key ? 'bg-button text-ink-10' : 'text-ink-90 hover:bg-button-hover-low bg-transparent'}"
 						onclick={() => (variant = v.key)}>
 						{v.label}
 					</button>
@@ -154,15 +148,14 @@
 
 		<!-- Description -->
 		<div class="flex flex-col gap-1">
-			<label for="date-create-description" class="font-label-s text-ink-70 font-semibold">
-				Description
-			</label>
+			<label for="date-create-description" class="font-label-s text-ink-70 font-semibold"> Description </label>
 			<textarea
 				id="date-create-description"
 				bind:value={description}
 				placeholder="Add a description..."
 				rows="3"
-				class="ring-border bg-level-2 text-ink-90 placeholder:text-ink-50 rounded-m w-full resize-none px-m py-2.5 font-label-s font-semibold ring-1 ring-inset outline-none transition-all hover:ring-2 focus:ring-2 focus:ring-ink-90"></textarea>
+				class="ring-border bg-level-2 text-ink-90 placeholder:text-ink-50 rounded-m px-m font-label-s focus:ring-ink-90 w-full resize-none py-2.5 font-semibold ring-1 transition-all outline-none ring-inset hover:ring-2 focus:ring-2"
+			></textarea>
 		</div>
 
 		<!-- Inline error -->
@@ -173,6 +166,6 @@
 
 	{#snippet footer()}
 		<Button variant="secondary" onclick={closeOverlay} disabled={loading}>Cancel</Button>
-		<Button variant="primary" onclick={handleSubmit} {loading}>Create</Button>
+		<Button variant="primary" size="sm" onclick={handleSubmit} {loading}>Create</Button>
 	{/snippet}
 </OverlayTemplateStandard>

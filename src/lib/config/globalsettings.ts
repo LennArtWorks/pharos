@@ -9,7 +9,7 @@ export const GLOBAL_SETTINGS = {
   },
   APP_INFO: {
     NAME: 'PHAROS',              // Display name — used in titles, emails, and UI
-    BASE_DOMAIN: 'pharos.app',   // The production root domain
+    BASE_DOMAIN: 'phar-os.app',   // The production root domain
 
     // -- Identity prefixes & extension prefix --
     // Change FILE_EXT_PREFIX to rename all app file extensions in one place.
@@ -17,8 +17,8 @@ export const GLOBAL_SETTINGS = {
     // e.g. 'phrs' → .phrsdoc / .phrssys / etc.
     FILE_EXT_PREFIX: 'app' as string,
 
-    // Prefix for browser cookies. e.g. 'app' → app_session, app_devmode, app_simulation
-    COOKIE_PREFIX: 'app' as string,
+    // Prefix for browser cookies and localStorage. e.g. 'phrs' → phrs_session, phrs_lang
+    COOKIE_PREFIX: 'phrs' as string,
 
     // Prefix for node IDs. Set to '' for pure UUIDs (recommended).
     // Set to e.g. 'node' to produce 'node_abc123' IDs.
