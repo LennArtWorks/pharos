@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Popover from '$lib/components/ui/Popover';
+	import * as Popover from '$lib/components/ui/TriggerPopover';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 

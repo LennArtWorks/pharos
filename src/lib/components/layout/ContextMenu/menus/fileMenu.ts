@@ -4,7 +4,7 @@ import { has } from '$lib/utils/config/permissions';
 import type { ContextMenuItem } from '$lib/state/layout/contextMenu.svelte';
 import type { FigmaIconName } from '$lib/components/ui/Icon.svelte';
 
-export function getFileContextMenuItems(node: VNode, hasDates: boolean = false): ContextMenuItem[] {
+export function getFileContextMenuItems(node: VNode, hasDates: boolean = false, currentUserId?: string): ContextMenuItem[] {
   const items: ContextMenuItem[] = [];
 
   if (has(PERMISSIONS.FILES.EDIT)) {
@@ -42,6 +42,13 @@ export function getFileContextMenuItems(node: VNode, hasDates: boolean = false):
     } else {
       items.push({ id: 'add-date', type: 'action', label: 'Add Date', icon: 'calendar', action: 'add-date' });
     }
+  }
+
+  if (items.length > 0) items.push({ id: 'div-assign', type: 'divider' });
+  const isSelfAssigned = !!currentUserId && (node.assignees ?? []).includes(currentUserId);
+  items.push({ id: 'assign-self', type: 'action', label: isSelfAssigned ? 'Unassign me' : 'Assign me', icon: 'person', action: 'assign-self' });
+  if (has(PERMISSIONS.FILES.EDIT)) {
+    items.push({ id: 'assign-others', type: 'action', label: 'Assign to...', icon: 'person', action: 'assign-others' });
   }
 
   if (has(PERMISSIONS.FILES.DELETE)) {

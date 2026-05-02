@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setSelectContext } from '$lib/components/ui/Select/context.svelte';
-	import * as Popover from '$lib/components/ui/Popover';
+	import * as Popover from '$lib/components/ui/TriggerPopover';
 	import type { Snippet } from 'svelte';
 	import { cn } from '$lib/utils';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Popover from '$lib/components/ui/Popover';
+	import * as Popover from '$lib/components/ui/TriggerPopover';
 	import { getSelectContext } from './context.svelte';
-	import { getPopoverContext } from '$lib/components/ui/Popover/context.svelte';
+	import { getPopoverContext } from '$lib/components/ui/TriggerPopover/context.svelte';
 	import Icon from '../Icon.svelte';
 	import { cn } from '$lib/utils';
 	import type { Snippet } from 'svelte';

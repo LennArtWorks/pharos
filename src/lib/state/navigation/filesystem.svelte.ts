@@ -57,6 +57,27 @@ class FileSystemEngine {
     return parent?.children || [];
   }
 
+  async updateNodeAssignees(nodeId: string, assignees: string[]) {
+    const node = this.nodeMap.get(nodeId);
+    if (!node) return;
+
+    // Optimistic update
+    node.assignees = assignees.length > 0 ? assignees : undefined;
+    this.rebuildMap();
+
+    try {
+      await fetch('/api/filesystem/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ nodeId, assignees })
+      });
+    } catch {
+      // Revert on network failure — re-fetch will correct state
+      this.rebuildMap();
+    }
+  }
+
   // NEW: Centralized Rename Logic
   async renameNode(id: string, newName: string) {
     const node = this.nodeMap.get(id);

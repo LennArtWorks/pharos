@@ -75,7 +75,7 @@
 					<h3 class="text-label-m text-ink-90 mb-4 font-bold">Tenant Identity</h3>
 					<Input label="Organization Name" name="organization_name" bind:value={name} required placeholder="e.g. FSR Design" />
 					<div class="mt-4">
-						<Input label="Subdomain" name="subdomain" bind:value={sub} required placeholder="e.g. design" tooltip="Will be used as subdomain: {sub || '...'}.fsr-os.de">
+						<Input label="Subdomain" name="subdomain" bind:value={sub} required placeholder="e.g. design" tooltip="Will be used as subdomain: {sub || '...'}.phar-os.app">
 							{#snippet leading()}<Icon name="web" />{/snippet}
 						</Input>
 					</div>
@@ -109,7 +109,7 @@
 					required={!isEditing}
 					placeholder={isEditing ? 'Leave blank to keep existing password' : 'Enter WebDAV App-Password'}
 					tooltip="Passwords are encrypted instantly via AES-256 before touching the database." />
-				<Input label="Base Directory (Optional)" name="cloud_directory" bind:value={cloudDir} placeholder="e.g. FSR-OS" tooltip="Leave blank to use the root directory of the cloud." />
+				<Input label="Base Directory (Optional)" name="cloud_directory" bind:value={cloudDir} placeholder="e.g. Pharos" tooltip="Leave blank to use the root directory of the cloud." />
 			</div>
 		</div>
 	</Form>

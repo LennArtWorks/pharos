@@ -3,7 +3,7 @@ import { PERMISSIONS } from '$lib/config/permissions';
 import { hasPermission } from '$lib/utils/config/permissions';
 import { SYSTEM_CONFIG } from '$lib/config/filesystem';
 import { getDatesIndex, hydrateDates } from '$lib/server/cloud/dates';
-import { generateDefaultDatesIndex, generateBaseFloatingDate } from '$lib/config/cloudfiles/dates';
+import { generateBaseAppDate } from '$lib/config/cloudfiles/dates';
 import { setDatesCache } from '$lib/server/cache';
 import { queueCloudSync } from '$lib/server/cloud/syncQueue';
 
@@ -50,7 +50,7 @@ export async function POST({ request, locals }) {
   }
 
   const body = await request.json();
-  const { title, variant, timestamp, timestampEnd, allDay, description, assignees, targetNodeId } = body;
+  const { title, variant, timestamp, timestampEnd, allDay, description, location, link, tags, assignees, targetNodeId } = body;
 
   // --- Required field validation ---
   const cleanTitle = typeof title === 'string' ? title.trim().replace(/\0/g, '').substring(0, 255) : '';
@@ -84,13 +84,16 @@ export async function POST({ request, locals }) {
     const rawId = crypto.randomUUID().replace(/-/g, '').substring(0, 16);
     const id = SYSTEM_CONFIG.ID_PREFIX ? `${SYSTEM_CONFIG.ID_PREFIX}_${rawId}` : rawId;
 
-    index.dates[id] = generateBaseFloatingDate({
+    index.dates[id] = generateBaseAppDate({
       title: cleanTitle,
       variant,
       timestamp,
       timestampEnd,
       allDay: allDay ?? true,
       description: typeof description === 'string' ? description.substring(0, 2000) : undefined,
+      location: typeof location === 'string' ? location.substring(0, 500) : undefined,
+      link: typeof link === 'string' ? link.substring(0, 500) : undefined,
+      tags: Array.isArray(tags) ? tags.filter((t: unknown) => typeof t === 'string').map((t: string) => t.substring(0, 100)) : undefined,
       assignees,
       targetNodeId
     });

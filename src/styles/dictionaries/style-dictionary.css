@@ -33,6 +33,7 @@
   --spacing-main-5xl: 43.75rem;
 
   /* Border Radius (Generates rounded-*) */
+  --radius-s: var(--setup-radius-s);
   --radius-m: var(--setup-radius-m);
   --radius-l: var(--setup-radius-l);
 
@@ -59,6 +60,7 @@
   --setup-spacing-sidebar-files: var(--setup-spacing-3xs);
 
   /* Border Radius (Generates rounded-*) */
+  --setup-radius-s: 0.375rem;
   --setup-radius-m: 0.5rem;
   --setup-radius-l: 1.125rem;
 }

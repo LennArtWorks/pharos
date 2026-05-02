@@ -62,7 +62,7 @@ insert.run({
   cloud_url: 'https://fh-muenster.sciebo.de/remote.php/webdav/',
   cloud_username: 'la117415@fh-muenster.de',
   cloud_password_encrypted: encrypt('WDeTq-2Wo6W-bF99x-mWCar-WGg36'),
-  cloud_directory: 'FSR-OS'
+  cloud_directory: 'Pharos'
 });
 
 // 2. Add a second organisation by just running it again
@@ -74,7 +74,7 @@ insert.run({
 //   cloud_url: 'https://uni-muenster.sciebo.de/remote.php/webdav/',
 //   cloud_username: 'design_admin@...',
 //   cloud_password_encrypted: encrypt('SECOND_PLAIN_TEXT_PASSWORD_HERE'),
-//   cloud_directory: 'FSR-OS'
+//   cloud_directory: 'Pharos'
 // });
 
 console.log('Organisations added securely.');

@@ -1,180 +1,100 @@
 /**
- * Calendar Aggregator
+ * Calendar Aggregator — unified dates.appsys model
  *
- * Merges two date sources into a single normalised CalendarEntry[]:
- *   1. FloatingDates  — standalone entries from dates.appsys
- *   2. VNode dates    — dates embedded in VNode.customFields (meta.appsys)
+ * All dates live in dates.appsys as AppDate records.
+ * A date without targetNodeId is standalone (floating).
+ * A date with targetNodeId is attached to that VNode (file, folder, task, event, etc.).
  *
- * This is a pure utility function: no fetching, no side-effects. Call it
- * with data already loaded by datesState and fsState.
- *
- * ── VNode date storage convention (must be respected by any writer) ──────────
- *
- *   Event VNodes (extension === APP_EXTENSIONS.EVENT):
- *     customFields.eventDate?: number   ← primary event timestamp (Unix ms)
- *     customFields.eventDateEnd?: number ← optional end timestamp
- *     customFields.eventAllDay?: boolean ← defaults true
- *
- *   Any VNode with general attached dates:
- *     customFields.dates?: Record<string, {
- *       title: string; variant: DateVariant;
- *       timestamp: number; timestampEnd?: number; allDay: boolean;
- *       description?: string; assignees?: string[];
- *     }>
- *
- *   The `customFields.dates` shape mirrors the lean record in dates.appsys so
- *   the aggregator can handle both sources with identical logic.
+ * The aggregator simply maps AppDate → CalendarEntry, resolving node display info
+ * from the VNode map when an attachment is present.
  */
 
-import type { FloatingDate, VNode, DateVariant } from '$lib/config/filesystem';
-import { APP_EXTENSIONS } from '$lib/config/globalsettings';
+import type { AppDate, VNode } from '$lib/config/filesystem';
 
 // ─── CalendarEntry ────────────────────────────────────────────────────────────
 
-/**
- * Describes where a CalendarEntry originated.
- *   floating → came from dates.appsys
- *   node     → derived from a VNode in meta.appsys
- */
 export type CalendarEntrySource =
-  | { type: 'floating' }
-  | { type: 'node'; nodeId: string; nodeName: string; nodeExtension: string };
+	| { type: 'floating' }
+	| { type: 'node'; nodeId: string; nodeName: string; nodeExtension: string };
 
-/**
- * The unified, normalised calendar entry consumed by all calendar views.
- * Never stored on disk — always computed on the fly by aggregateCalendarEntries().
- */
 export interface CalendarEntry {
-  /**
-   * Globally unique identifier.
-   *   Floating date  → FloatingDate.id
-   *   Event VNode    → `${nodeId}::eventDate`
-   *   Attached date  → `${nodeId}::${dateKey}`
-   */
-  calendarId: string;
+	/** Equals AppDate.id — unique across all entries. */
+	calendarId: string;
 
-  title: string;
+	title: string;
+	variant: AppDate['variant'];
 
-  /**
-   * Always a DateVariant — events are just folders with a date attached,
-   * not a separate variant. To detect Event VNodes specifically, check
-   * `source.type === 'node' && source.nodeExtension === APP_EXTENSIONS.EVENT`.
-   */
-  variant: DateVariant;
+	timestamp: number;
+	timestampEnd?: number;
+	allDay: boolean;
 
-  // ── Time ──
-  timestamp: number;       // start (Unix ms)
-  timestampEnd?: number;   // end (Unix ms) — only set for timeframes
-  allDay: boolean;
+	description?: string;
+	assignees?: string[];
+	/** Assignees of the attached VNode — used for "assigned to me" display without data propagation. */
+	nodeAssignees?: string[];
 
-  // ── Content ──
-  description?: string;
-  assignees?: string[];
-
-  source: CalendarEntrySource;
+	source: CalendarEntrySource;
 }
 
 // ─── Aggregator ───────────────────────────────────────────────────────────────
 
 /**
- * Builds a CalendarEntry[] from both data sources.
- *
- * @param nodeMap  The flat VNode map from fsState.nodeMap (id → VNode).
- * @param dates    The hydrated FloatingDate[] from datesState.dates.
- * @returns        Unsorted array of all calendar entries. Sort as needed in the UI.
+ * Converts AppDate[] → CalendarEntry[].
+ * Node info (name, extension) is resolved from nodeMap for attached dates.
+ * If the node no longer exists (deleted), source still carries the nodeId.
  */
 export function aggregateCalendarEntries(
-  nodeMap: Map<string, VNode>,
-  dates: FloatingDate[]
+	nodeMap: Map<string, VNode>,
+	dates: AppDate[]
 ): CalendarEntry[] {
-  const entries: CalendarEntry[] = [];
+	return dates.map((date) => {
+		const base = {
+			calendarId: date.id,
+			title: date.title,
+			variant: date.variant,
+			timestamp: date.timestamp,
+			timestampEnd: date.timestampEnd,
+			allDay: date.allDay,
+			description: date.description,
+			assignees: date.assignees
+		};
 
-  // ── Source 1: Floating dates ──────────────────────────────────────────────
-  // Direct 1-to-1 mapping — FloatingDate is already normalised.
-  for (const date of dates) {
-    entries.push({
-      calendarId: date.id,
-      title: date.title,
-      variant: date.variant,
-      timestamp: date.timestamp,
-      timestampEnd: date.timestampEnd,
-      allDay: date.allDay,
-      description: date.description,
-      assignees: date.assignees,
-      source: { type: 'floating' }
-    });
-  }
+		if (!date.targetNodeId) {
+			return { ...base, source: { type: 'floating' } };
+		}
 
-  // ── Source 2: VNode-embedded dates ────────────────────────────────────────
-  for (const [nodeId, node] of nodeMap) {
-    const cf = node.customFields;
-    if (!cf) continue;
-
-    const nodeSource: CalendarEntrySource = {
-      type: 'node',
-      nodeId,
-      nodeName: node.name,
-      nodeExtension: node.extension
-    };
-
-    // 2a. Event VNodes — primary date stored at customFields.eventDate.
-    // Events are standard folders with a date; we use whatever variant is stored
-    // (defaulting to 'standard'). The UI can detect event nodes via source.nodeExtension.
-    if (node.extension === APP_EXTENSIONS.EVENT && cf.eventDate != null) {
-      entries.push({
-        calendarId: `${nodeId}::eventDate`,
-        title: node.name,
-        variant: (cf.eventVariant as DateVariant) ?? 'standard',
-        timestamp: cf.eventDate as number,
-        timestampEnd: cf.eventDateEnd as number | undefined,
-        allDay: cf.eventAllDay !== false, // default true
-        description: cf.description as string | undefined,
-        assignees: cf.attendees as string[] | undefined,
-        source: nodeSource
-      });
-    }
-
-    // 2b. General attached dates — stored at customFields.dates record
-    if (cf.dates && typeof cf.dates === 'object') {
-      for (const [dateKey, record] of Object.entries(cf.dates as Record<string, any>)) {
-        if (!record || typeof record.timestamp !== 'number') continue;
-
-        entries.push({
-          calendarId: `${nodeId}::${dateKey}`,
-          title: record.title ?? node.name,
-          variant: record.variant ?? 'standard',
-          timestamp: record.timestamp,
-          timestampEnd: record.timestampEnd,
-          allDay: record.allDay !== false, // default true
-          description: record.description,
-          assignees: record.assignees,
-          source: nodeSource
-        });
-      }
-    }
-  }
-
-  return entries;
+		const node = nodeMap.get(date.targetNodeId);
+		return {
+			...base,
+			nodeAssignees: node?.assignees,
+			source: {
+				type: 'node',
+				nodeId: date.targetNodeId,
+				nodeName: node?.name ?? 'Unknown',
+				nodeExtension: node?.extension ?? ''
+			}
+		};
+	});
 }
 
 // ─── Sorting helpers ──────────────────────────────────────────────────────────
 
 /** Sorts CalendarEntry[] chronologically by start timestamp. */
 export function sortByTimestamp(entries: CalendarEntry[]): CalendarEntry[] {
-  return [...entries].sort((a, b) => a.timestamp - b.timestamp);
+	return [...entries].sort((a, b) => a.timestamp - b.timestamp);
 }
 
 /**
  * Groups CalendarEntry[] by calendar date string (YYYY-MM-DD in local time).
- * Useful for the Table / Grid view in Phase 3.
+ * Note: does not expand spanning entries — use the MonthView's cellEntriesMap for that.
  */
 export function groupByDay(entries: CalendarEntry[]): Map<string, CalendarEntry[]> {
-  const map = new Map<string, CalendarEntry[]>();
-  for (const entry of entries) {
-    const key = new Date(entry.timestamp).toLocaleDateString('sv-SE'); // ISO date, locale-independent
-    const bucket = map.get(key) ?? [];
-    bucket.push(entry);
-    map.set(key, bucket);
-  }
-  return map;
+	const map = new Map<string, CalendarEntry[]>();
+	for (const entry of entries) {
+		const key = new Date(entry.timestamp).toLocaleDateString('sv-SE');
+		const bucket = map.get(key) ?? [];
+		bucket.push(entry);
+		map.set(key, bucket);
+	}
+	return map;
 }

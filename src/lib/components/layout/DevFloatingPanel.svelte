@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import * as Popover from '$lib/components/ui/Popover';
+	import * as Popover from '$lib/components/ui/TriggerPopover';
 	import * as Select from '$lib/components/ui/Select';
 	import { invalidateAll } from '$app/navigation';
 	import { opState } from '$lib/state/dev/operator.svelte';

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 
-	import * as Popover from '$lib/components/ui/Popover';
+	import * as Popover from '$lib/components/ui/TriggerPopover';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 	import Tag from '$lib/components/ui/Tag.svelte';
@@ -18,12 +18,14 @@
 	import { fsState } from '$lib/state/navigation/filesystem.svelte';
 	import { datesState } from '$lib/state/navigation/dates.svelte';
 	import { openDateCreate } from '$lib/state/layout/dateCreate.svelte';
+	import { openAssign } from '$lib/state/layout/assign.svelte';
 	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import TreeNodeItem from '$lib/components/blocks/NodeItem/TreeNodeItem.svelte';
 	import { goto } from '$app/navigation';
 
 	let rootNodes = $derived(fsState.tree.filter((node) => node.parentId === null));
 	let activeId = $derived(page.url.pathname.split('/').pop() || null);
+	const currentUserId = $derived(page.data.user?.id as string | undefined);
 
 	let editingId = $state<string | null>(null);
 	let expandedStates = $state<Record<string, boolean>>({});
@@ -63,6 +65,12 @@
 			if (action === 'rename') editingId = node.id;
 			else if (action === 'delete') handleDelete(node.id);
 			else if (action === 'add-date') openDateCreate({ targetNodeId: node.id, targetNodeName: node.name });
+			else if (action === 'assign-self' && currentUserId) {
+				const cur = node.assignees ?? [];
+				const next = cur.includes(currentUserId) ? cur.filter(id => id !== currentUserId) : [...cur, currentUserId];
+				fsState.updateNodeAssignees(node.id, next);
+			}
+			else if (action === 'assign-others') openAssign({ clientX: contextMenu.x, clientY: contextMenu.y } as MouseEvent, { type: 'node', nodeId: node.id, currentAssignees: node.assignees ?? [] });
 			else if (action.startsWith('create:')) handleCreate(action.split(':')[1], node.type === 'workspace' || node.type === 'folder' ? node.id : node.parentId);
 		}
 	});
@@ -240,7 +248,7 @@
 	{#each nodes as node (node.id)}
 		{@const isOpen = expandedStates[node.id] ?? node.type === 'workspace'}
 
-		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node, getFileContextMenuItems(node, datesState.forNode(node.id).length > 0))}>
+		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node, getFileContextMenuItems(node, datesState.forNode(node.id).length > 0, currentUserId))}>
 			<TreeNodeItem
 				{isOpen}
 				hasChildren={node.children && node.children.length > 0}
@@ -258,6 +266,7 @@
 						isWorkspace={node.type === 'workspace'}
 						isEditing={editingId === node.id}
 						active={activeId === node.id || (contextMenu.isOpen && contextMenu.node?.id === node.id)}
+						assigned={!!currentUserId && (node.assignees?.includes(currentUserId) ?? false)}
 						template={node.customFields?.isTemplate}
 						tagName={node.type === 'workspace' ? 'div' : undefined}
 						href={node.type === 'workspace' ? undefined : `/files/${node.id}`}

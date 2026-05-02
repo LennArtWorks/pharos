@@ -32,7 +32,7 @@ export const PERMISSIONS = {
   SYSTEM: {
     ALL: 'system.*', // Full access to all system-level settings and sysfiles
     MANAGE_USERS: 'system.manage_users', // Can create/delete users and view accounts
-    MANAGE_ROLES: 'system.manage_roles', // Can edit the roles.fsrsys file
+    MANAGE_ROLES: 'system.manage_roles', // Can edit the roles.appsys file
     SETTINGS: {
       WRITE: 'system.settings_write', // Can edit organisation settings
       VIEW: 'system.settings_view' // Can see organisation settings

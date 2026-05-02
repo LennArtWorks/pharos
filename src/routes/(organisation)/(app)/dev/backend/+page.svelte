@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Divider from '$lib/components/ui/Divider.svelte';
-	import * as Popover from '$lib/components/ui/Popover';
+	import * as Popover from '$lib/components/ui/TriggerPopover';
 	import { cn } from '$lib/utils.js';
 
 	let { data } = $props();
@@ -81,7 +81,7 @@
 						<span class="text-label-s text-ink-70 font-bold">Organisation Identity</span>
 						<div class="flex items-center justify-between">
 							<span class="text-label-l text-ink-90 font-bold">{context.org.name}</span>
-							<span class="bg-accent-500/10 text-accent-500 text-label-s rounded-md px-2 py-1 font-mono">{context.org.subdomain}.fsr-os.de</span>
+							<span class="bg-accent-500/10 text-accent-500 text-label-s rounded-md px-2 py-1 font-mono">{context.org.subdomain}.phar-os.app</span>
 						</div>
 						<div class="mt-2 flex items-center justify-between">
 							<span class="text-body-s text-ink-50 font-mono">ID: {context.org.id}</span>

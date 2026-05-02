@@ -1,5 +1,5 @@
 /**
- * BLUEPRINT: meta.fsrsys
+ * BLUEPRINT: meta.appsys
  * Defines the logical structure of the file tree.
  */
 export function generateDefaultMetaIndex() {
