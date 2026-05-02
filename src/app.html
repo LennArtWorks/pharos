@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="mode-light theme-neutral">
+<html lang="en" class="mode-dark theme-neutral">
 
 <head>
 	<meta charset="utf-8" />
@@ -8,12 +8,12 @@
 
 
 	<script>
-		// (function () {
-		// 	try {
-		// 		const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		// 		document.documentElement.classList.add(isDark ? 'mode-dark' : 'mode-light');
-		// 	} catch (e) { }
-		// })();
+		(function () {
+			try {
+				const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				document.documentElement.classList.add(isDark ? 'mode-dark' : 'mode-light');
+			} catch (e) { }
+		})();
 	</script>
 </head>
 

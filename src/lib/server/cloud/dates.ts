@@ -4,7 +4,7 @@
  */
 import { getCloudClient, type CloudConfig } from './origin/client';
 import { getDatesCache, setDatesCache } from '../cache';
-import { SYSTEM_CONFIG, type AppDates, type AppDate } from '$lib/config/filesystem';
+import { SYSTEM_CONFIG, type AppDates, type FloatingDate } from '$lib/config/filesystem';
 import { generateDefaultDatesIndex } from '$lib/config/cloudfiles/dates';
 
 /**
@@ -36,10 +36,10 @@ export async function getDatesIndex(orgConfig: App.Locals['orgConfig']): Promise
 }
 
 /**
- * Hydrates the raw lean record map into a typed AppDate array
+ * Hydrates the raw lean record map into a typed FloatingDate array
  * by re-injecting the `id` key from the record key — identical to how
  * transformNodesToTree works for meta.appsys.
  */
-export function hydrateDates(dates: AppDates['dates']): AppDate[] {
-  return Object.entries(dates).map(([id, record]) => ({ ...record, id } as AppDate));
+export function hydrateDates(dates: AppDates['dates']): FloatingDate[] {
+  return Object.entries(dates).map(([id, record]) => ({ ...record, id } as FloatingDate));
 }

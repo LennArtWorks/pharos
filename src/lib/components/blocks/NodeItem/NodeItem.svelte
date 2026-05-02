@@ -2,7 +2,6 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
 	import Tag from '$lib/components/ui/Tag.svelte';
-	import AssignedIndicator from '$lib/components/ui/AssignedIndicator.svelte';
 	import { cn } from '$lib/utils';
 
 	import { FILE_TYPE_CONFIG, VIEW_CONFIG, type UIFileIconType, type VNode } from '$lib/config/filesystem';
@@ -169,9 +168,6 @@
 	)}
 	{...rest}>
 	{#snippet leading()}
-		{#if assigned && !isGrid}
-			<AssignedIndicator />
-		{/if}
 		{#if !effectiveIconHidden}
 			<Icon
 				name={resolvedIcon}
@@ -208,7 +204,7 @@
 	{/snippet}
 
 	{#snippet trailing()}
-		{#if tags.length > 0 || trailingItems || hasChildren}
+		{#if tags.length > 0 || assigned || trailingItems || hasChildren}
 			<div class={cn('flex shrink-0 items-center gap-1', isGrid ? 'absolute top-1 right-1' : '')}>
 				{#if !isGrid}
 					{#each tags as tagItem}
@@ -223,6 +219,7 @@
 					{/each}
 				{/if}
 
+				{#if assigned}<div class="bg-ink-90 h-1.5 w-1.5 shrink-0 rounded-full"></div>{/if}
 				{#if trailingItems}{@render trailingItems()}{/if}
 
 				{#if hasChildren && !isGrid}

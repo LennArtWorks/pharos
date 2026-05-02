@@ -1,5 +1,5 @@
 /**
- * In-Memory RAM Cache for Pharos
+ * In-Memory RAM Cache for FSR-OS
  * Scoped per organisation to prevent data leaks between different FSRs.
  * Wipes completely if the Node.js server restarts.
  */

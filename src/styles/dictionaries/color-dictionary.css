@@ -264,8 +264,8 @@
   --color-neutral-750: #303236;
   --color-neutral-800: #202124;
   --color-neutral-850: #101112;
-  --color-neutral-900: #020203;
-  --color-neutral-950: #020203;
+  --color-neutral-900: #000000;
+  --color-neutral-950: #000000;
 
   /* accent */
   --color-accent-100: #F1EDFE;
@@ -387,7 +387,7 @@
   --color-neutral-50: #020203;
   --color-neutral-100: #070708;
   --color-neutral-150: #0B0C0E;
-  --color-neutral-200: #121316;
+  --color-neutral-200: #141619;
   --color-neutral-250: #21252B;
   --color-neutral-300: #262931;
   --color-neutral-350: #2E3139;

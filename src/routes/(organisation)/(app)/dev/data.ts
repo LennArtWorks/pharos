@@ -17,7 +17,7 @@ export const foundations: ComponentDef[] = [
     desc: "",
     importStr: "",
     context: `
-      [Pharos COLOR SYSTEM]
+      [FSR-OS COLOR SYSTEM]
       Tailwind Primitives: neutral, accent, purpur, purple, blue, cyan, green, yellow, orange, red, magenta.
       Steps: 50 to 950 (e.g., bg-accent-500, text-red-600).
       Semantic Text/Ink: text-ink-90 (darkest/primary), text-ink-70, text-ink-50 (muted/secondary), text-ink-30, text-ink-10 (lightest/inverted).
@@ -31,7 +31,7 @@ export const foundations: ComponentDef[] = [
     desc: "",
     importStr: "",
     context: `
-      [Pharos ICON SYSTEM]
+      [FSR-OS ICON SYSTEM]
       Import: import Icon from '$lib/components/ui/Icon.svelte';
       Usage: <Icon name="settings" class="h-4 w-4 text-ink-50" />
       Available specific icons: arrow-left, arrow-right, arrow-down, folder, folder-open, file, settings, check, copy, trash, add, pencil, sparkles.
@@ -143,11 +143,11 @@ export const uiComponents: ComponentDef[] = [
     name: 'Popover',
     href: '/dev/design-system/ui/popover',
     desc: 'Not up to Date!!! Contextual overlays with automatic viewport positioning and click-outside handling.',
-    importStr: `import * as Popover from '$lib/components/ui/TriggerPopover';`,
+    importStr: `import * as Popover from '$lib/components/ui/Popover';`,
     context: `
       Not up to Date!!! 
       COMPONENT: Popover (Svelte 5 / Bits UI)
-      IMPORT: import * as Popover from '$lib/components/ui/TriggerPopover';
+      IMPORT: import * as Popover from '$lib/components/ui/Popover';
       STRUCTURE:
       <Popover.Root>
         <Popover.Trigger>Click Me</Popover.Trigger>

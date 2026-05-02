@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import * as Popover from '$lib/components/ui/TriggerPopover';
+	import * as Popover from '$lib/components/ui/Popover';
 	import { SETUP_ROLES, DEFAULT_ROLES } from '$lib/config/cloudfiles/roles';
 	import { PERMISSIONS } from '$lib/config/permissions';
 	import { foundations } from '../../../data';
