@@ -20,7 +20,7 @@
 				<Icon name="add" class="mr-2" /> Add Organisation
 			</Button>
 		</div>
-		<p class="text-body-m text-ink-50 max-w-[70ch]">Manage all active Pharos instances. Credentials are encrypted securely in SQLite via AES-256-GCM.</p>
+		<p class="text-body-m text-ink-50 max-w-[70ch]">Manage all active FSR-OS instances. Credentials are encrypted securely in SQLite via AES-256-GCM.</p>
 	</header>
 
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -31,7 +31,7 @@
 				{/if}
 				<div class="flex-1 p-6 pb-0">
 					<h2 class="text-label-l text-ink-90 mb-1 font-bold">{org.organization_name}</h2>
-					<p class="text-body-s text-ink-50 mb-6 font-mono">{org.subdomain}.phar-os.app</p>
+					<p class="text-body-s text-ink-50 mb-6 font-mono">{org.subdomain}.fsr-os.de</p>
 
 					<div class="mb-6 flex flex-col gap-2">
 						<div class="text-body-s text-ink-70 flex items-center gap-2">

@@ -6,7 +6,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import * as Select from '$lib/components/ui/Select';
-	import * as Popover from '$lib/components/ui/TriggerPopover';
+	import * as Popover from '$lib/components/ui/Popover';
 	import PermissionBuilder from '$lib/components/blocks/PermissionBuilder.svelte';
 
 	type User = { id: string; name: string; email: string; role: string; overrides: string[] };

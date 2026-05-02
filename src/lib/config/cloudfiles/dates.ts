@@ -1,7 +1,6 @@
 /**
  * BLUEPRINT: dates.appsys
- * Defines the logical structure of the unified app dates index.
- * All dates live here — standalone (floating) or node-attached (targetNodeId set).
+ * Defines the logical structure of the floating dates index.
  * Mirrors the lean-JSON pattern of meta.appsys — no redundant computed fields stored.
  */
 import type { DateVariant } from '$lib/config/filesystem';
@@ -19,7 +18,7 @@ export function generateDefaultDatesIndex() {
   };
 }
 
-export interface AppDateInit {
+export interface FloatingDateInit {
   title: string;
   variant: DateVariant;
   timestamp: number;
@@ -28,11 +27,7 @@ export interface AppDateInit {
   /** Defaults to true — opt in to timed entries by setting false. */
   allDay?: boolean;
   description?: string;
-  location?: string;
-  link?: string;
-  tags?: string[];
   assignees?: string[];
-  /** Set to attach this date to a VNode (file, task, event, etc.). Absent = floating. */
   targetNodeId?: string;
 }
 
@@ -40,8 +35,8 @@ export interface AppDateInit {
  * Produces the lean record stored under a date's ID key in dates.appsys.
  * `id` is intentionally excluded — it is always the map key, never stored in the value.
  */
-export function generateBaseAppDate(init: AppDateInit) {
-  const { title, variant, timestamp, timestampEnd, allDay = true, description, location, link, tags, assignees, targetNodeId } = init;
+export function generateBaseFloatingDate(init: FloatingDateInit) {
+  const { title, variant, timestamp, timestampEnd, allDay = true, description, assignees, targetNodeId } = init;
 
   return {
     title,
@@ -50,9 +45,6 @@ export function generateBaseAppDate(init: AppDateInit) {
     allDay,
     ...(timestampEnd !== undefined && variant === 'standard' ? { timestampEnd } : {}),
     ...(description !== undefined ? { description } : {}),
-    ...(location !== undefined ? { location } : {}),
-    ...(link !== undefined ? { link } : {}),
-    ...(tags && tags.length > 0 ? { tags } : {}),
     ...(assignees && assignees.length > 0 ? { assignees } : {}),
     ...(targetNodeId !== undefined ? { targetNodeId } : {}),
     createdAt: Date.now()

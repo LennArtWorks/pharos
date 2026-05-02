@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import Divider from '$lib/components/ui/Divider.svelte';
-	import * as Popover from '$lib/components/ui/TriggerPopover';
+	import * as Popover from '$lib/components/ui/Popover';
 
 	import FileTree from './FileTree.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';

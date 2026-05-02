@@ -63,7 +63,7 @@ function buildCloudPath(nodes, targetId) {
 }
 
 const hocuspocusServer = new Hocuspocus({
-  name: 'Pharos-Server',
+  name: 'FSR-OS-Server',
   debounce: 2000,
 
   async onConnect(data) {
@@ -146,7 +146,7 @@ const hocuspocusServer = new Hocuspocus({
 
       // NEW: Wrap both into the save payload
       const payload = {
-        _meta: { format: "appdoc", version: "1.1" },
+        _meta: { format: "fsrdoc", version: "1.1" },
         documentState: base64State,
         content: json
       };
@@ -176,5 +176,5 @@ httpServer.on('upgrade', (request, socket, head) => {
 app.use(handler);
 
 httpServer.listen(PORT, () => {
-  console.log(`\x1b[32m[Pharos]\x1b[0m Unified Server running on http://localhost:${PORT}`);
+  console.log(`\x1b[32m[FSR-OS]\x1b[0m Unified Server running on http://localhost:${PORT}`);
 });

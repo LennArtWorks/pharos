@@ -5,9 +5,6 @@
 	import ContextMenu from '$lib/components/layout/ContextMenu/ContextMenu.svelte';
 	import { closeContextMenu, openContextMenu } from '$lib/state/layout/contextMenu.svelte';
 	import ContentHeader from '$lib/components/layout/content/ContentHeader.svelte';
-	import AssigneeSelector from '$lib/components/ui/AssigneeSelector.svelte';
-	import { assignOverlay } from '$lib/state/layout/assign.svelte';
-	import { membersState } from '$lib/state/navigation/members.svelte';
 
 	import { appNav } from '$lib/state/navigation/navigation.svelte';
 	import { VIEW_CONFIG } from '$lib/config/filesystem';
@@ -19,7 +16,6 @@
 
 	onMount(() => {
 		appNav.init();
-		membersState.fetch();
 	});
 
 	// 1. Optimistic Highlight
@@ -70,10 +66,6 @@
 	</main>
 </div>
 
-<svelte:window onscroll={closeContextMenu} onresize={closeContextMenu} oncontextmenu={(e) => openContextMenu(e, 'general')} />
+<svelte:window onmousedown={closeContextMenu} onscroll={closeContextMenu} onresize={closeContextMenu} oncontextmenu={(e) => openContextMenu(e, 'general')} />
 
 <ContextMenu />
-
-{#if assignOverlay.isOpen && assignOverlay.target}
-	<AssigneeSelector target={assignOverlay.target} x={assignOverlay.x} y={assignOverlay.y} />
-{/if}

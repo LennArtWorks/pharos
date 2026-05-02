@@ -20,7 +20,7 @@ export async function POST({ request, locals }) {
   }
 
   const body = await request.json();
-  const { id, title, variant, timestamp, timestampEnd, allDay, description, location, link, tags, assignees, targetNodeId } = body;
+  const { id, title, variant, timestamp, timestampEnd, allDay, description, assignees, targetNodeId } = body;
 
   if (!id || typeof id !== 'string') {
     return json({ error: 'id is required' }, { status: 400 });
@@ -76,15 +76,6 @@ export async function POST({ request, locals }) {
     if (allDay !== undefined) existing.allDay = Boolean(allDay);
     if (description !== undefined) {
       existing.description = typeof description === 'string' ? description.substring(0, 2000) : undefined;
-    }
-    if (location !== undefined) {
-      existing.location = typeof location === 'string' ? location.substring(0, 500) : undefined;
-    }
-    if (link !== undefined) {
-      existing.link = typeof link === 'string' ? link.substring(0, 500) : undefined;
-    }
-    if (tags !== undefined) {
-      existing.tags = Array.isArray(tags) ? tags.filter((t: unknown) => typeof t === 'string').map((t: string) => t.substring(0, 100)) : undefined;
     }
     if (assignees !== undefined) existing.assignees = assignees;
     if (targetNodeId !== undefined) existing.targetNodeId = targetNodeId;

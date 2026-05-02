@@ -4,7 +4,7 @@
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { type FigmaIconName } from '$lib/components/ui/Icon.svelte';
-	import * as Popover from '$lib/components/ui/TriggerPopover';
+	import * as Popover from '$lib/components/ui/Popover';
 
 	import { appNav } from '$lib/state/navigation/navigation.svelte';
 	import { cn } from '$lib/utils';
@@ -112,7 +112,7 @@
 
 <svelte:window ondragend={handleDragEnd} />
 
-<header class="bg-level-1 px-l gap-2xl h-main-l flex items-center">
+<header class="bg-level-1 px-l gap-2xl h-main-l flex items-center shadow-sm">
 	<div data-uiname="between-file-navigation" class="gap-m flex h-full items-center">
 		<div data-uiname="backforth-arrows" class="gap-2xs relative flex">
 			<Popover.Root bind:isOpen={isBackMenuOpen} closeOnClick>
@@ -228,7 +228,7 @@
 										isSiblingMenuOpen = false;
 									}} />
 							</Popover.Trigger>
-							<Popover.Content class="w-64 p-0!" side="bottom" align="start">
+							<Popover.Content class="w-64 !p-0" side="bottom" align="start">
 								<div class="text-ink-50 bg-level-1 sticky top-0 z-10 p-2 text-xs font-semibold">In this Directory</div>
 								<div class="scrollbar-minimal flex max-h-64 flex-col gap-1 overflow-y-auto p-1">
 									{#each siblings as sibling}

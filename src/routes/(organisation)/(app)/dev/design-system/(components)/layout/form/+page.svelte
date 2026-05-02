@@ -3,7 +3,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon, { iconGroups, type FigmaIconName } from '$lib/components/ui/Icon.svelte';
-	import * as Popover from '$lib/components/ui/TriggerPopover';
+	import * as Popover from '$lib/components/ui/Popover';
 	import * as Select from '$lib/components/ui/Select';
 	import { allComponents } from '../../../../data';
 
