@@ -12,6 +12,7 @@
 	import Tag from '$lib/components/ui/Tag.svelte';
 	import AssignedIndicator from '$lib/components/ui/AssignedIndicator.svelte';
 	import ToggleGroup from '$lib/components/ui/ToggleGroup.svelte';
+	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import type { DateVariant, AppDate } from '$lib/config/filesystem';
 
 	const currentUserId = $derived(page.data.user?.id as string | undefined);
@@ -31,6 +32,9 @@
 	// ── Create preview: temp entry ID inserted on create mode open ───────────
 	let previewId = $state<string | null>(null);
 
+	// ── Title input ref for auto-focus ────────────────────────────────────────
+	let titleInputEl = $state<HTMLInputElement | null>(null);
+
 	// ── Form state ────────────────────────────────────────────────────────────
 	let formTitle = $state('');
 	let formVariant = $state<DateVariant>('standard');
@@ -47,13 +51,27 @@
 	let formLoading = $state(false);
 	let editingDate = $state(false);
 
-	// Sync mode + form when panel mode or entryId changes (not when entry content changes)
+	// Track the last session key to distinguish "new session" from "date-only update"
+	let _prevSessionKey = '';
+
+	// Sync mode + form when panel mode or entryId changes (not when entry content changes).
+	// When only initialTimestamp changes (same mode+entryId, create mode), only update the date field.
 	$effect(() => {
 		const panelMode = datePanel.mode;
-		void datePanel.entryId; // track entry switches
+		const entryId = datePanel.entryId;
 		const ts = datePanel.initialTimestamp;
+		const sessionKey = `${panelMode}:${entryId ?? ''}`;
 		untrack(() => {
-			// Clean up any live create-preview from the previous mode
+			const isNewSession = sessionKey !== _prevSessionKey;
+			_prevSessionKey = sessionKey;
+
+			if (!isNewSession && (panelMode === 'create' || panelMode === 'edit') && ts != null) {
+				// Only the date changed — update formDateStr without resetting anything
+				formDateStr = new Date(ts).toLocaleDateString('sv-SE');
+				return;
+			}
+
+			// Full reset for new session
 			if (previewId) {
 				datesState.removePreview(previewId);
 				previewId = null;
@@ -84,13 +102,33 @@
 		});
 	});
 
-	// Remove the create-preview when the panel is closed without saving
+	// Remove the create-preview when the panel is closed without saving.
+	// Also reset the session key so the next open is always treated as a fresh session.
 	$effect(() => {
-		if (!datePanel.isOpen && previewId) {
-			datesState.removePreview(previewId);
-			previewId = null;
+		if (!datePanel.isOpen) {
+			if (previewId) {
+				datesState.removePreview(previewId);
+				previewId = null;
+			}
+			_prevSessionKey = '';
 		}
 	});
+
+	// Auto-focus the title input when entering create mode
+	$effect(() => {
+		if (mode === 'create' && titleInputEl) {
+			untrack(() => titleInputEl?.focus());
+		}
+	});
+
+	// Parse a leading time prefix from a title string (e.g. "9:00 Meeting" → { time: "09:00", title: "Meeting" })
+	function parseTimePrefix(raw: string): { time: string | null; title: string } {
+		const m = raw.trim().match(/^(\d{1,2})[:\.](\d{2})\s+(.+)/);
+		if (!m) return { time: null, title: raw.trim() };
+		const h = m[1].padStart(2, '0');
+		const min = m[2];
+		return { time: `${h}:${min}`, title: m[3].trim() };
+	}
 
 	// Live preview: mirror form state to local datesState so the calendar
 	// updates as the user types. Edit mode reverts via snapshot on cancel;
@@ -126,7 +164,7 @@
 
 		untrack(() => {
 			datesState.previewUpdate(activeId, {
-				title: title.trim() || (mode === 'edit' ? (editSnapshot?.title ?? '') : ''),
+				title: title.trim() || (mode === 'edit' ? (editSnapshot?.title ?? '') : 'new date'),
 				variant,
 				timestamp: startTs,
 				...(endTs !== undefined ? { timestampEnd: endTs } : {}),
@@ -216,10 +254,6 @@
 
 	// ── Actions ───────────────────────────────────────────────────────────────
 	async function handleCreate() {
-		if (!formTitle.trim()) {
-			formError = 'Title is required';
-			return;
-		}
 		if (!formDateStr) {
 			formError = 'Date is required';
 			return;
@@ -227,10 +261,16 @@
 		formError = '';
 		formLoading = true;
 		try {
-			const startTs = new Date(`${formDateStr}T${formAllDay ? '00:00' : formTimeStr}`).getTime();
+			// Parse leading time prefix (e.g. "9:00 Meeting" → timed entry with title "Meeting")
+			const { time: parsedTime, title: parsedTitle } = parseTimePrefix(formTitle);
+			const resolvedTitle = parsedTitle || 'new date';
+			const resolvedAllDay = parsedTime ? false : formAllDay;
+			const resolvedTime = parsedTime ?? formTimeStr;
+
+			const startTs = new Date(`${formDateStr}T${resolvedAllDay ? '00:00' : resolvedTime}`).getTime();
 			let endTs: number | undefined;
 			if (formVariant === 'standard' && formEndDateStr) {
-				endTs = new Date(`${formEndDateStr}T${formAllDay ? '00:00' : formEndTimeStr}`).getTime();
+				endTs = new Date(`${formEndDateStr}T${resolvedAllDay ? '00:00' : formEndTimeStr}`).getTime();
 				if (endTs <= startTs) {
 					formError = 'End must be after start';
 					formLoading = false;
@@ -240,11 +280,11 @@
 			const pid = previewId;
 			await datesState.createDate(
 				{
-					title: formTitle.trim(),
+					title: resolvedTitle,
 					variant: formVariant,
 					timestamp: startTs,
 					...(endTs !== undefined && { timestampEnd: endTs }),
-					allDay: formAllDay,
+					allDay: resolvedAllDay,
 					description: formDescription.trim() || undefined,
 					location: formLocation.trim() || undefined,
 					link: formLink.trim() || undefined,
@@ -329,12 +369,12 @@
 </script>
 
 {#if datePanel.isOpen}
-	<FloatingPopover x={datePanel.x} y={datePanel.y} onclose={closeDatePanel} style="width:320px; max-height:560px;" class="overflow-hidden">
+	<FloatingPopover x={datePanel.x} y={datePanel.y} onclose={closeDatePanel} style="width:320px; max-height:560px;" class="overflow-hidden" dismissExclude="[data-calendar-cell]">
 		<!-- ── VIEW MODE ─────────────────────────────────────────────────── -->
 		{#if mode === 'view' && entry}
 			<!-- Header (drag handle) -->
 			<div data-drag-handle class="px-s py-xs flex shrink-0 cursor-grab items-center gap-1 active:cursor-grabbing">
-				<Tag class={isAssignedToMe ? 'theme-accent' : ''} onclick={toggleSelfAssignView}>
+				<Tag active class={isAssignedToMe ? 'theme-accent' : ''} onclick={toggleSelfAssignView}>
 					{#if isAssignedToMe}
 						<AssignedIndicator class="mr-0.5" />assigned
 					{:else}
@@ -369,10 +409,7 @@
 				<p class="font-label-s text-ink-60">{formatEntryDate(entry)}</p>
 
 				{#if attachedNode}
-					<div class="bg-button-active font-label-s text-ink-70 px-s py-xs flex items-center gap-1.5 rounded-s">
-						<Icon name="file" class="shrink-0 opacity-60" />
-						<span class="truncate">{attachedNode.name}</span>
-					</div>
+					<NodeItem node={attachedNode} variant="secondary" size="s" tagName="div" active />
 				{/if}
 
 				{#if entry.description}
@@ -418,7 +455,7 @@
 
 			<!-- Header (drag handle) -->
 			<div data-drag-handle class="px-s py-xs flex shrink-0 cursor-grab items-center gap-1 active:cursor-grabbing">
-				<Tag class={isSelfAssigned ? 'theme-accent' : ''} onclick={toggleSelfAssign}>
+				<Tag active class={isSelfAssigned ? 'theme-accent' : ''} onclick={toggleSelfAssign}>
 					{#if isSelfAssigned}
 						<AssignedIndicator class="mr-0.5" />assigned
 					{:else}
@@ -442,8 +479,15 @@
 				<!-- Title -->
 				<input
 					type="text"
+					bind:this={titleInputEl}
 					bind:value={formTitle}
 					placeholder="enter title"
+					onkeydown={(e: KeyboardEvent) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							mode === 'edit' ? handleUpdate() : handleCreate();
+						}
+					}}
 					class="font-label-l text-ink-90 placeholder:text-ink-40 w-full border-none bg-transparent p-0 font-bold outline-none focus:ring-0" />
 
 				<!-- Variant toggle -->

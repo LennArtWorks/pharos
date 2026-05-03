@@ -15,11 +15,54 @@
 		onDayClick: (e: MouseEvent, date: Date) => void;
 		onEntryClick?: (e: MouseEvent, entry: CalendarEntry) => void;
 		onMoreClick: (date: Date) => void;
+		onDateDrop?: (calendarId: string, date: Date) => void;
 	}
 
-	let { currentDate, entries, currentUserId, onDayClick, onEntryClick, onMoreClick }: Props = $props();
+	let { currentDate, entries, currentUserId, onDayClick, onEntryClick, onMoreClick, onDateDrop }: Props = $props();
 
-	const MAX_VISIBLE = 3;
+	// ── Drag state ──────────────────────────────────────────────────────────────
+	let dragOverDateKey = $state<string | null>(null);
+
+	function handleDragOver(e: DragEvent, dateKey: string) {
+		if (!e.dataTransfer?.types.includes('application/calendar-entry-id')) return;
+		e.preventDefault();
+		if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+		dragOverDateKey = dateKey;
+	}
+
+	function handleDragLeave(e: DragEvent) {
+		// Only clear if leaving the cell entirely (not moving into a child)
+		const related = e.relatedTarget as Node | null;
+		if (!(e.currentTarget as HTMLElement).contains(related)) {
+			dragOverDateKey = null;
+		}
+	}
+
+	function handleDrop(e: DragEvent, date: Date, dateKey: string) {
+		e.preventDefault();
+		dragOverDateKey = null;
+		const calendarId = e.dataTransfer?.getData('application/calendar-entry-id');
+		if (!calendarId) return;
+		onDateDrop?.(calendarId, date);
+	}
+
+	// Dynamic slot calculation: read actual token sizes so the layout stays
+	// correct if spacing tokens change. slotH = item height + gap between items.
+	// baseH = cell padding (top+bottom) + header row height — consumed before items start.
+	let cellH = $state(0);
+	let slotH = $state(26); // fallback until $effect runs (h-main-xs 24 + gap-3xs 2)
+	let baseH = $state(28); // fallback (h-main-xs 24 + gap-3xs*2 4)
+
+	$effect(() => {
+		const style = getComputedStyle(document.documentElement);
+		const fs = parseFloat(style.fontSize) || 16;
+		const rem = (v: string) => parseFloat(v.trim()) * fs;
+		const mainXs = rem(style.getPropertyValue('--spacing-main-xs')); // Button xs height
+		const gap3xs = rem(style.getPropertyValue('--spacing-3xs'));      // cell gap
+		slotH = mainXs + gap3xs;
+		baseH = mainXs + 2 * gap3xs; // header + top-padding + bottom-padding
+	});
+
 	const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 	const todayKey = new Date().toLocaleDateString('sv-SE');
 
@@ -154,17 +197,25 @@
 				{#each calendarDays.slice(weekIdx * 7, (weekIdx + 1) * 7) as { date, dateKey, isCurrentMonth } (dateKey)}
 					{@const isToday = dateKey === todayKey}
 					{@const sortedItems = sortCellItems(cellEntriesMap.get(dateKey) ?? [])}
-					{@const visibleItems = sortedItems.slice(0, MAX_VISIBLE)}
-					{@const overflow = sortedItems.length - MAX_VISIBLE}
+					{@const totalSlots = cellH ? Math.max(1, Math.floor((cellH - baseH) / slotH)) : 3}
+					{@const hasOverflow = sortedItems.length > totalSlots}
+					{@const visibleCount = hasOverflow ? Math.max(1, totalSlots - 1) : sortedItems.length}
+					{@const visibleItems = sortedItems.slice(0, visibleCount)}
+					{@const overflow = sortedItems.length - visibleCount}
 
 					<div
 						role="button"
 						tabindex="0"
-						class="p-xs rounded-m gap-3xs hover:ring-border flex cursor-pointer flex-col ring ring-transparent transition-colors {isCurrentMonth ? '' : 'opacity-30'}"
+						data-calendar-cell
+						bind:clientHeight={cellH}
+						class="p-3xs rounded-m gap-3xs hover:ring-border flex cursor-pointer flex-col ring transition-colors {isCurrentMonth ? '' : 'opacity-30'} {dragOverDateKey === dateKey ? 'ring-accent-400' : 'ring-transparent'}"
 						onclick={(e: MouseEvent) => onDayClick(e, date)}
 						onkeydown={(e: KeyboardEvent) => {
 							if (e.key === 'Enter') onDayClick(e as unknown as MouseEvent, date);
-						}}>
+						}}
+						ondragover={(e: DragEvent) => handleDragOver(e, dateKey)}
+						ondragleave={handleDragLeave}
+						ondrop={(e: DragEvent) => handleDrop(e, date, dateKey)}>
 						<!-- Day number -->
 						<div class="flex w-full items-center justify-center">
 							{#if isToday}
@@ -197,7 +248,8 @@
 								}}
 								onmouseleave={() => {
 									hoveredCalendarId = null;
-								}} />
+								}}
+								ondragend={() => { dragOverDateKey = null; }} />
 						{/each}
 
 						<!-- Overflow chip -->

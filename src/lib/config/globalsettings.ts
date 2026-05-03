@@ -96,3 +96,6 @@ export const APP_COOKIE = {
   DEVMODE:    `${GLOBAL_SETTINGS.APP_INFO.COOKIE_PREFIX}_devmode`,
   SIMULATION: `${GLOBAL_SETTINGS.APP_INFO.COOKIE_PREFIX}_simulation`,
 } as const;
+
+/** Milliseconds a dragged item must hover over a trigger (nav arrow, folder) before it activates. */
+export const DRAG_HOVER_DELAY = 700;

@@ -24,15 +24,16 @@
 	// We use $derived so Svelte tracks changes to 'v' and 'size'
 	const thicknessClass = $derived.by(() => {
 		const map = {
-			s: v ? 'w-1 border-l-[0.5px]' : 'h-1  border-t-[0.5px]',
-			m: v ? 'w-1 border-l' : 'h-1 border-t',
-			l: v ? 'w-1 border-l-2' : 'h-1 border-t-2'
+			// *TODO* go away from border towards stroke for rounded ends and better alignment
+			s: v ? 'w-0 border-l-[0.5px]' : 'h-0  border-t-[0.5px]',
+			m: v ? 'w-0 border-l' : 'h-0 border-t',
+			l: v ? 'w-0 border-l-2' : 'h-0 border-t-2'
 		};
 		return map[size];
 	});
 </script>
 
-<div class={v ? 'py-s' : 'px-s'}>
+<div class={cn(v ? 'py-s' : 'px-s', 'flex h-3 items-center')}>
 	<div
 		role="separator"
 		aria-orientation={v ? 'vertical' : 'horizontal'}

@@ -39,9 +39,20 @@
 		oncontextmenu?: (e: MouseEvent) => void;
 		onmouseenter?: (e: MouseEvent) => void;
 		onmouseleave?: (e: MouseEvent) => void;
+		ondragstart?: (e: DragEvent) => void;
+		ondragend?: (e: DragEvent) => void;
 	}
 
-	let { entry, spanState = 'full', isHovered = false, currentUserId, onclick, oncontextmenu, onmouseenter, onmouseleave }: Props = $props();
+	let { entry, spanState = 'full', isHovered = false, currentUserId, onclick, oncontextmenu, onmouseenter, onmouseleave, ondragstart, ondragend }: Props = $props();
+
+	function handleDragStart(e: DragEvent) {
+		e.dataTransfer?.setData('application/calendar-entry-id', entry.calendarId);
+		e.dataTransfer?.setData('application/calendar-entry-timestamp', String(entry.timestamp));
+		e.dataTransfer?.setData('application/calendar-entry-allday', String(entry.allDay));
+		if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+		e.stopPropagation();
+		ondragstart?.(e);
+	}
 
 	const isAssignedToMe = $derived(!!currentUserId && ((entry.assignees ?? []).includes(currentUserId) || (entry.nodeAssignees ?? []).includes(currentUserId)));
 
@@ -76,13 +87,7 @@
 	// JS-driven hover: isHovered is true when ANY segment of this entry is hovered,
 	// so all segments highlight together.
 	const barColors = $derived(
-		isEventNode
-			? isHovered
-				? 'bg-button-hover-high text-ink-10'
-				: 'bg-button text-ink-10 hover:bg-button-hover-high'
-			: isHovered
-				? 'bg-button-hover-low text-ink-90'
-				: 'bg-button-active text-ink-90'
+		isEventNode ? (isHovered ? 'bg-button-hover-high text-ink-10' : 'bg-button text-ink-10 hover:bg-button-hover-high') : isHovered ? 'bg-button-hover-low text-ink-90' : 'bg-button-active text-ink-90'
 	);
 
 	const pillColors = $derived(isHovered ? 'bg-button-hover-low' : '');
@@ -112,7 +117,19 @@
 		Pips are absolutely positioned inside Button (position:relative + overflow:hidden),
 		so they get clipped to the bar's border-radius automatically — no pip radius needed.
 	-->
-	<Button size="xs" variant="tertiary" class={cn(nodeTheme, 'w-full justify-start gap-1', barColors)} style="border-radius: {barRadius}; {barSpanStyle}" {onclick} {oncontextmenu} {onmouseenter} {onmouseleave}>
+	<Button
+		size="xs"
+		variant="tertiary"
+		class={cn(nodeTheme, 'w-full justify-start gap-1')}
+		active
+		draggable={true}
+		style="border-radius: {barRadius}; {barSpanStyle}"
+		{onclick}
+		{oncontextmenu}
+		{onmouseenter}
+		{onmouseleave}
+		ondragstart={handleDragStart}
+		{ondragend}>
 		{#snippet leading()}
 			{#if entry.variant === 'start'}
 				<!-- Left-edge pip: outer corners clipped to bar's radius by overflow-hidden -->
@@ -136,7 +153,17 @@
 	</Button>
 {:else}
 	<!-- ── Pill variant (timed) ─────────────────────────────────────────────── -->
-	<Button size="xs" variant="tertiary" class={cn(nodeTheme, pillColors, 'w-full justify-start gap-1')} {onclick} {oncontextmenu} {onmouseenter} {onmouseleave}>
+	<Button
+		size="xs"
+		variant="tertiary"
+		class={cn(nodeTheme, pillColors, 'gap-m w-full justify-start')}
+		draggable={true}
+		{onclick}
+		{oncontextmenu}
+		{onmouseenter}
+		{onmouseleave}
+		ondragstart={handleDragStart}
+		{ondragend}>
 		{#snippet leading()}
 			{#if isAssignedToMe}
 				<AssignedIndicator />
@@ -146,8 +173,10 @@
 			{/if}
 		{/snippet}
 		{#snippet label()}
-			<span class="text-ink-40 shrink-0 tabular-nums">{formatTime(entry.timestamp)}</span>
-			<span class="truncate">{entry.title}</span>
+			<div class="gap-3xs">
+				<span class={cn('shrink-0 tabular-nums', isAssignedToMe ? 'text-accent-400' : 'text-ink-40')}>{formatTime(entry.timestamp)}</span>
+				<span class="truncate">{entry.title}</span>
+			</div>
 		{/snippet}
 	</Button>
 {/if}

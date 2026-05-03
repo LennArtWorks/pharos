@@ -162,7 +162,7 @@
 	class={cn(
 		isGrid ? 'p-m gap-s aspect-square h-auto w-24 flex-col justify-center' : 'w-full justify-start',
 		// Only apply tight margins if it's ACTUALLY an unstyled header (FileTree), not a breadcrumb
-		isWorkspace && buttonVariant === 'unstyled' && !isGrid ? 'h-main-xs mb-2xs px-2xs hover:bg-level-1-hover group rounded' : 'group',
+		isWorkspace && buttonVariant === 'unstyled' && !isGrid ? 'h-main-xs mb-2xs px-2xs hover:bg-level-1-hover group rounded-m' : 'group',
 		minimized ? 'align-center m-0 aspect-square justify-center p-0' : '', //hover:w-40 hover:justify-start hover:px-s
 		isEditing && !isWorkspace ? 'bg-level-1-hover ring-border ring-1' : '',
 		className

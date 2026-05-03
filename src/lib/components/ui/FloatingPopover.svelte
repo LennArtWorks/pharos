@@ -26,9 +26,12 @@
 		style?: string;
 		/** aria-label forwarded to the dialog element. */
 		'aria-label'?: string;
+		/** CSS selector — mousedown events whose target matches (or is inside) this selector
+		 *  will NOT close the panel. Useful for interaction zones that should keep the panel open. */
+		dismissExclude?: string;
 	}
 
-	let { x, y, onclose, children, class: className = '', style: additionalStyle = '', 'aria-label': ariaLabel }: Props = $props();
+	let { x, y, onclose, children, class: className = '', style: additionalStyle = '', 'aria-label': ariaLabel, dismissExclude = '' }: Props = $props();
 
 	const MARGIN = 10;
 
@@ -99,6 +102,7 @@
 	function handleWindowMouseDown(e: MouseEvent) {
 		if (!panelEl) return;
 		if (panelEl.contains(e.target as Node)) return;
+		if (dismissExclude && (e.target as Element).closest?.(dismissExclude)) return;
 		onclose();
 	}
 

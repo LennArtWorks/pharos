@@ -154,10 +154,17 @@
 	}
 
 	function handleDragOver(e: DragEvent, targetNode: VNode) {
-		if (!e.dataTransfer?.types.includes('application/fsr-node-id')) return;
+		const isNodeDrag = e.dataTransfer?.types.includes('application/fsr-node-id');
+		const isCalendarDrag = e.dataTransfer?.types.includes('application/calendar-entry-id');
+		if (!isNodeDrag && !isCalendarDrag) return;
 		e.preventDefault();
 		e.stopPropagation();
 		if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+		if (isCalendarDrag) {
+			// Calendar entries always attach to the hovered node
+			dropStates[targetNode.id] = 'inside';
+			return;
+		}
 		const target = e.currentTarget as HTMLElement;
 		const rect = target.getBoundingClientRect();
 		const y = e.clientY - rect.top;
@@ -177,6 +184,15 @@
 	async function handleDrop(e: DragEvent, targetId: string) {
 		e.preventDefault();
 		e.stopPropagation();
+
+		// Calendar entry attachment — drag a date onto a file/folder to attach it
+		const calendarEntryId = e.dataTransfer?.getData('application/calendar-entry-id');
+		if (calendarEntryId) {
+			dropStates[targetId] = null;
+			await datesState.updateDate(calendarEntryId, { targetNodeId: targetId });
+			return;
+		}
+
 		const draggedId = e.dataTransfer?.getData('application/fsr-node-id');
 		const action = dropStates[targetId];
 		dropStates[targetId] = null;

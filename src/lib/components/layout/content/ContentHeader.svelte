@@ -96,15 +96,16 @@
 			<Button
 				variant="tertiary"
 				size="s"
-				class={cn('w-full shrink-0 justify-start', realIndex === appNav.currentIndex ? 'bg-level-1-hover' : '')}
+				active={realIndex === appNav.currentIndex ? true : false}
+				class={cn('w-full shrink-0 justify-start')}
 				onclick={(e: any) => {
 					e.stopPropagation();
 					appNav.jumpToHistoryIndex(realIndex);
 					isBackMenuOpen = false;
 					isForwardMenuOpen = false;
 				}}>
-				{#snippet leading()}<Icon name={historyItem.icon || 'file'} class={realIndex === appNav.currentIndex ? 'text-accent-500' : ''} />{/snippet}
-				{#snippet label()}<span class={cn('w-full truncate text-left', realIndex === appNav.currentIndex ? 'text-accent-500 font-bold' : '')}>{historyItem.name}</span>{/snippet}
+				{#snippet leading()}<Icon name={historyItem.icon || 'file'} class={realIndex === appNav.currentIndex ? 'text-ink-90' : ''} />{/snippet}
+				{#snippet label()}<span class={cn('w-full truncate text-left', realIndex === appNav.currentIndex ? 'text-ink-90 font-bold' : '')}>{historyItem.name}</span>{/snippet}
 			</Button>
 		{/each}
 	</div>

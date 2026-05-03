@@ -7,7 +7,7 @@
 	import { fsState } from '$lib/state/navigation/filesystem.svelte';
 	import { contextMenu } from '$lib/state/layout/contextMenu.svelte';
 	import { openAssign } from '$lib/state/layout/assign.svelte';
-	import { openDatePanelCreate, openDatePanelView } from '$lib/state/layout/datePanel.svelte';
+	import { datePanel, openDatePanelCreate, openDatePanelView } from '$lib/state/layout/datePanel.svelte';
 	import { aggregateCalendarEntries, sortByTimestamp } from '$lib/utils/calendar/aggregator';
 	import type { CalendarEntry } from '$lib/utils/calendar/aggregator';
 
@@ -92,7 +92,12 @@
 
 	// ── Cell interaction handlers ────────────────────────────────────────────────
 	function handleDayClick(e: MouseEvent, date: Date) {
-		openDatePanelCreate(e, { timestamp: date.getTime() });
+		if (datePanel.isOpen && (datePanel.mode === 'create' || datePanel.mode === 'edit')) {
+			// Panel is already open — just update the date field without resetting the form
+			datePanel.initialTimestamp = date.getTime();
+		} else {
+			openDatePanelCreate(e, { timestamp: date.getTime() });
+		}
 	}
 
 	function handleEntryClick(e: MouseEvent, entry: CalendarEntry) {
@@ -103,9 +108,26 @@
 		currentDate = date;
 		setView('day');
 	}
+
+	function handleDateDrop(calendarId: string, targetDate: Date) {
+		const entry = allEntries.find((e) => e.calendarId === calendarId);
+		if (!entry) return;
+		const orig = new Date(entry.timestamp);
+		const y = targetDate.getFullYear();
+		const m = targetDate.getMonth();
+		const d = targetDate.getDate();
+		const newTs = entry.allDay
+			? new Date(y, m, d).getTime()
+			: new Date(y, m, d, orig.getHours(), orig.getMinutes()).getTime();
+		const updates: { timestamp: number; timestampEnd?: number } = { timestamp: newTs };
+		if (entry.timestampEnd) {
+			updates.timestampEnd = entry.timestampEnd + (newTs - entry.timestamp);
+		}
+		datesState.updateDate(calendarId, updates);
+	}
 </script>
 
-<div class="px-3xl pt-3xl gap-xl flex h-full flex-col">
+<div class="px-2xl pt-2xl gap-xl flex h-full flex-col">
 	<!-- <div class="gap-m flex items-center">
 		<Icon name="calendar" class="size-2xl" />
 		<h1 class="font-label-xl font-bold">Calendar</h1>
@@ -114,7 +136,7 @@
 	<CalendarHeader {view} {currentDate} onViewChange={setView} onPrev={goToPrev} onNext={goToNext} onToday={goToToday} />
 
 	{#if view === 'month'}
-		<MonthView {currentDate} entries={allEntries} {currentUserId} onDayClick={handleDayClick} onEntryClick={handleEntryClick} onMoreClick={handleMoreClick} />
+		<MonthView {currentDate} entries={allEntries} {currentUserId} onDayClick={handleDayClick} onEntryClick={handleEntryClick} onMoreClick={handleMoreClick} onDateDrop={handleDateDrop} />
 	{:else if view === 'week'}
 		<WeekView {currentDate} entries={allEntries} />
 	{:else if view === 'day'}
