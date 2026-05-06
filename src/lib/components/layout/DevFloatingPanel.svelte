@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { session } from '$lib/state/session.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import * as Popover from '$lib/components/ui/TriggerPopover';
@@ -104,7 +105,7 @@
 
 					{#if isSimulating}
 						<div class="text-body-s text-ink-70 bg-level-2 rounded-m border-border border px-3 py-2 text-center">
-							Simulating: <span class="text-ink-90 font-bold">{page.data.user.role}</span>
+							Simulating: <span class="text-ink-90 font-bold">{session.user?.role}</span>
 						</div>
 						<Button variant="secondary" size="s" class="w-full justify-center" onclick={() => toggleSimulation('stop')}>End Simulation</Button>
 					{:else}

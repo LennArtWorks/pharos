@@ -29,6 +29,7 @@ export interface CalendarEntry {
 	allDay: boolean;
 
 	description?: string;
+	location?: string;
 	assignees?: string[];
 	/** Assignees of the attached VNode — used for "assigned to me" display without data propagation. */
 	nodeAssignees?: string[];
@@ -56,6 +57,7 @@ export function aggregateCalendarEntries(
 			timestampEnd: date.timestampEnd,
 			allDay: date.allDay,
 			description: date.description,
+			location: date.location,
 			assignees: date.assignees
 		};
 

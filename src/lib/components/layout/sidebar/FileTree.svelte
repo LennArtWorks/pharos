@@ -19,13 +19,13 @@
 	import { datesState } from '$lib/state/navigation/dates.svelte';
 	import { openDateCreate } from '$lib/state/layout/dateCreate.svelte';
 	import { openAssign } from '$lib/state/layout/assign.svelte';
+	import { session } from '$lib/state/session.svelte';
 	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import TreeNodeItem from '$lib/components/blocks/NodeItem/TreeNodeItem.svelte';
 	import { goto } from '$app/navigation';
 
 	let rootNodes = $derived(fsState.tree.filter((node) => node.parentId === null));
 	let activeId = $derived(page.url.pathname.split('/').pop() || null);
-	const currentUserId = $derived(page.data.user?.id as string | undefined);
 
 	let editingId = $state<string | null>(null);
 	let expandedStates = $state<Record<string, boolean>>({});
@@ -65,9 +65,9 @@
 			if (action === 'rename') editingId = node.id;
 			else if (action === 'delete') handleDelete(node.id);
 			else if (action === 'add-date') openDateCreate({ targetNodeId: node.id, targetNodeName: node.name });
-			else if (action === 'assign-self' && currentUserId) {
+			else if (action === 'assign-self' && session.user) {
 				const cur = node.assignees ?? [];
-				const next = cur.includes(currentUserId) ? cur.filter(id => id !== currentUserId) : [...cur, currentUserId];
+				const next = cur.includes(session.user.id) ? cur.filter(id => id !== session.user!.id) : [...cur, session.user.id];
 				fsState.updateNodeAssignees(node.id, next);
 			}
 			else if (action === 'assign-others') openAssign({ clientX: contextMenu.x, clientY: contextMenu.y } as MouseEvent, { type: 'node', nodeId: node.id, currentAssignees: node.assignees ?? [] });
@@ -264,7 +264,7 @@
 	{#each nodes as node (node.id)}
 		{@const isOpen = expandedStates[node.id] ?? node.type === 'workspace'}
 
-		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node, getFileContextMenuItems(node, datesState.forNode(node.id).length > 0, currentUserId))}>
+		<div data-uiname={`FileTree-Node-${node.id}`} oncontextmenu={(e) => openContextMenu(e, node.type === 'workspace' ? 'workspace' : 'file', node, getFileContextMenuItems(node, datesState.forNode(node.id).length > 0, session.user?.id))}>
 			<TreeNodeItem
 				{isOpen}
 				hasChildren={node.children && node.children.length > 0}
@@ -282,7 +282,7 @@
 						isWorkspace={node.type === 'workspace'}
 						isEditing={editingId === node.id}
 						active={activeId === node.id || (contextMenu.isOpen && contextMenu.node?.id === node.id)}
-						assigned={!!currentUserId && (node.assignees?.includes(currentUserId) ?? false)}
+						assigned={!!session.user?.id && (node.assignees?.includes(session.user?.id) ?? false)}
 						template={node.customFields?.isTemplate}
 						tagName={node.type === 'workspace' ? 'div' : undefined}
 						href={node.type === 'workspace' ? undefined : `/files/${node.id}`}

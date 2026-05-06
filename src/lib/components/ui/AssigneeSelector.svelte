@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { session } from '$lib/state/session.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import FloatingPopover from '$lib/components/ui/FloatingPopover.svelte';
 	import { membersState } from '$lib/state/navigation/members.svelte';
@@ -17,7 +17,6 @@
 
 	let { target, x, y }: Props = $props();
 
-	const currentUserId = $derived(page.data.user?.id as string | undefined);
 
 	let assignees = $state([...(target.currentAssignees ?? [])]);
 
@@ -55,7 +54,7 @@
 		{:else}
 			{#each membersState.members as member (member.id)}
 				{@const isAssigned = assignees.includes(member.id)}
-				{@const isYou = member.id === currentUserId}
+				{@const isYou = member.id === session.user?.id}
 				<button
 					type="button"
 					class={cn(

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import OverlayTemplateSidebar from '../../../templates/OverlayTemplateSidebar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -10,12 +11,8 @@
 
 	let { closeOverlay }: { closeOverlay: () => void } = $props();
 
-	// 🚨 1. Kick unauthorized users out instantly!
-	$effect(() => {
-		// Replace PERMISSIONS.SETTINGS.VIEW with whatever your actual permission constant is
-		if (!has(PERMISSIONS.SYSTEM.SETTINGS.VIEW)) {
-			closeOverlay();
-		}
+	onMount(() => {
+		if (!has(PERMISSIONS.SYSTEM.SETTINGS.VIEW)) closeOverlay();
 	});
 
 	let activeTab = $state('general');

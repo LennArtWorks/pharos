@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { page } from '$app/state';
 	import { datePanel, closeDatePanel } from '$lib/state/layout/datePanel.svelte';
+	import { session } from '$lib/state/session.svelte';
 	import { datesState } from '$lib/state/navigation/dates.svelte';
 	import { membersState } from '$lib/state/navigation/members.svelte';
 	import { fsState } from '$lib/state/navigation/filesystem.svelte';
@@ -15,13 +15,11 @@
 	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import type { DateVariant, AppDate } from '$lib/config/filesystem';
 
-	const currentUserId = $derived(page.data.user?.id as string | undefined);
-
 	const entry = $derived(datePanel.entryId != null ? (datesState.dates.find((d) => d.id === datePanel.entryId) ?? null) : null);
 
 	const attachedNode = $derived(entry?.targetNodeId ? (fsState.nodeMap.get(entry.targetNodeId) ?? null) : null);
 
-	const isAssignedToMe = $derived(!!currentUserId && !!entry && (entry.assignees ?? []).includes(currentUserId));
+	const isAssignedToMe = $derived(!!session.user && !!entry && (entry.assignees ?? []).includes(session.user.id));
 
 	// ── Local mode (allows view↔edit toggle without closing) ─────────────────
 	let mode = $state<'view' | 'create' | 'edit'>('create');
@@ -83,7 +81,7 @@
 			formLoading = false;
 			if (panelMode === 'create') {
 				const tempId = `preview-${Date.now()}`;
-				resetCreateForm(ts);
+				resetCreateForm(ts, datePanel.initialTimestampEnd);
 				editSnapshot = null;
 				previewId = tempId;
 				datesState.insertPreview({
@@ -177,15 +175,23 @@
 		});
 	});
 
-	function resetCreateForm(ts: number | null) {
+	function resetCreateForm(ts: number | null, tsEnd: number | null = null) {
 		const stamp = ts ?? Date.now();
 		formTitle = '';
 		formVariant = 'standard';
 		formDateStr = new Date(stamp).toLocaleDateString('sv-SE');
-		formTimeStr = '09:00';
-		formEndDateStr = '';
-		formEndTimeStr = '10:00';
-		formAllDay = true;
+		if (tsEnd) {
+			const end = new Date(tsEnd);
+			formEndDateStr = end.toLocaleDateString('sv-SE');
+			formEndTimeStr = end.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+			formTimeStr = new Date(stamp).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+			formAllDay = false;
+		} else {
+			formTimeStr = '09:00';
+			formEndDateStr = '';
+			formEndTimeStr = '10:00';
+			formAllDay = true;
+		}
 		formDescription = '';
 		formLocation = '';
 		formLink = '';
@@ -352,18 +358,20 @@
 	}
 
 	function toggleSelfAssign() {
-		if (!currentUserId) return;
-		if (formAssignees.includes(currentUserId)) {
-			formAssignees = formAssignees.filter((id) => id !== currentUserId);
+		if (!session.user) return;
+		const id = session.user.id;
+		if (formAssignees.includes(id)) {
+			formAssignees = formAssignees.filter((a) => a !== id);
 		} else {
-			formAssignees = [...formAssignees, currentUserId];
+			formAssignees = [...formAssignees, id];
 		}
 	}
 
 	async function toggleSelfAssignView() {
-		if (!currentUserId || !datePanel.entryId || !entry) return;
+		if (!session.user || !datePanel.entryId || !entry) return;
+		const id = session.user.id;
 		const current = entry.assignees ?? [];
-		const next = current.includes(currentUserId) ? current.filter((id) => id !== currentUserId) : [...current, currentUserId];
+		const next = current.includes(id) ? current.filter((a) => a !== id) : [...current, id];
 		await datesState.updateDate(datePanel.entryId, { assignees: next });
 	}
 </script>
@@ -451,7 +459,7 @@
 
 			<!-- ── CREATE / EDIT MODE ─────────────────────────────────────────── -->
 		{:else if mode === 'create' || mode === 'edit'}
-			{@const isSelfAssigned = !!currentUserId && formAssignees.includes(currentUserId)}
+			{@const isSelfAssigned = !!session.user && formAssignees.includes(session.user.id)}
 
 			<!-- Header (drag handle) -->
 			<div data-drag-handle class="px-s py-xs flex shrink-0 cursor-grab items-center gap-1 active:cursor-grabbing">

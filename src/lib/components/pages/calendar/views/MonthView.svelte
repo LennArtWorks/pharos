@@ -4,21 +4,22 @@
 	import { PERMISSIONS } from '$lib/config/permissions';
 	import { has } from '$lib/utils/config/permissions';
 	import { APP_EXTENSIONS } from '$lib/config/globalsettings';
-	import MonthNode from '../nodes/MonthNode.svelte';
+	import { session } from '$lib/state/session.svelte';
+	import { fly } from 'svelte/transition';
+	import CalendarNode from '../nodes/CalendarNode.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Divider from '$lib/components/ui/Divider.svelte';
 
 	interface Props {
 		currentDate: Date;
 		entries: CalendarEntry[];
-		currentUserId?: string;
 		onDayClick: (e: MouseEvent, date: Date) => void;
 		onEntryClick?: (e: MouseEvent, entry: CalendarEntry) => void;
 		onMoreClick: (date: Date) => void;
 		onDateDrop?: (calendarId: string, date: Date) => void;
 	}
 
-	let { currentDate, entries, currentUserId, onDayClick, onEntryClick, onMoreClick, onDateDrop }: Props = $props();
+	let { currentDate, entries, onDayClick, onEntryClick, onMoreClick, onDateDrop }: Props = $props();
 
 	// ── Drag state ──────────────────────────────────────────────────────────────
 	let dragOverDateKey = $state<string | null>(null);
@@ -58,7 +59,7 @@
 		const fs = parseFloat(style.fontSize) || 16;
 		const rem = (v: string) => parseFloat(v.trim()) * fs;
 		const mainXs = rem(style.getPropertyValue('--spacing-main-xs')); // Button xs height
-		const gap3xs = rem(style.getPropertyValue('--spacing-3xs'));      // cell gap
+		const gap3xs = rem(style.getPropertyValue('--spacing-3xs')); // cell gap
 		slotH = mainXs + gap3xs;
 		baseH = mainXs + 2 * gap3xs; // header + top-padding + bottom-padding
 	});
@@ -159,7 +160,7 @@
 
 	// ── Context menu for entries ────────────────────────────────────────────────
 	function getEntryContextItems(entry: CalendarEntry): ContextMenuItem[] {
-		const isSelfAssigned = !!currentUserId && (entry.assignees ?? []).includes(currentUserId);
+		const isSelfAssigned = !!session.user && (entry.assignees ?? []).includes(session.user.id);
 		const items: ContextMenuItem[] = [
 			{ id: 'edit-date', type: 'action', label: 'View / Edit', icon: 'pencil', action: 'edit-date' },
 			{ id: 'div-assign', type: 'divider' },
@@ -176,7 +177,7 @@
 	}
 </script>
 
-<div class="flex h-full flex-col">
+<div class="pb-m flex h-full flex-col">
 	<!-- Weekday header -->
 	<div class="gap-s grid shrink-0 grid-cols-7">
 		{#each WEEKDAYS as day}
@@ -208,7 +209,9 @@
 						tabindex="0"
 						data-calendar-cell
 						bind:clientHeight={cellH}
-						class="p-3xs rounded-m gap-3xs hover:ring-border flex cursor-pointer flex-col ring transition-colors {isCurrentMonth ? '' : 'opacity-30'} {dragOverDateKey === dateKey ? 'ring-accent-400' : 'ring-transparent'}"
+						class="p-3xs rounded-m gap-3xs hover:ring-border flex cursor-pointer flex-col ring transition-colors {isCurrentMonth ? '' : 'opacity-30'} {dragOverDateKey === dateKey
+							? 'ring-accent-400'
+							: 'ring-transparent'}"
 						onclick={(e: MouseEvent) => onDayClick(e, date)}
 						onkeydown={(e: KeyboardEvent) => {
 							if (e.key === 'Enter') onDayClick(e as unknown as MouseEvent, date);
@@ -229,27 +232,30 @@
 
 						<!-- Entry nodes -->
 						{#each visibleItems as { entry, spanState } (entry.calendarId)}
-							<MonthNode
-								{entry}
-								{spanState}
-								{currentUserId}
-								isHovered={hoveredCalendarId === entry.calendarId}
-								onclick={(e: MouseEvent) => {
-									e.stopPropagation();
-									onEntryClick?.(e, entry);
-								}}
-								oncontextmenu={(e: MouseEvent) => {
-									e.stopPropagation();
-									openContextMenu(e, 'date-entry', null, getEntryContextItems(entry));
-									contextMenu.payload = entry;
-								}}
-								onmouseenter={() => {
-									hoveredCalendarId = entry.calendarId;
-								}}
-								onmouseleave={() => {
-									hoveredCalendarId = null;
-								}}
-								ondragend={() => { dragOverDateKey = null; }} />
+							<div transition:fly={{ y: 4, duration: 120 }}>
+								<CalendarNode
+									{entry}
+									{spanState}
+									isHovered={hoveredCalendarId === entry.calendarId}
+									onclick={(e: MouseEvent) => {
+										e.stopPropagation();
+										onEntryClick?.(e, entry);
+									}}
+									oncontextmenu={(e: MouseEvent) => {
+										e.stopPropagation();
+										openContextMenu(e, 'date-entry', null, getEntryContextItems(entry));
+										contextMenu.payload = entry;
+									}}
+									onmouseenter={() => {
+										hoveredCalendarId = entry.calendarId;
+									}}
+									onmouseleave={() => {
+										hoveredCalendarId = null;
+									}}
+									ondragend={() => {
+										dragOverDateKey = null;
+									}} />
+							</div>
 						{/each}
 
 						<!-- Overflow chip -->

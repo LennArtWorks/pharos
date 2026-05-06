@@ -242,7 +242,7 @@
 		class?: string;
 	}
 
-	let { name, filled = false, stroke = 1.7, class: className = '', ...rest }: Props = $props();
+	let { name, filled = false, stroke = 2, class: className = '', ...rest }: Props = $props();
 
 	const iconEntry = $derived(iconMap[name]);
 

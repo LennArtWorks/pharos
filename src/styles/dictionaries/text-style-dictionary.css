@@ -14,7 +14,7 @@
   font-family: var(--font-sans);
   font-size: 3rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.02em;
 }
 
@@ -22,7 +22,7 @@
   font-family: var(--font-sans);
   font-size: 2rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.02em;
 }
 
@@ -30,7 +30,7 @@
   font-family: var(--font-sans);
   font-size: 1.75rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.02em;
 }
 
@@ -45,21 +45,21 @@
 @utility font-label-m {
   font-family: var(--font-sans);
   font-size: 1rem;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.02em;
 }
 
 @utility font-label-s {
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.02em;
 }
 
 @utility font-label-xs {
   font-family: var(--font-sans);
   font-size: 0.6875rem;
-  line-height: 1.2;
+  line-height: 1;
   letter-spacing: -0.02em;
 }
 
@@ -71,6 +71,6 @@
   font-family: var(--font-sans);
   /* font-family: 'Open Sans', sans-serif; */
   font-size: 1rem;
-  line-height: 1.2;
+  line-height: 1.5;
   letter-spacing: -0.02em;
 }

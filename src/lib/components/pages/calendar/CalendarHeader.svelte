@@ -57,6 +57,19 @@
 		if (navSwitchTimer) { clearTimeout(navSwitchTimer); navSwitchTimer = null; }
 	}
 
+	const isTodayVisible = $derived.by(() => {
+		const today = new Date();
+		const ty = today.getFullYear(), tm = today.getMonth(), td = today.getDate();
+		const cy = currentDate.getFullYear(), cm = currentDate.getMonth(), cd = currentDate.getDate();
+		if (view === 'month' || view === 'agenda') return ty === cy && tm === cm;
+		if (view === 'day') return ty === cy && tm === cm && td === cd;
+		// week: find Mon of the week containing currentDate
+		const dow = (currentDate.getDay() + 6) % 7; // 0=Mon
+		const weekStart = new Date(cy, cm, cd - dow);
+		const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
+		return today >= weekStart && today <= weekEnd;
+	});
+
 	const periodLabel = $derived.by(() => {
 		const week = getISOWeek(currentDate);
 		const month = currentDate.toLocaleDateString(undefined, { month: 'long' });
@@ -86,9 +99,11 @@
 
 	<!-- Right: navigation -->
 	<div class="flex items-center gap-1">
-		<Button variant="secondary" size="sm" onclick={onToday}>
-			{#snippet label()}today{/snippet}
-		</Button>
+		{#if !isTodayVisible}
+			<Button variant="secondary" size="sm" onclick={onToday}>
+				{#snippet label()}today{/snippet}
+			</Button>
+		{/if}
 
 		<Button variant="tertiary" size="s" iconOnly onclick={onPrev} aria-label="Previous"
 				active={dragOverNav === 'prev'}

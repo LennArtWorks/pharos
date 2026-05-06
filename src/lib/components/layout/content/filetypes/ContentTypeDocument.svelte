@@ -5,9 +5,8 @@
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
-	import { page } from '$app/state';
-
 	import * as Y from 'yjs';
+	import { session } from '$lib/state/session.svelte';
 	import { HocuspocusProvider } from '@hocuspocus/provider';
 	import Collaboration from '@tiptap/extension-collaboration';
 	import CollaborationCaret from '@tiptap/extension-collaboration-caret';
@@ -51,7 +50,7 @@
 	});
 
 	onMount(() => {
-		const currentUser = page.data.user;
+		const currentUser = session.user;
 
 		console.log('[DEBUG 1] Component Mounted. Starting setup...');
 		console.log('[DEBUG 2] Editor Element exists?', !!editorElement);

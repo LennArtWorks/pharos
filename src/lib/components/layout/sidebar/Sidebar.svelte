@@ -7,6 +7,7 @@
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import SidebarProfile from './SidebarProfile.svelte';
 	import { page } from '$app/state';
+	import { session } from '$lib/state/session.svelte';
 	import { VIEW_CONFIG, type UIFileIconType } from '$lib/config/filesystem';
 	import NodeItem from '$lib/components/blocks/NodeItem/NodeItem.svelte';
 	import TreeNodeItem from '$lib/components/blocks/NodeItem/TreeNodeItem.svelte';
@@ -112,5 +113,5 @@
 		</div>
 	</section>
 
-	<SidebarProfile user={page.data.user} />
+	<SidebarProfile user={session.user} />
 </aside>

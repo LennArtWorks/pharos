@@ -58,9 +58,9 @@
 	};
 
 	const sizeClasses = {
-		xs: 'h-main-xs font-label-s font-semibold gap-3xs',
-		s: 'h-main-s font-label-s font-semibold gap-3xs',
-		sm: 'h-main-s font-label-s font-semibold gap-2xs',
+		xs: 'h-main-xs font-label-s font-semibold gap-3xs leading-none',
+		s: 'h-main-s font-label-s font-semibold gap-3xs leading-none',
+		sm: 'h-main-s font-label-s font-semibold gap-2xs leading-none',
 		m: 'h-main-m font-semibold gap-xs',
 		l: 'h-main-l font-semibold gap-xs',
 		xl: 'h-main-xl font-semibold gap-xs'

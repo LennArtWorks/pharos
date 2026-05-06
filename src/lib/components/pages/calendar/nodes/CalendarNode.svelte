@@ -1,10 +1,12 @@
 <script lang="ts">
 	/**
-	 * CalendarMonthNode — renders a single CalendarEntry inside a MonthView cell.
+	 * CalendarNode — renders a single CalendarEntry inside any calendar view cell.
+	 *
+	 * Formerly MonthNode — renamed because it is reused in Week and Day views as well.
 	 *
 	 * Two structural variants:
 	 *   bar  — allDay entries: full-width coloured bar
-	 *   pill — timed entries: compact row with time + icon + title
+	 *   pill — timed entries: compact row with time + icon + title (used in month view only)
 	 *
 	 * Visual colour rules:
 	 *   Event node   → bg-button / text-ink-10 (dark)
@@ -13,7 +15,7 @@
 	 * start / deadline bars: fully rounded bar + a small dark pip at the
 	 * relevant edge. Button's overflow-hidden clips the pip to the bar's radius.
 	 *
-	 * Spanning bars: negative margin closes the 1px grid gap so the bar looks
+	 * Spanning bars: negative margin closes the grid gap so the bar looks
 	 * continuous across cells. border-radius encodes which end of the span
 	 * this cell represents.
 	 *
@@ -26,6 +28,7 @@
 	import type { CalendarEntry } from '$lib/utils/calendar/aggregator';
 	import { APP_EXTENSIONS } from '$lib/config/globalsettings';
 	import { getFileConfig } from '$lib/utils/config/filesystem';
+	import { session } from '$lib/state/session.svelte';
 	import { cn } from '$lib/utils';
 
 	interface Props {
@@ -34,7 +37,6 @@
 		spanState?: 'full' | 'start' | 'middle' | 'end';
 		/** Shared hover state — true when ANY segment of this entry is hovered. */
 		isHovered?: boolean;
-		currentUserId?: string;
 		onclick?: (e: MouseEvent) => void;
 		oncontextmenu?: (e: MouseEvent) => void;
 		onmouseenter?: (e: MouseEvent) => void;
@@ -43,7 +45,7 @@
 		ondragend?: (e: DragEvent) => void;
 	}
 
-	let { entry, spanState = 'full', isHovered = false, currentUserId, onclick, oncontextmenu, onmouseenter, onmouseleave, ondragstart, ondragend }: Props = $props();
+	let { entry, spanState = 'full', isHovered = false, onclick, oncontextmenu, onmouseenter, onmouseleave, ondragstart, ondragend }: Props = $props();
 
 	function handleDragStart(e: DragEvent) {
 		e.dataTransfer?.setData('application/calendar-entry-id', entry.calendarId);
@@ -54,7 +56,7 @@
 		ondragstart?.(e);
 	}
 
-	const isAssignedToMe = $derived(!!currentUserId && ((entry.assignees ?? []).includes(currentUserId) || (entry.nodeAssignees ?? []).includes(currentUserId)));
+	const isAssignedToMe = $derived(!!session.user && ((entry.assignees ?? []).includes(session.user.id) || (entry.nodeAssignees ?? []).includes(session.user.id)));
 
 	const R = 'var(--radius-s)';
 	const Z = '0';
@@ -120,7 +122,7 @@
 	<Button
 		size="xs"
 		variant="tertiary"
-		class={cn(nodeTheme, barColors, 'w-full justify-start gap-1')}
+		class={cn(nodeTheme, barColors, 'w-full justify-start gap-1 transition-all duration-75')}
 		active
 		draggable={true}
 		style="border-radius: {barRadius}; {barSpanStyle}"
@@ -156,7 +158,7 @@
 	<Button
 		size="xs"
 		variant="tertiary"
-		class={cn(nodeTheme, pillColors, 'gap-m w-full justify-start')}
+		class={cn(nodeTheme, pillColors, 'gap-m w-full justify-start transition-all duration-75')}
 		draggable={true}
 		{onclick}
 		{oncontextmenu}

@@ -8,12 +8,18 @@
 	import DevFloatingPanel from '$lib/components/layout/DevFloatingPanel.svelte';
 
 	import { opState } from '$lib/state/dev/operator.svelte';
+	import { session } from '$lib/state/session.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { addBanner, removeBanner } from '$lib/state/layout/banners.svelte';
 	import SystemBanner from '$lib/components/layout/SystemBanner.svelte';
 	import { untrack } from 'svelte';
 
 	let { children } = $props();
+
+	// Keep session.user in sync with page.data.user reactively.
+	// This is the single place that bridges SvelteKit's server data into client state.
+	$effect(() => { session.user = page.data.user; });
+	$effect(() => { session.orgRoles = page.data.activeRoles ?? {}; });
 
 	let serverOperator = $derived(page.data.operator);
 

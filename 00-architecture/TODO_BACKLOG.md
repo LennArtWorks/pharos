@@ -84,8 +84,21 @@ Items discussed but not yet implemented. Add new entries here rather than leavin
 
 ---
 
+## Architecture
+
+### session.svelte.ts — ContentRoot migration
+- `ContentRoot.svelte` derives `currentUser` from `page.data.user` to call `hasPermission(user.role, ...)`
+- Should eventually read from `session.user` instead, but the PERMISSIONS system may deserve its own state (`permissionsState`) that wraps `session.user.role` and exposes `can(permission)` directly
+- Deferring until the permissions architecture is clearer — the `has()` helper already exists in `$lib/utils/config/permissions`, so this is a refactor of how components access it, not a logic change
+
 ## General UI
 
 - **DateCreateModal — assignees field** — Currently the create form has no assignee picker; add AssigneeSelector into the form
 - **Keyboard navigation** — Context menus, popovers, and modals should be keyboard-accessible (arrow keys, Escape)
 - **Context menu — keyboard trigger** — Right-click equivalent via keyboard (Shift+F10 or context menu key)
+
+### Split view (future)
+- Day view has a stub "+ add split view" panel on the right; clicking it does nothing yet
+- Full split view: two time-grid columns side by side (e.g. two different days shown at once)
+- App-wide: split view concept extends to the content area (two files open side-by-side)
+- Deferring until ContentHeader architecture is settled — split view affects the entire layout system, including how the main content area is structured and how the ContentHeader handles multiple open files

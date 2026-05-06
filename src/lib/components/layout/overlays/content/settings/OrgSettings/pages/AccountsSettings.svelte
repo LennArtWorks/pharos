@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { page } from '$app/state';
 	import { slide } from 'svelte/transition';
+	import { session } from '$lib/state/session.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -25,7 +25,6 @@
 	let editingOverrides = $state<string[]>([]);
 	let inheritedFlagsForEditing = $derived(editingPermissionsFor ? availableRolesData[editingPermissionsFor.role] || [] : []);
 
-	const currentUser = $derived(page.data.user);
 
 	onMount(async () => {
 		try {
@@ -56,8 +55,8 @@
 	let processedUsers = $derived(() => {
 		let filtered = users.filter((u) => u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase()));
 		return filtered.sort((a, b) => {
-			if (a.id === currentUser?.id) return -1;
-			if (b.id === currentUser?.id) return 1;
+			if (a.id === session.user?.id) return -1;
+			if (b.id === session.user?.id) return 1;
 			const aIsDev = a.id.startsWith('dev_');
 			const bIsDev = b.id.startsWith('dev_');
 			if (aIsDev && !bIsDev) return -1;
@@ -150,7 +149,7 @@
 					<tr><td colspan="4" class="text-ink-50 p-6 text-center italic">Loading accounts...</td></tr>
 				{:else}
 					{#each processedUsers() as user (user.id)}
-						{@const isMe = user.id === currentUser?.id}
+						{@const isMe = user.id === session.user?.id}
 						{@const isDev = user.id.startsWith('dev_')}
 						{@const hasOverrides = user.overrides && user.overrides.length > 0}
 

@@ -20,19 +20,21 @@ export const datePanel = $state({
   y: 0,
   entryId: null as string | null,
   initialTimestamp: null as number | null,
+  initialTimestampEnd: null as number | null,
   targetNodeId: null as string | null,
   targetNodeName: null as string | null
 });
 
 export function openDatePanelCreate(
   e: MouseEvent,
-  opts?: { timestamp?: number; targetNodeId?: string; targetNodeName?: string }
+  opts?: { timestamp?: number; timestampEnd?: number; targetNodeId?: string; targetNodeName?: string }
 ) {
   datePanel.mode = 'create';
   datePanel.entryId = null;
   datePanel.x = e.clientX;
   datePanel.y = e.clientY;
   datePanel.initialTimestamp = opts?.timestamp ?? null;
+  datePanel.initialTimestampEnd = opts?.timestampEnd ?? null;
   datePanel.targetNodeId = opts?.targetNodeId ?? null;
   datePanel.targetNodeName = opts?.targetNodeName ?? null;
   datePanel.isOpen = true;
@@ -44,6 +46,7 @@ export function openDatePanelView(e: MouseEvent, entryId: string) {
   datePanel.x = e.clientX;
   datePanel.y = e.clientY;
   datePanel.initialTimestamp = null;
+  datePanel.initialTimestampEnd = null;
   datePanel.targetNodeId = null;
   datePanel.targetNodeName = null;
   datePanel.isOpen = true;

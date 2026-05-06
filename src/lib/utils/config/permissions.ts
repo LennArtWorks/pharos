@@ -1,4 +1,4 @@
-import { page } from '$app/state';
+import { session } from '$lib/state/session.svelte';
 import { SETUP_ROLES } from '$lib/config/cloudfiles/roles';
 
 export const FORM_PERMISSION_KEY = Symbol('form-permission');
@@ -47,15 +47,8 @@ export function hasPermission(
  * Usage in Svelte 5 components: has('files.edit')
  * for frontend checks
  */
-export function has(requiredFlag: string) {
-  // Gracefully fallback if page.data isn't loaded yet
-  if (!page.data) return false;
-
-  const role = page.data.user?.role || SETUP_ROLES.GUEST;
-
-  // FIX: Access activeRoles directly from page.data!
-  const activeRoles = page.data.activeRoles || {};
-  const overrides = page.data.user?.overrides || [];
-
-  return hasPermission(role, requiredFlag, activeRoles, overrides);
+export function has(requiredFlag: string): boolean {
+  const role = session.user?.role ?? SETUP_ROLES.GUEST;
+  const overrides = session.user?.overrides ?? [];
+  return hasPermission(role, requiredFlag, session.orgRoles, overrides);
 }

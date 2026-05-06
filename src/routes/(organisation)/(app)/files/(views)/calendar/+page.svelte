@@ -10,6 +10,7 @@
 	import { datePanel, openDatePanelCreate, openDatePanelView } from '$lib/state/layout/datePanel.svelte';
 	import { aggregateCalendarEntries, sortByTimestamp } from '$lib/utils/calendar/aggregator';
 	import type { CalendarEntry } from '$lib/utils/calendar/aggregator';
+	import { session } from '$lib/state/session.svelte';
 
 	import CalendarHeader, { type CalendarView } from '$lib/components/pages/calendar/CalendarHeader.svelte';
 	import MonthView from '$lib/components/pages/calendar/views/MonthView.svelte';
@@ -25,7 +26,6 @@
 		fsState.fetchTree();
 	});
 
-	const currentUserId = $derived(page.data.user?.id as string | undefined);
 
 	// ── Context menu: handle date-entry actions ──────────────────────────────────
 	$effect(() => {
@@ -37,9 +37,9 @@
 
 			if (action === 'delete-date' && entry.source.type === 'floating') {
 				datesState.deleteDate(entry.calendarId);
-			} else if (action === 'assign-self' && currentUserId) {
+			} else if (action === 'assign-self' && session.user) {
 				const cur = entry.assignees ?? [];
-				const next = cur.includes(currentUserId) ? cur.filter((id) => id !== currentUserId) : [...cur, currentUserId];
+				const next = cur.includes(session.user.id) ? cur.filter((id) => id !== session.user!.id) : [...cur, session.user.id];
 				datesState.updateDate(entry.calendarId, { assignees: next });
 			} else if (action === 'assign-others') {
 				openAssign({ clientX: contextMenu.x, clientY: contextMenu.y } as MouseEvent, {
@@ -109,6 +109,15 @@
 		setView('day');
 	}
 
+	function handleTimedDrop(calendarId: string, newTimestamp: number) {
+		const entry = allEntries.find((e) => e.calendarId === calendarId);
+		if (!entry) return;
+		const delta = newTimestamp - entry.timestamp;
+		const updates: { timestamp: number; timestampEnd?: number } = { timestamp: newTimestamp };
+		if (entry.timestampEnd) updates.timestampEnd = entry.timestampEnd + delta;
+		datesState.updateDate(calendarId, updates);
+	}
+
 	function handleDateDrop(calendarId: string, targetDate: Date) {
 		const entry = allEntries.find((e) => e.calendarId === calendarId);
 		if (!entry) return;
@@ -136,11 +145,11 @@
 	<CalendarHeader {view} {currentDate} onViewChange={setView} onPrev={goToPrev} onNext={goToNext} onToday={goToToday} />
 
 	{#if view === 'month'}
-		<MonthView {currentDate} entries={allEntries} {currentUserId} onDayClick={handleDayClick} onEntryClick={handleEntryClick} onMoreClick={handleMoreClick} onDateDrop={handleDateDrop} />
+		<MonthView {currentDate} entries={allEntries} onDayClick={handleDayClick} onEntryClick={handleEntryClick} onMoreClick={handleMoreClick} onDateDrop={handleDateDrop} />
 	{:else if view === 'week'}
-		<WeekView {currentDate} entries={allEntries} />
+		<WeekView {currentDate} entries={allEntries} onEntryClick={handleEntryClick} onDateDrop={handleDateDrop} onTimedDrop={handleTimedDrop} />
 	{:else if view === 'day'}
-		<DayView {currentDate} entries={allEntries} />
+		<DayView {currentDate} entries={allEntries} onEntryClick={handleEntryClick} onDateDrop={handleDateDrop} onTimedDrop={handleTimedDrop} />
 	{:else}
 		<AgendaView {currentDate} entries={allEntries} />
 	{/if}
