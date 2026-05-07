@@ -41,7 +41,7 @@ export function generateUserIdentity(accountId: string, email: string, name: str
   };
 }
 
-// 3. Builds the individual user preferences profile (usr_XXX.fsrsys.fsrsecure)
+// 3. Builds the individual user preferences profile ({accountId}.appsys.appsecure, encrypted)
 export function generateDefaultUserProfile(accountId: string) {
   return {
     _meta: { schemaVersion: "1.0", accountId },

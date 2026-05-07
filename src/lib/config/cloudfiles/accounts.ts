@@ -2,8 +2,8 @@
 import { SETUP_ROLES } from './roles';
 
 /**
- * BLUEPRINT: accounts.fsrsecure
- * Defines the Master Auth Registry structure.
+ * BLUEPRINT: accounts.appsys.appsecure
+ * Defines the Master Auth Registry structure. Always encrypted (AES-256-GCM) on WebDAV.
  */
 export function generateDefaultAccountsRegistry() {
   return {
